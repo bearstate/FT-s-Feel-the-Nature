@@ -34,8 +34,16 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.20.1-47.2.0'
+    // 47.3 rather than 47.2 so the development game runs Serene Seasons and Tough As Nails, which ask for it. Nothing of
+    // 47.3's own is used: the addon still runs on any 47 (mods.toml).
+    minecraft 'net.minecraftforge:forge:1.20.1-47.3.0'
     implementation fg.deobf('blank:fts-geology:0.11.0')
+    // Only in the development game, to try the seasons of the small life (client.life.SeasonBridge, which reads Serene
+    // Seasons by reflection and needs nothing of it to build). Never shipped.
+    if (file('libs/sereneseasons-9.1.0.3.jar').exists() && !project.hasProperty('noSeasons')) {
+        runtimeOnly fg.deobf('blank:sereneseasons:9.1.0.3')
+        runtimeOnly fg.deobf('blank:glitchcore:0.0.1.1')
+    }
     // Only in the development game, to try the AmbientSounds compatibility against the real thing. Never shipped.
     if (file('libs/ambientsounds-6.3.8.jar').exists() && !project.hasProperty('noAmbientSounds')) {
         runtimeOnly fg.deobf('blank:ambientsounds:6.3.8')

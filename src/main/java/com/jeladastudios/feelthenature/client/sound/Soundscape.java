@@ -89,6 +89,7 @@ public final class Soundscape {
             return;
         }
         if (mc.isPaused()) return;
+        long t0 = System.nanoTime();
         if (++sinceLook >= LOOK_EVERY) {
             AROUND.look(level, player);
             sinceLook = 0;
@@ -108,6 +109,10 @@ public final class Soundscape {
         wind(level, player, hear, underWater);
         apply(now);
         WaterVoices.tick(level, player, now, underWater);
+        long spent = System.nanoTime() - t0;
+        costNanos += spent;
+        costMax = Math.max(costMax, spent);
+        costTicks++;
         if (TRACE && now % 20 == 0) trace(player);
     }
 
@@ -117,6 +122,9 @@ public final class Soundscape {
     private static final boolean TRACE = Boolean.getBoolean("fts_feelthenature.trace");
     /** AmbientSounds' sounds started since the last trace line: none of its rain or wind should be among them. */
     private static final java.util.Set<String> AMBIENT_SEEN = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    /** What the soundscape cost since the last trace line: its whole tick, the water voices with it. */
+    private static long costNanos, costMax;
+    private static int costTicks;
 
     private static void trace(LocalPlayer player) {
         StringBuilder b = new StringBuilder(String.format(java.util.Locale.ROOT,
@@ -135,6 +143,11 @@ public final class Soundscape {
                 || player.getOffhandItem().getItem() instanceof com.jeladastudios.feelthenature.world.UmbrellaItem;
         b.append(" umbrella=").append(umbrellaOpen ? "open" : holding ? "closed" : "none");
         b.append(" life=").append(com.jeladastudios.feelthenature.client.life.AmbientLife.countsAndReset());
+        // Microseconds a tick, on average and at the most, for the soundscape and for the small life.
+        b.append(String.format(java.util.Locale.ROOT, " cost=sound:%d/%d,", costNanos / Math.max(1, costTicks) / 1000, costMax / 1000))
+                .append(com.jeladastudios.feelthenature.client.life.AmbientLife.costAndReset());
+        costNanos = costMax = 0;
+        costTicks = 0;
         b.append(" ambient=").append(String.join(",", AMBIENT_SEEN));
         AMBIENT_SEEN.clear();
         FeelTheNature.LOGGER.info(b.toString());

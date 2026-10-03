@@ -48,6 +48,10 @@ public final class AmbientLife {
 
     /** Counts since the last trace line, for the automated game test. */
     static int fireflies, pollen, leaves, drift;
+    /** Serene Seasons' sub-season the last tick, or -1. */
+    private static int season = -1;
+    private static long costNanos, costMax;
+    private static int costTicks;
 
     @Mod.EventBusSubscriber(modid = FeelTheNature.MODID, value = Dist.CLIENT)
     public static final class Ticks {
@@ -61,7 +65,12 @@ public final class AmbientLife {
             LocalPlayer player = mc.player;
             if (level == null || player == null || mc.isPaused() || !ClientConfig.AMBIENT_LIFE.get()) return;
             if (mc.options.particles().get() == ParticleStatus.MINIMAL) return;
+            long t0 = System.nanoTime();
             spawn(level, player);
+            long spent = System.nanoTime() - t0;
+            costNanos += spent;
+            costMax = Math.max(costMax, spent);
+            costTicks++;
         }
     }
 
@@ -87,15 +96,18 @@ public final class AmbientLife {
         BlockPos here = player.blockPosition();
         Biome biome = level.getBiome(here).value();
         boolean warm = !biome.coldEnoughToSnow(here) && biome.getBaseTemperature() >= 0.5f;
+        // The time of year, with Serene Seasons: fireflies in summer, pollen in spring, leaves in autumn.
+        season = SeasonBridge.subSeason(level, here);
 
         if (night && rain < 0.05f && warm && wind < 5f) {
-            for (int i = 0; i < 2; i++) if (RANDOM.nextFloat() < 0.07f * density) firefly(level, player);
+            float chance = 0.07f * (float) density * Seasons.fireflies(season);
+            for (int i = 0; i < 2; i++) if (RANDOM.nextFloat() < chance) firefly(level, player);
         }
         if (day && rain < 0.05f && biome.getBaseTemperature() >= 0.3f) {
-            if (RANDOM.nextFloat() < 0.5f * density) pollen(level, player, wx, wz);
+            if (RANDOM.nextFloat() < 0.5f * (float) density * Seasons.pollen(season)) pollen(level, player, wx, wz);
         }
         if (rain < 0.8f) {
-            float chance = (0.04f + 0.05f * Math.min(wind, 8f)) * (float) density;
+            float chance = (0.04f + 0.05f * Math.min(wind, 8f)) * (float) density * Seasons.leaves(season);
             for (int i = 0; i < 2; i++) if (RANDOM.nextFloat() < chance) leaf(level, player, wx, wz);
         }
         if (wind > 4.5f) {
@@ -191,8 +203,16 @@ public final class AmbientLife {
     }
 
     /** For the trace: what was spawned since the last call. */
+    /** For the trace: microseconds a tick spawning, on average and at the most, since the last call. */
+    public static String costAndReset() {
+        String s = "life:" + costNanos / Math.max(1, costTicks) / 1000 + "/" + costMax / 1000;
+        costNanos = costMax = 0;
+        costTicks = 0;
+        return s;
+    }
+
     public static String countsAndReset() {
-        String s = "fireflies:" + fireflies + ",pollen:" + pollen + ",leaves:" + leaves + ",drift:" + drift;
+        String s = "fireflies:" + fireflies + ",pollen:" + pollen + ",leaves:" + leaves + ",drift:" + drift + ",season:" + season;
         fireflies = pollen = leaves = drift = 0;
         return s;
     }

@@ -33,8 +33,28 @@ public class RiparianFeature extends Feature<NoneFeatureConfiguration> {
         super(codec);
     }
 
+    /** For the automated test: what the chunks cost, logged every 256 of them. */
+    private static final java.util.concurrent.atomic.LongAdder COST_NANOS = new java.util.concurrent.atomic.LongAdder();
+    private static final java.util.concurrent.atomic.AtomicLong COST_MAX = new java.util.concurrent.atomic.AtomicLong();
+    private static final java.util.concurrent.atomic.AtomicInteger COST_CHUNKS = new java.util.concurrent.atomic.AtomicInteger();
+
     @Override
     public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
+        if (!com.jeladastudios.feelthenature.dev.TestCommands.ON) return grow(context);
+        long t0 = System.nanoTime();
+        boolean placed = grow(context);
+        long spent = System.nanoTime() - t0;
+        COST_NANOS.add(spent);
+        COST_MAX.accumulateAndGet(spent, Math::max);
+        int n = COST_CHUNKS.incrementAndGet();
+        if (n % 256 == 0) {
+            com.jeladastudios.feelthenature.FeelTheNature.LOGGER.info("RIPARIAN_COST chunks={} avg_us={} max_us={}",
+                    n, COST_NANOS.sum() / n / 1000, COST_MAX.get() / 1000);
+        }
+        return placed;
+    }
+
+    private boolean grow(FeaturePlaceContext<NoneFeatureConfiguration> context) {
         WorldGenLevel level = context.level();
         if (!GeologyBridge.isGeologyWorld(level.getLevel())) return false;
         RandomSource random = context.random();
