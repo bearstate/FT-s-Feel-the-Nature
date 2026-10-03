@@ -15,6 +15,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.FluidState;
 
@@ -89,38 +90,72 @@ final class WaterVoices {
         }
     }
 
-    /** Where the moving water round the player is, and how much of it, from random points in the space round them. */
+    /** The surface round the player is looked at every this many blocks, out to {@link #REACH}. */
+    private static final int GRID = 2;
+    /** How far above or below the eye surface water is still heard: a river at the foot of a bank, a brook in a gully. */
+    private static final int SURFACE_HEIGHT = 12;
+
+    /**
+     * Where the moving water round the player is, and how much of it. Rivers and brooks run on the surface, so the
+     * surface is looked at on a grid, the same columns every time, and a river beside the player fills its share of it
+     * and is heard as loud as it is. Water underground or falling down a face is found by random points in the space
+     * round them. Each kind takes the larger of its two shares.
+     */
     private static void look(ClientLevel level, LocalPlayer player) {
         BlockPos eye = BlockPos.containing(player.getEyePosition());
-        int[] count = new int[Kind.values().length];
+        int kinds = Kind.values().length;
+        int[] count = new int[kinds], surface = new int[kinds];
         double[] best = {Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE};
-        BlockPos[] found = new BlockPos[Kind.values().length];
+        BlockPos[] found = new BlockPos[kinds];
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        int cells = 0;
+        for (int dx = -REACH; dx <= REACH; dx += GRID) {
+            for (int dz = -REACH; dz <= REACH; dz += GRID) {
+                int x = eye.getX() + dx, z = eye.getZ() + dz;
+                m.set(x, eye.getY(), z);
+                if (!level.hasChunkAt(m)) continue;
+                cells++;
+                m.setY(level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1);
+                if (Math.abs(m.getY() - eye.getY()) > SURFACE_HEIGHT) continue;
+                Kind k = kind(level.getBlockState(m));
+                if (k == null) continue;
+                surface[k.ordinal()]++;
+                closer(k, m, eye, best, found);
+            }
+        }
         for (int i = 0; i < SAMPLES; i++) {
             m.set(eye.getX() + RANDOM.nextInt(2 * REACH + 1) - REACH, eye.getY() + RANDOM.nextInt(2 * HEIGHT + 1) - HEIGHT,
                     eye.getZ() + RANDOM.nextInt(2 * REACH + 1) - REACH);
             if (!level.hasChunkAt(m)) continue;
-            BlockState s = level.getBlockState(m);
-            FluidState f = s.getFluidState();
-            if (!f.is(FluidTags.WATER)) continue;
-            Kind k;
-            if (f.hasProperty(FlowingFluid.FALLING) && f.getValue(FlowingFluid.FALLING)) k = Kind.FALL;
-            else if (GeologyBridge.isRiverWater(s)) k = Kind.RIVER;
-            else if (!f.isSource()) k = Kind.STREAM;
-            else continue;
+            Kind k = kind(level.getBlockState(m));
+            if (k == null) continue;
             count[k.ordinal()]++;
-            double d = m.distSqr(eye);
-            if (d < best[k.ordinal()]) {
-                best[k.ordinal()] = d;
-                found[k.ordinal()] = m.immutable();
-            }
+            closer(k, m, eye, best, found);
         }
         for (Kind k : Kind.values()) {
             int i = k.ordinal();
+            float share = Math.max(count[i] / (float) SAMPLES, cells == 0 ? 0f : surface[i] / (float) cells);
             // Eased, so the voice does not swell and drop with every handful of random points.
-            amount[i] += (count[i] / (float) SAMPLES - amount[i]) * 0.4f;
+            amount[i] += (share - amount[i]) * 0.4f;
             if (found[i] != null) nearest[i] = found[i];
             else if (amount[i] < 0.002f) nearest[i] = null;
+        }
+    }
+
+    /** What a block's water is heard as: falling water, FT's Geology's river, a brook (vanilla water running), or none. */
+    private static Kind kind(BlockState s) {
+        FluidState f = s.getFluidState();
+        if (!f.is(FluidTags.WATER)) return null;
+        if (f.hasProperty(FlowingFluid.FALLING) && f.getValue(FlowingFluid.FALLING)) return Kind.FALL;
+        if (GeologyBridge.isRiverWater(s)) return Kind.RIVER;
+        return f.isSource() ? null : Kind.STREAM;
+    }
+
+    private static void closer(Kind k, BlockPos at, BlockPos eye, double[] best, BlockPos[] found) {
+        double d = at.distSqr(eye);
+        if (d < best[k.ordinal()]) {
+            best[k.ordinal()] = d;
+            found[k.ordinal()] = at.immutable();
         }
     }
 
