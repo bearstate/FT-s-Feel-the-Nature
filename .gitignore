@@ -19,6 +19,7 @@ libs/
 PLAN.md
 CEKIRDEK_PROMPT.md
 SES_ADAYLARI*.md
+OTURUM_*
 
 # Local test tools (paths are this machine's)
 tools/

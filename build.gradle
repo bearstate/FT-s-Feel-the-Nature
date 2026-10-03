@@ -22,6 +22,8 @@ minecraft {
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             // One line a second of what the soundscape hears and plays, for the automated game test (tools/).
             property 'fts_feelthenature.trace', 'true'
+            // The compatibility mixins (Tough As Nails); in the jar they are named in its manifest.
+            arg '-mixin.config=fts_feelthenature.mixins.json'
             mods { fts_feelthenature { source sourceSets.main } }
         }
     }
@@ -34,20 +36,29 @@ repositories {
 }
 
 dependencies {
-    // 47.3 rather than 47.2 so the development game runs Serene Seasons and Tough As Nails, which ask for it. Nothing of
-    // 47.3's own is used: the addon still runs on any 47 (mods.toml).
-    minecraft 'net.minecraftforge:forge:1.20.1-47.3.0'
+    // 47.4, as the user's modpack runs (47.4.10): Serene Seasons and Tough As Nails ask for 47.3 and some of the pack's
+    // mods for 47.4. Nothing of 47.3 or 47.4 is used: the addon still runs on any 47 (mods.toml).
+    minecraft 'net.minecraftforge:forge:1.20.1-47.4.23'
     implementation fg.deobf('blank:fts-geology:0.11.0')
     // Only in the development game, to try the seasons of the small life (client.life.SeasonBridge, which reads Serene
     // Seasons by reflection and needs nothing of it to build). Never shipped.
     if (file('libs/sereneseasons-9.1.0.3.jar').exists() && !project.hasProperty('noSeasons')) {
         runtimeOnly fg.deobf('blank:sereneseasons:9.1.0.3')
         runtimeOnly fg.deobf('blank:glitchcore:0.0.1.1')
+        // And Tough As Nails, for the umbrella keeping its holder out of the rain (mixin.TanRainMixin).
+        if (file('libs/toughasnails-9.2.0.171.jar').exists()) runtimeOnly fg.deobf('blank:toughasnails:9.2.0.171')
     }
     // Only in the development game, to try the AmbientSounds compatibility against the real thing. Never shipped.
     if (file('libs/ambientsounds-6.3.8.jar').exists() && !project.hasProperty('noAmbientSounds')) {
         runtimeOnly fg.deobf('blank:ambientsounds:6.3.8')
         runtimeOnly fg.deobf('blank:creativecore:2.12.40')
+    }
+    // With -Ppack, a slice of the user's modpack in the development game, for the game test against its worldgen: the
+    // mods whose biome modifiers once fell between the addon's and crashed the game (Croptopia, HBM), Dynamic Trees,
+    // Naturalist and Wildernature, with what they need. Copied into libs/ by hand; never shipped.
+    if (project.hasProperty('pack')) {
+        ['croptopia:4.0.1', 'epherolib:1.2.0', 'hbm:2.0', 'architectury:9.2.14', 'clothconfig:11.1.136', 'geckolib:4.8.4',
+         'dynamictrees:1.4.11', 'naturalist:5.0', 'wildernature:1.0.6', 'curios:5.14.1'].each { runtimeOnly fg.deobf("blank:${it}") }
     }
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -211,7 +222,8 @@ tasks.named('jar') {
             'Specification-Vendor'  : 'Jelada Studios',
             'Specification-Version' : '1',
             'Implementation-Title'  : project.name,
-            'Implementation-Version': project.version
+            'Implementation-Version': project.version,
+            'MixinConfigs'          : 'fts_feelthenature.mixins.json'
         ])
     }
     // One jar in build/libs, the build that just ran.

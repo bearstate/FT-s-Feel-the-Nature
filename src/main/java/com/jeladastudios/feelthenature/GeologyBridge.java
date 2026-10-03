@@ -16,7 +16,8 @@ public final class GeologyBridge {
 
     private GeologyBridge() {}
 
-    private static volatile boolean weatherLinks = true, serverWindLinks = true, riversLinks = true, worldLinks = true;
+    private static volatile boolean weatherLinks = true, serverWindLinks = true, serverRainLinks = true, riversLinks = true,
+            worldLinks = true;
 
     /** Says once that a part of FT's Geology no longer links, and answers false for the part's flag. */
     private static boolean lost(String what, LinkageError e) {
@@ -121,6 +122,22 @@ public final class GeologyBridge {
             }
         }
         return fallbackWind(level);
+    }
+
+    /**
+     * How hard it rains at a place on the server, 0 to 1, by FT's Geology's regional weather; -1 where the rain is not
+     * regional (another dimension, or its regional rain turned off), where the world's one weather stands. On the
+     * server's own thread only; elsewhere FT's Geology answers with the world's weather.
+     */
+    public static float rainAt(net.minecraft.server.level.ServerLevel level, int x, int z) {
+        if (!serverRainLinks) return -1f;
+        try {
+            if (!com.jeladastudios.ftsgeology.weather.Storms.on(level)) return -1f;
+            return com.jeladastudios.ftsgeology.weather.Storms.intensityAt(level, x, z);
+        } catch (LinkageError e) {
+            serverRainLinks = lost("its regional rain", e);
+            return -1f;
+        }
     }
 
     /** Whether a level is made by FT's Geology's own world type, where its rivers and rock are. */

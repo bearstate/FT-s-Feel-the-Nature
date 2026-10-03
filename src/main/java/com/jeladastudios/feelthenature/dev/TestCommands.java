@@ -28,6 +28,8 @@ import net.minecraftforge.fml.common.Mod;
  *
  * <p>{@code /ftn_test umbrella open|close} opens or closes the umbrella in the player's main hand, as a use would:
  * the test window cannot be clicked.</p>
+ *
+ * <p>{@code /ftn_test tan} answers how long Tough As Nails has had the player dry ({@code FTN_TEST tan dry=N}).</p>
  */
 @Mod.EventBusSubscriber(modid = FeelTheNature.MODID)
 public final class TestCommands {
@@ -47,7 +49,33 @@ public final class TestCommands {
                                 .executes(c -> riverbank(c, IntegerArgumentType.getInteger(c, "radius")))))
                 .then(Commands.literal("umbrella")
                         .then(Commands.literal("open").executes(c -> umbrella(c, true)))
-                        .then(Commands.literal("close").executes(c -> umbrella(c, false)))));
+                        .then(Commands.literal("close").executes(c -> umbrella(c, false))))
+                .then(Commands.literal("tan").executes(TestCommands::tan)));
+    }
+
+    /**
+     * How long Tough As Nails has had the player dry, in ticks: it starts again from 0 every time the player is out in the
+     * rain. Read by reflection, as the addon does not build against Tough As Nails.
+     */
+    private static int tan(CommandContext<CommandSourceStack> c) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        try {
+            Object data = Class.forName("toughasnails.api.temperature.TemperatureHelper")
+                    .getMethod("getTemperatureData", net.minecraft.world.entity.player.Player.class).invoke(null, player);
+            int dry = (Integer) data.getClass().getMethod("getDryTicks").invoke(data);
+            // And what it decides from: the world raining, and the player's block out in it (umbrella and all).
+            var exposedTo = Class.forName("toughasnails.temperature.TemperatureHelperImpl").getDeclaredMethod("isExposedToRain",
+                    net.minecraft.world.level.Level.class, BlockPos.class);
+            exposedTo.setAccessible(true);
+            boolean exposed = (Boolean) exposedTo.invoke(null, player.level(), player.blockPosition());
+            boolean raining = player.level().isRaining();
+            c.getSource().sendSuccess(() -> Component.literal("FTN_TEST tan dry=" + dry + " raining=" + raining + " exposed=" + exposed), false);
+            return 1;
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            c.getSource().sendSuccess(() -> Component.literal("FTN_TEST tan none"), false);
+            return 0;
+        }
     }
 
     /** Opens or closes the umbrella in the player's main hand, as a use would, without the sound. */
