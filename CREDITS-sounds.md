@@ -9,7 +9,7 @@ with thanks. Each file was cut, looped and level-matched for the game; no other 
 | `rain_bed_light` | [Rain light 2 (rural)](https://freesound.org/people/jmbphilmes/sounds/200273/) | jmbphilmes | CC0 | |
 | `rain_bed_heavy` | [Rain heavy 2 (rural)](https://freesound.org/people/jmbphilmes/sounds/200272/) | jmbphilmes | CC0 | |
 | `rain_start_light`, `rain_start_heavy` | [Rain, builds light to heavy, dispersed bright wash](https://freesound.org/people/TRP/sounds/572418/) | TRP | CC0 | |
-| `rain_end` | [2017 september - rain - the end of a rainstorm](https://freesound.org/people/Anthousai/sounds/405630/) | Anthousai | CC0 | |
+| `rain_end` | [2017 september - rain - the end of a rainstorm](https://freesound.org/people/Anthousai/sounds/405630/) | Anthousai | CC0 | 1:20 to 2:35, the last 10 s faded |
 | `drip_*` | [Post-rain dripping](https://freesound.org/people/bushtobazaar/sounds/524566/) | bushtobazaar | CC0 | |
 | `rain_on_leaves` | [Rain, modulating light drips on leaves](https://freesound.org/people/TRP/sounds/572267/) | TRP | CC0 | |
 | `rain_on_conifers` | [rain in the forest atmo field recording](https://freesound.org/people/Garuda1982/sounds/536843/) | Garuda1982 | CC0 | |

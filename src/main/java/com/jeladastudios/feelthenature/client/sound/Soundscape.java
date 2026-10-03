@@ -55,8 +55,11 @@ public final class Soundscape {
     private static final Surroundings AROUND = new Surroundings();
     private static final RandomSource RANDOM = RandomSource.create();
 
-    private static LayerTrack intro;
+    private static LayerTrack intro, outro;
     private static int introLength, introHandover;
+    private static final RainSpell SPELL = new RainSpell();
+    /** The recording of a rain ending, in ticks: 75 seconds. */
+    private static final int OUTRO_LENGTH = 1500;
     private static int sinceLook = 99, dryTicks = Integer.MAX_VALUE / 2;
     /** How wet the world round the player still is: the rain, and after it a minute or two of dripping. */
     private static float wet;
@@ -125,6 +128,7 @@ public final class Soundscape {
         // Each track as name:volume, with a "v" after one fading out: the cap is on the tracks asked to play, and one
         // that lost its place is still heard for the moment it takes to fade.
         if (intro != null) traceTrack(b, intro);
+        if (outro != null) traceTrack(b, outro);
         for (LayerTrack t : TRACKS.values()) traceTrack(b, t);
         b.append(" water=").append(WaterVoices.describe());
         boolean holding = player.getMainHandItem().getItem() instanceof com.jeladastudios.feelthenature.world.UmbrellaItem
@@ -169,6 +173,21 @@ public final class Soundscape {
             } else {
                 hold = smooth((intro.age - introHandover) / (float) (introLength - introHandover));
                 intro.target = rain <= Mix.WET ? 0f : intro.layer.gain * gain;
+            }
+        }
+        // A long rain dying away ends with the recording of a rain ending: the last of the beds fade into it over its
+        // first seconds, and its drops thin out to the drips that go on after. A rain that comes back cuts it short.
+        if (SPELL.tick(rain) && outro == null && gain > 0.02f) {
+            outro = new LayerTrack(Layer.RAIN_END, Layer.RAIN_END.gain * gain, STEP, now);
+            Minecraft.getInstance().getSoundManager().play(outro);
+        }
+        if (outro != null) {
+            if (outro.isStopped() || now - outro.born > OUTRO_LENGTH + 40
+                    || !Minecraft.getInstance().getSoundManager().isActive(outro) && now - outro.born > 40) {
+                outro = null;
+            } else {
+                hold *= 1f - smooth(outro.age / 160f);
+                outro.target = rain >= RainSpell.STEADY ? 0f : outro.layer.gain * gain;
             }
         }
         ask(Layer.RAIN_LIGHT, l * gain * hold);
@@ -266,7 +285,7 @@ public final class Soundscape {
      * room, so a crowded moment loses its quietest details rather than its rain.
      */
     private static void apply(long now) {
-        int room = ClientConfig.MAX_LAYERS.get() - (intro != null ? 1 : 0);
+        int room = ClientConfig.MAX_LAYERS.get() - (intro != null ? 1 : 0) - (outro != null ? 1 : 0);
         List<Map.Entry<Layer, Float>> wanted = new ArrayList<>();
         for (Map.Entry<Layer, Float> e : TARGETS.entrySet()) if (e.getValue() > 0.002f) wanted.add(e);
         wanted.sort((a, b) -> Float.compare(b.getValue(), a.getValue()));
@@ -308,7 +327,10 @@ public final class Soundscape {
         for (LayerTrack t : TRACKS.values()) sounds.stop(t);
         TRACKS.clear();
         if (intro != null) sounds.stop(intro);
+        if (outro != null) sounds.stop(outro);
         intro = null;
+        outro = null;
+        SPELL.reset();
         WaterVoices.stopAll();
         wet = 0f;
         dryTicks = Integer.MAX_VALUE / 2;

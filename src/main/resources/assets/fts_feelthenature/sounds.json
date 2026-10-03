@@ -4,6 +4,7 @@
   "rain_bed_heavy": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_bed_heavy", "stream": false } ] },
   "rain_start_light": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_start_light", "stream": false } ] },
   "rain_start_heavy": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_start_heavy", "stream": false } ] },
+  "rain_end": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_end", "stream": false } ] },
   "drips_loop": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:drips_loop", "stream": false } ] },
   "rain_on_leaves": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_on_leaves", "stream": false } ] },
   "rain_on_conifers": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_on_conifers", "stream": false } ] },

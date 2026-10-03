@@ -17,6 +17,8 @@ public enum Layer {
     // A rain's beginning after a dry while, played once.
     RAIN_START_LIGHT("rain_start_light", Group.RAIN, 0.55f, false),
     RAIN_START_HEAVY("rain_start_heavy", Group.RAIN, 0.9f, false),
+    // A long rain's end, played once as it dies away.
+    RAIN_END("rain_end", Group.RAIN, 1.0f, false),
     // What the rain falls on round the player.
     ON_LEAVES("rain_on_leaves", Group.SURFACE, 0.6f, true),
     ON_CONIFERS("rain_on_conifers", Group.SURFACE, 0.5f, true),

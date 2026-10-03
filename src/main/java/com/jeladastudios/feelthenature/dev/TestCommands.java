@@ -25,6 +25,9 @@ import net.minecraftforge.fml.common.Mod;
  * in the country already loaded round them: a column of its river water on the surface with a grass bank beside it.
  * A biome named river is not enough to stand by, since the river network can name a column a river where the water was
  * never laid. Answers {@code FTN_TEST riverbank x y z} or {@code FTN_TEST riverbank none}.</p>
+ *
+ * <p>{@code /ftn_test umbrella open|close} opens or closes the umbrella in the player's main hand, as a use would:
+ * the test window cannot be clicked.</p>
  */
 @Mod.EventBusSubscriber(modid = FeelTheNature.MODID)
 public final class TestCommands {
