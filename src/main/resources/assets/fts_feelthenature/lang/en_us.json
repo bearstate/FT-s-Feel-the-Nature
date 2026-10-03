@@ -1,3 +1,21 @@
 {
-  "subtitles.fts_feelthenature.tree_creak": "Tree creaks"
+  "subtitles.fts_feelthenature.tree_creak": "Tree creaks",
+  "subtitles.fts_feelthenature.umbrella_open": "Umbrella opens",
+  "subtitles.fts_feelthenature.umbrella_invert": "Umbrella blows inside out",
+  "item.fts_feelthenature.umbrella_white": "White Umbrella",
+  "item.fts_feelthenature.umbrella_orange": "Orange Umbrella",
+  "item.fts_feelthenature.umbrella_magenta": "Magenta Umbrella",
+  "item.fts_feelthenature.umbrella_light_blue": "Light Blue Umbrella",
+  "item.fts_feelthenature.umbrella_yellow": "Yellow Umbrella",
+  "item.fts_feelthenature.umbrella_lime": "Lime Umbrella",
+  "item.fts_feelthenature.umbrella_pink": "Pink Umbrella",
+  "item.fts_feelthenature.umbrella_gray": "Gray Umbrella",
+  "item.fts_feelthenature.umbrella_light_gray": "Light Gray Umbrella",
+  "item.fts_feelthenature.umbrella_cyan": "Cyan Umbrella",
+  "item.fts_feelthenature.umbrella_purple": "Purple Umbrella",
+  "item.fts_feelthenature.umbrella_blue": "Blue Umbrella",
+  "item.fts_feelthenature.umbrella_brown": "Brown Umbrella",
+  "item.fts_feelthenature.umbrella_green": "Green Umbrella",
+  "item.fts_feelthenature.umbrella_red": "Red Umbrella",
+  "item.fts_feelthenature.umbrella_black": "Black Umbrella"
 }

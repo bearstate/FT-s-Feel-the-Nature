@@ -31,7 +31,8 @@ public final class TestCommands {
 
     private TestCommands() {}
 
-    private static final boolean ON = Boolean.getBoolean("fts_feelthenature.trace");
+    /** Whether the game runs for the automated test: the commands are there, and a few events are logged for it. */
+    public static final boolean ON = Boolean.getBoolean("fts_feelthenature.trace");
 
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
@@ -40,7 +41,24 @@ public final class TestCommands {
                 .then(Commands.literal("riverbank")
                         .executes(c -> riverbank(c, 128))
                         .then(Commands.argument("radius", IntegerArgumentType.integer(8, 256))
-                                .executes(c -> riverbank(c, IntegerArgumentType.getInteger(c, "radius"))))));
+                                .executes(c -> riverbank(c, IntegerArgumentType.getInteger(c, "radius")))))
+                .then(Commands.literal("umbrella")
+                        .then(Commands.literal("open").executes(c -> umbrella(c, true)))
+                        .then(Commands.literal("close").executes(c -> umbrella(c, false)))));
+    }
+
+    /** Opens or closes the umbrella in the player's main hand, as a use would, without the sound. */
+    private static int umbrella(CommandContext<CommandSourceStack> c, boolean open) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        var stack = player.getMainHandItem();
+        if (!(stack.getItem() instanceof com.jeladastudios.feelthenature.world.UmbrellaItem)) {
+            c.getSource().sendSuccess(() -> Component.literal("FTN_TEST umbrella none"), false);
+            return 0;
+        }
+        com.jeladastudios.feelthenature.world.UmbrellaItem.setOpen(stack, open);
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST umbrella " + (open ? "open" : "closed")), false);
+        return 1;
     }
 
     private static int riverbank(CommandContext<CommandSourceStack> c, int radius) {

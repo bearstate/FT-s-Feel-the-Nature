@@ -28,6 +28,9 @@ public enum Layer {
     ROOF_WOOD("rain_roof_wood", Group.SURFACE, 0.8f, true),
     ROOF_METAL("rain_roof_metal", Group.SURFACE, 0.8f, true),
     WINDOW("rain_window", Group.SURFACE, 0.6f, true),
+    // An open umbrella in the player's hand: the rain on its cloth, just over the head.
+    UMBRELLA_LIGHT("rain_on_umbrella_light", Group.SURFACE, 0.65f, true),
+    UMBRELLA_HEAVY("rain_on_umbrella_heavy", Group.SURFACE, 0.8f, true),
     // Water still dripping while the world round is wet.
     DRIPS("drips_loop", Group.DRIP, 0.5f, true),
     // The wind, by how hard it blows, and what it blows through.

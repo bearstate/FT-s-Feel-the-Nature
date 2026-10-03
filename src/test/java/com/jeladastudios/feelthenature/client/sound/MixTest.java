@@ -33,6 +33,28 @@ class MixTest {
     }
 
     @Test
+    void umbrellaFollowsTheRain() {
+        // Silent before the rain begins, heard through every strength of it, the drumming only growing with it.
+        for (float r = 0f; r <= Mix.WET; r += 0.0005f) assertEquals(0f, power(Mix.umbrellaBeds(r)), EPS, "patter at rain " + r);
+        float last = -1f;
+        for (float r = 0.08f; r <= 1.0001f; r += 0.005f) {
+            float[] u = Mix.umbrellaBeds(r);
+            assertTrue(power(u) >= 0.7f && power(u) <= 1.45f, "umbrella at rain " + r + ": " + power(u));
+            assertTrue(u[1] >= last - EPS, "drumming fell at rain " + r);
+            last = u[1];
+        }
+    }
+
+    @Test
+    void noRainOnAnUmbrellaUnderARoof() {
+        assertEquals(0f, Mix.onUmbrella(0f, 0f), EPS);
+        assertEquals(1f, Mix.onUmbrella(1f, 0f), EPS);
+        // Under a crown, the drops gathered off the leaves, fewer than in the open.
+        float crown = Mix.onUmbrella(0f, 1f);
+        assertTrue(crown > 0.3f && crown < 1f, "under a crown: " + crown);
+    }
+
+    @Test
     void everyRainIsHeard() {
         // From a drizzle on, the beds together never dip far: no hole where one hands over to the next.
         for (float r = 0.08f; r <= 1.0001f; r += 0.005f) {

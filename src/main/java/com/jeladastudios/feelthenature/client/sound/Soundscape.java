@@ -61,6 +61,8 @@ public final class Soundscape {
     /** How wet the world round the player still is: the rain, and after it a minute or two of dripping. */
     private static float wet;
     private static float heardRain, heardWind;
+    /** Whether the player holds an open umbrella, this tick. */
+    private static boolean umbrellaOpen;
 
     /** How often the surroundings are looked at, in ticks. */
     private static final int LOOK_EVERY = 5;
@@ -94,6 +96,7 @@ public final class Soundscape {
         heardRain = rain;
         float underWater = player.isUnderWater() ? 0.15f : 1f;
         float hear = AROUND.hear();
+        umbrellaOpen = com.jeladastudios.feelthenature.world.UmbrellaItem.heldOpen(player);
 
         long now = level.getGameTime();
         rain(level, now, rain, hear, underWater);
@@ -124,6 +127,9 @@ public final class Soundscape {
         if (intro != null) traceTrack(b, intro);
         for (LayerTrack t : TRACKS.values()) traceTrack(b, t);
         b.append(" water=").append(WaterVoices.describe());
+        boolean holding = player.getMainHandItem().getItem() instanceof com.jeladastudios.feelthenature.world.UmbrellaItem
+                || player.getOffhandItem().getItem() instanceof com.jeladastudios.feelthenature.world.UmbrellaItem;
+        b.append(" umbrella=").append(umbrellaOpen ? "open" : holding ? "closed" : "none");
         b.append(" life=").append(com.jeladastudios.feelthenature.client.life.AmbientLife.countsAndReset());
         b.append(" ambient=").append(String.join(",", AMBIENT_SEEN));
         AMBIENT_SEEN.clear();
@@ -186,6 +192,13 @@ public final class Soundscape {
         ask(Layer.ROOF_WOOD, cover(AROUND.woodOver) * over);
         ask(Layer.ROOF_METAL, cover(AROUND.metalOver) * over);
         ask(Layer.WINDOW, cover(AROUND.glassOver) * over);
+        // An open umbrella in hand: the rain drums on its cloth just over the head. The rain all round is still heard.
+        if (umbrellaOpen) {
+            float[] u = Mix.umbrellaBeds(rain);
+            float on = Mix.onUmbrella(AROUND.sky, AROUND.leavesOver) * g;
+            ask(Layer.UMBRELLA_LIGHT, u[0] * on);
+            ask(Layer.UMBRELLA_HEAVY, u[1] * on);
+        }
     }
 
     /** A share of the ground, made audible sooner: half the ground under trees is a forest to the ear. */

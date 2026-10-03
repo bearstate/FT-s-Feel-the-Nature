@@ -26,6 +26,24 @@ public final class Mix {
         return new float[]{l, m, h};
     }
 
+    /**
+     * How loud the rain on an open umbrella is, a light patter and a heavy drumming, at a rain strength from 0 to 1:
+     * the one hands over to the other as the rain grows, and neither sounds before the rain does ({@link #WET}).
+     */
+    public static float[] umbrellaBeds(float rain) {
+        float light = smooth((rain - WET) / 0.07f) * (1f - smooth((rain - 0.4f) / 0.25f));
+        float heavy = smooth((rain - 0.3f) / 0.25f);
+        return new float[]{light, heavy};
+    }
+
+    /**
+     * How much rain reaches an umbrella over the head: what falls from the open sky over the player, or, under a crown,
+     * the bigger drops gathered off its leaves. None under a roof.
+     */
+    public static float onUmbrella(float sky, float leavesOver) {
+        return Math.max(sky, 0.6f * leavesOver);
+    }
+
     /** How loud the breeze, the strong wind and the storm are at a wind speed in blocks a second, before their gains. */
     public static float[] windBeds(float speed) {
         float breeze = smooth((speed - 0.2f) / 1.0f) * (1f - smooth((speed - 3f) / 2f));

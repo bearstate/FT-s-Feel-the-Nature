@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "fts_feelthenature:item/umbrella_icon_closed_canopy",
+    "layer1": "fts_feelthenature:item/umbrella_icon_closed_parts"
+  }
+}

@@ -1,3 +1,21 @@
 {
-  "subtitles.fts_feelthenature.tree_creak": "Ağaç gıcırdıyor"
+  "subtitles.fts_feelthenature.tree_creak": "Ağaç gıcırdıyor",
+  "subtitles.fts_feelthenature.umbrella_open": "Şemsiye açılıyor",
+  "subtitles.fts_feelthenature.umbrella_invert": "Şemsiye rüzgârda ters dönüyor",
+  "item.fts_feelthenature.umbrella_white": "Beyaz Şemsiye",
+  "item.fts_feelthenature.umbrella_orange": "Turuncu Şemsiye",
+  "item.fts_feelthenature.umbrella_magenta": "Eflatun Şemsiye",
+  "item.fts_feelthenature.umbrella_light_blue": "Açık Mavi Şemsiye",
+  "item.fts_feelthenature.umbrella_yellow": "Sarı Şemsiye",
+  "item.fts_feelthenature.umbrella_lime": "Açık Yeşil Şemsiye",
+  "item.fts_feelthenature.umbrella_pink": "Pembe Şemsiye",
+  "item.fts_feelthenature.umbrella_gray": "Gri Şemsiye",
+  "item.fts_feelthenature.umbrella_light_gray": "Açık Gri Şemsiye",
+  "item.fts_feelthenature.umbrella_cyan": "Camgöbeği Şemsiye",
+  "item.fts_feelthenature.umbrella_purple": "Mor Şemsiye",
+  "item.fts_feelthenature.umbrella_blue": "Mavi Şemsiye",
+  "item.fts_feelthenature.umbrella_brown": "Kahverengi Şemsiye",
+  "item.fts_feelthenature.umbrella_green": "Yeşil Şemsiye",
+  "item.fts_feelthenature.umbrella_red": "Kırmızı Şemsiye",
+  "item.fts_feelthenature.umbrella_black": "Siyah Şemsiye"
 }

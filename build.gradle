@@ -56,7 +56,8 @@ tasks.named('test') {
  *    the game crashed with "Feature order cycle" (twice on 2026-10-03);
  *  - no vanilla or other mod's placed feature is added directly, for the same reason;
  *  - every sound the soundscape names exists, and none is streamed: other mods fill the eight stream channels;
- *  - both languages carry the same keys.
+ *  - both languages carry the same keys;
+ *  - every item model's own parents and textures exist, and every umbrella colour has its model, recipe, name and tag.
  */
 tasks.register('validateData') {
     group = 'verification'
@@ -149,6 +150,40 @@ tasks.register('validateData') {
         (en - tr).each { errors << "tr_tr lacks ${it}" }
         (tr - en).each { errors << "en_us lacks ${it}" }
         sounds.each { event, def entry -> if (entry.subtitle && !en.contains(entry.subtitle)) errors << "subtitle ${entry.subtitle} not in en_us" }
+        // Item models: every parent and texture of ours they name exists, so nothing shows as the purple-and-black cube.
+        def models = new File(res, "assets/${ns}/models/item")
+        def ownRef = { String ref -> ref?.startsWith("${ns}:") ? ref.substring(ns.length() + 1) : null }
+        fileTree(models) { include '*.json' }.each { f ->
+            def checkModel
+            checkModel = { m ->
+                if (!(m instanceof Map)) return
+                def p = ownRef(m.parent)
+                if (p != null && !new File(res, "assets/${ns}/models/${p}.json").exists()) errors << "${f.name}: parent ${m.parent} does not exist"
+                m.textures?.each { k, t ->
+                    def tex = ownRef(t)
+                    if (tex != null && !new File(res, "assets/${ns}/textures/${tex}.png").exists()) errors << "${f.name}: texture ${t} does not exist"
+                }
+                m.overrides?.each { o ->
+                    def om = ownRef(o.model)
+                    if (om != null && !new File(res, "assets/${ns}/models/${om}.json").exists()) errors << "${f.name}: override model ${o.model} does not exist"
+                }
+                checkModel(m.base)
+                m.perspectives?.each { k, v -> checkModel(v) }
+            }
+            checkModel(json.parse(f))
+        }
+        // Every umbrella colour has its model, its recipe, its name in both languages, and a place in the umbrellas tag.
+        def umbrellaTag = json.parse(new File(data, 'tags/items/umbrellas.json')).values
+        ['white', 'orange', 'magenta', 'light_blue', 'yellow', 'lime', 'pink', 'gray', 'light_gray', 'cyan', 'purple',
+         'blue', 'brown', 'green', 'red', 'black'].each { c ->
+            def item = "umbrella_${c}"
+            if (!new File(models, "${item}.json").exists()) errors << "${item} has no item model"
+            def recipe = new File(data, "recipes/${item}.json")
+            if (!recipe.exists()) errors << "${item} has no recipe"
+            else if (json.parse(recipe).result?.item != "${ns}:${item}") errors << "recipe ${recipe.name} does not make ${item}"
+            if (!en.contains("item.${ns}.${item}".toString())) errors << "${item} has no name in en_us"
+            if (!umbrellaTag.contains("${ns}:${item}".toString())) errors << "${item} is not in the umbrellas tag"
+        }
         // The AmbientSounds compatibility silences its rain and wind: each override plays nothing.
         fileTree(new File(res, 'assets/ambientsounds')) { include '**/*.json' }.each { f ->
             def o = json.parse(f)

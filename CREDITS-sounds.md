@@ -30,9 +30,9 @@ with thanks. Each file was cut, looped and level-matched for the game; no other 
 | `wind_conifers` | [Wind_pine.wav](https://freesound.org/people/sinewave1kHz/sounds/202989/) | sinewave1kHz | CC0 | |
 | `tree_creak_*` | [Tree creaks](https://freesound.org/people/Sacha.Julien/sounds/726217/) | Sacha.Julien | CC0 | |
 | `wind_grass` | [Wheat in the Wind](https://freesound.org/people/bdvictor/sounds/240914/) | bdvictor | CC0 | |
-| `rain_on_umbrella` (light) | [tiny raindrops under an umbrella](https://freesound.org/people/launemax/sounds/274765/) | launemax | CC0 | |
+| `rain_on_umbrella` (light) | [tiny raindrops under an umbrella](https://freesound.org/people/launemax/sounds/274765/) | launemax | CC0 | 2:05 to 2:55 |
 | `rain_on_umbrella` (heavy) | [heavy rain on a small tent hq](https://freesound.org/people/Petrosilia/sounds/592996/) | Petrosilia | CC0 | |
-| `umbrella_open` | [Umbrella Opening](https://freesound.org/people/Sheyvan/sounds/369322/) | Sheyvan | CC0 | |
+| `umbrella_open` | [Umbrella Opening](https://freesound.org/people/Sheyvan/sounds/369322/) | Sheyvan | CC0 | the first second; also played a quarter lower as the umbrella blowing inside out |
 | `stream_small` | [Stream River Water Up Close](https://freesound.org/people/jackthemurray/sounds/433589/) | jackthemurray | CC0 | |
 | `river_flow` | [Small river](https://freesound.org/people/MicheleFalleri/sounds/578465/) | MicheleFalleri | CC0 | |
 | `waterfall_small` | [Hidden waterfall](https://freesound.org/people/BassmanJourney/sounds/632107/) | BassmanJourney | CC0 | |

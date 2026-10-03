@@ -45,7 +45,20 @@ public final class GeologyBridge {
         return regionalWeather() ? LocalWeather.windZ() : fallbackWind(level) * 0.6f;
     }
 
-    // === The server side: FT's Geology's own world and its rivers ===========================================
+    // === The server side: FT's Geology's own world, its wind and its rivers ==================================
+
+    /**
+     * The wind over a place on the server, in blocks a second: FT's Geology's own where its regional weather runs (the
+     * same wind its clients are told, a hold set with its command included), else the made-up one from the world's rain
+     * and thunder, as on the client.
+     */
+    public static float serverWind(net.minecraft.server.level.ServerLevel level, double x, double z) {
+        if (com.jeladastudios.ftsgeology.weather.Storms.on(level)) {
+            double[] w = com.jeladastudios.ftsgeology.weather.Atmosphere.wind(level, x, z);
+            return (float) (Math.hypot(w[0], w[1]) * 20.0);
+        }
+        return fallbackWind(level);
+    }
 
     /** Whether a level is made by FT's Geology's own world type, where its rivers and rock are. */
     public static boolean isGeologyWorld(net.minecraft.server.level.ServerLevel level) {

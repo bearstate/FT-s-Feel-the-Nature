@@ -33,5 +33,8 @@ public final class ModRegistries {
         FEATURES.register(bus);
         BIOME_MODIFIERS.register(bus);
         ModParticles.PARTICLES.register(bus);
+        ModItems.ITEMS.register(bus);
+        ModItems.RECIPES.register(bus);
+        ModSounds.SOUNDS.register(bus);
     }
 }

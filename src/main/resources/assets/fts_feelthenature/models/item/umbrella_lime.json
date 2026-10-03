@@ -1,0 +1,11 @@
+{
+  "loader": "forge:separate_transforms",
+  "gui_light": "front",
+  "base": { "parent": "fts_feelthenature:item/umbrella_closed_3d" },
+  "perspectives": {
+    "gui": { "parent": "fts_feelthenature:item/umbrella_icon_closed" },
+    "fixed": { "parent": "fts_feelthenature:item/umbrella_icon_closed" },
+    "ground": { "parent": "fts_feelthenature:item/umbrella_icon_closed" }
+  },
+  "overrides": [ { "predicate": { "fts_feelthenature:open": 1 }, "model": "fts_feelthenature:item/umbrella_open" } ]
+}

@@ -24,5 +24,9 @@
   "tree_creak": { "category": "ambient", "subtitle": "subtitles.fts_feelthenature.tree_creak", "sounds": [ { "name": "fts_feelthenature:tree_creak_1" }, { "name": "fts_feelthenature:tree_creak_2" }, { "name": "fts_feelthenature:tree_creak_3" }, { "name": "fts_feelthenature:tree_creak_4" }, { "name": "fts_feelthenature:tree_creak_5" } ] },
   "stream_small": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:stream_small", "stream": false, "attenuation_distance": 20 } ] },
   "river_flow": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:river_flow", "stream": false, "attenuation_distance": 28 } ] },
-  "waterfall_small": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:waterfall_small", "stream": false, "attenuation_distance": 32 } ] }
+  "waterfall_small": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:waterfall_small", "stream": false, "attenuation_distance": 32 } ] },
+  "rain_on_umbrella_light": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_on_umbrella_light", "stream": false } ] },
+  "rain_on_umbrella_heavy": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_on_umbrella_heavy", "stream": false } ] },
+  "umbrella_open": { "category": "player", "subtitle": "subtitles.fts_feelthenature.umbrella_open", "sounds": [ { "name": "fts_feelthenature:umbrella_open" } ] },
+  "umbrella_invert": { "category": "player", "subtitle": "subtitles.fts_feelthenature.umbrella_invert", "sounds": [ { "name": "fts_feelthenature:umbrella_open", "pitch": 0.75 } ] }
 }

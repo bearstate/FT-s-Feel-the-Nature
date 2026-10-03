@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "fts_feelthenature:umbrella",
+  "pattern": [
+    "WWW",
+    "NSN",
+    " S "
+  ],
+  "key": {
+    "W": { "item": "minecraft:green_wool" },
+    "N": { "item": "minecraft:iron_nugget" },
+    "S": { "item": "minecraft:stick" }
+  },
+  "result": { "item": "fts_feelthenature:umbrella_green" }
+}
