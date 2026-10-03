@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#fts_feelthenature:volcanic_highland",
+  "features": ["fts_feelthenature:volcanic_moss","fts_feelthenature:volcanic_boulder","fts_feelthenature:volcanic_large_fern","fts_feelthenature:volcanic_krummholz"],
+  "step": "vegetal_decoration"
+}

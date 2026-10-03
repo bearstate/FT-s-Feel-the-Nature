@@ -1,0 +1,6 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "fts_geology:geothermal_basin", "required": false }
+  ]
+}
