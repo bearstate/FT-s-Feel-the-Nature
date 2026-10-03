@@ -1,0 +1,8 @@
+{
+  "name": "storm.close",
+  "storming": true,
+  "overall-raining": true,
+  "bad-regions": [ "cold" ],
+  "regions": [ "surface" ],
+  "sounds": []
+}

@@ -1,0 +1,10 @@
+{
+  "type": "fts_feelthenature:fallen_log",
+  "config": {
+    "log": { "type": "minecraft:weighted_state_provider", "entries": [
+      { "data": { "Name": "minecraft:oak_log", "Properties": { "axis": "y" } }, "weight": 3 },
+      { "data": { "Name": "minecraft:birch_log", "Properties": { "axis": "y" } }, "weight": 2 } ] },
+    "length": { "type": "minecraft:uniform", "value": { "min_inclusive": 3, "max_inclusive": 6 } },
+    "moss_chance": 0.35
+  }
+}

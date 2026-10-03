@@ -1,0 +1,6 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "fts_geology:snowfield", "required": false }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#fts_feelthenature:treeline",
+  "features": ["fts_feelthenature:treeline_krummholz","fts_feelthenature:treeline_boulder"],
+  "step": "vegetal_decoration"
+}

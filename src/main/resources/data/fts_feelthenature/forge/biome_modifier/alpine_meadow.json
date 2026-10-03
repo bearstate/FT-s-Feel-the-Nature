@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#fts_feelthenature:alpine_meadow",
+  "features": ["fts_feelthenature:meadow_allium","fts_feelthenature:meadow_cornflower","fts_feelthenature:meadow_azure_bluet","fts_feelthenature:meadow_oxeye_daisy","fts_feelthenature:meadow_krummholz","fts_feelthenature:meadow_boulder"],
+  "step": "vegetal_decoration"
+}

@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "fts_geology:alpine_scree", "required": false },
+    { "id": "fts_geology:orogenic_highland", "required": false }
+  ]
+}

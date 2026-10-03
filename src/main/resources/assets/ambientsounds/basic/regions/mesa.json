@@ -1,0 +1,5 @@
+{
+  "name": "mesa",
+  "biomes": [ "#is_badlands", "mesa", "badlands", "lush desert", "outback", "wasteland", "steppe", "arid highland", "canyon" ],
+  "sounds": []
+}

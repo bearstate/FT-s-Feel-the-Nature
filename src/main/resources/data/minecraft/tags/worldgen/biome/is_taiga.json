@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "fts_geology:subalpine_forest", "required": false },
+    { "id": "fts_geology:treeline", "required": false }
+  ]
+}

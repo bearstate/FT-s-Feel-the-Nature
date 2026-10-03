@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "fts_geology:montane_forest", "required": false },
+    { "id": "fts_geology:volcanic_highland", "required": false }
+  ]
+}

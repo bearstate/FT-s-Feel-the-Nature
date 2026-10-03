@@ -1,0 +1,5 @@
+{
+  "type": "fts_feelthenature:atmosphere",
+  "biomes": "#fts_feelthenature:music_snow",
+  "music": { "sound": "minecraft:music.overworld.frozen_peaks", "min_delay": 12000, "max_delay": 24000, "replace_current_music": false }
+}

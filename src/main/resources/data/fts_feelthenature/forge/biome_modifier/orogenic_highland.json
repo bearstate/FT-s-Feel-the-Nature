@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#fts_feelthenature:orogenic_highland",
+  "features": ["fts_feelthenature:orogenic_krummholz","fts_feelthenature:orogenic_boulder"],
+  "step": "vegetal_decoration"
+}

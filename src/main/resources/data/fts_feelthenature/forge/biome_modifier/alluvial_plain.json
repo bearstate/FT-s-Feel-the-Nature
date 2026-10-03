@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#fts_feelthenature:alluvial_plain",
+  "features": ["fts_feelthenature:plain_poppy","fts_feelthenature:plain_oxeye_daisy","fts_feelthenature:plain_cornflower","fts_feelthenature:plain_dandelion","fts_feelthenature:plain_bush"],
+  "step": "vegetal_decoration"
+}

@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#fts_feelthenature:rift_valley",
+  "features": ["fts_feelthenature:rift_bush"],
+  "step": "vegetal_decoration"
+}

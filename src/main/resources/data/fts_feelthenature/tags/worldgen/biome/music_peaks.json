@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "fts_geology:everest", "required": false },
+    { "id": "fts_geology:k2", "required": false },
+    { "id": "fts_geology:matterhorn", "required": false }
+  ]
+}

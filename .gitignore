@@ -1,0 +1,24 @@
+# Build output and tooling
+.gradle/
+build/
+run/
+out/
+*.iml
+.idea/
+.vscode/
+eclipse/
+.classpath
+.project
+.settings/
+bin/
+
+# FT's Geology's own jar, compiled against but never shipped
+libs/
+
+# Planning notes, never in the public repo
+PLAN.md
+CEKIRDEK_PROMPT.md
+SES_ADAYLARI*.md
+
+# Local test tools (paths are this machine's)
+tools/

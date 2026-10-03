@@ -1,0 +1,37 @@
+package com.jeladastudios.feelthenature.world;
+
+import com.jeladastudios.feelthenature.FeelTheNature;
+import com.mojang.serialization.Codec;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.level.levelgen.feature.Feature;
+import net.minecraftforge.common.world.BiomeModifier;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+/** What the addon adds to the game's registries: its world features and the biome modifier type that sets atmosphere. */
+public final class ModRegistries {
+
+    private ModRegistries() {}
+
+    public static final DeferredRegister<Feature<?>> FEATURES = DeferredRegister.create(Registries.FEATURE, FeelTheNature.MODID);
+    public static final DeferredRegister<Codec<? extends BiomeModifier>> BIOME_MODIFIERS =
+            DeferredRegister.create(ForgeRegistries.Keys.BIOME_MODIFIER_SERIALIZERS, FeelTheNature.MODID);
+
+    public static final RegistryObject<FallenLogFeature> FALLEN_LOG =
+            FEATURES.register("fallen_log", () -> new FallenLogFeature(FallenLogFeature.Config.CODEC));
+    public static final RegistryObject<BoulderFeature> BOULDER =
+            FEATURES.register("boulder", () -> new BoulderFeature(BoulderFeature.Config.CODEC));
+    public static final RegistryObject<RiparianFeature> RIPARIAN =
+            FEATURES.register("riparian", () -> new RiparianFeature(net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration.CODEC));
+
+    public static final RegistryObject<Codec<AtmosphereModifier>> ATMOSPHERE =
+            BIOME_MODIFIERS.register("atmosphere", () -> AtmosphereModifier.CODEC);
+
+    public static void register(IEventBus bus) {
+        FEATURES.register(bus);
+        BIOME_MODIFIERS.register(bus);
+        ModParticles.PARTICLES.register(bus);
+    }
+}

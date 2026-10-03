@@ -1,0 +1,43 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+license = "MIT"
+
+[[mods]]
+modId = "fts_feelthenature"
+version = "${file.jarVersion}"
+displayName = "FT's Geology: Feel the Nature"
+authors = "Jelada Studios"
+credits = "Sounds: see CREDITS-sounds.md. Every recording is CC0, from Freesound."
+description = '''
+The life on FT's Geology's ground: the weather heard as it falls where you stand, the wind in what grows round you,
+and the country clothed the way its rock and climate would clothe it.
+'''
+
+[[dependencies.fts_feelthenature]]
+    modId = "forge"
+    mandatory = true
+    versionRange = "[47,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.fts_feelthenature]]
+    modId = "minecraft"
+    mandatory = true
+    versionRange = "[1.20.1,1.21)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.fts_feelthenature]]
+    modId = "fts_geology"
+    mandatory = true
+    versionRange = "[0.11.0,)"
+    ordering = "AFTER"
+    side = "BOTH"
+
+# Loaded after it so the compatibility pack can stand over its weather regions.
+[[dependencies.fts_feelthenature]]
+    modId = "ambientsounds"
+    mandatory = false
+    versionRange = "*"
+    ordering = "AFTER"
+    side = "CLIENT"

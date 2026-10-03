@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#fts_feelthenature:alpine_scree",
+  "features": ["fts_feelthenature:scree_boulder"],
+  "step": "vegetal_decoration"
+}

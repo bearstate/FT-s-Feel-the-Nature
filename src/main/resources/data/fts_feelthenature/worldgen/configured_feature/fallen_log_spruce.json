@@ -1,0 +1,8 @@
+{
+  "type": "fts_feelthenature:fallen_log",
+  "config": {
+    "log": { "type": "minecraft:simple_state_provider", "state": { "Name": "minecraft:spruce_log", "Properties": { "axis": "y" } } },
+    "length": { "type": "minecraft:uniform", "value": { "min_inclusive": 3, "max_inclusive": 7 } },
+    "moss_chance": 0.45
+  }
+}

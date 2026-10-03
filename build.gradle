@@ -1,0 +1,178 @@
+import groovy.json.JsonSlurper
+
+plugins {
+    id 'eclipse'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+}
+
+version = '0.1.0'
+group = 'com.jeladastudios.feelthenature'
+archivesBaseName = 'fts-feel-the-nature'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: 'official', version: '1.20.1'
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            // FT's Geology carries mixins; in the development world its refmap has to be read in official names.
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            // One line a second of what the soundscape hears and plays, for the automated game test (tools/).
+            property 'fts_feelthenature.trace', 'true'
+            mods { fts_feelthenature { source sourceSets.main } }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    // FT's Geology itself: the jar its own build makes, copied into libs/. Compiled against and run beside, never shipped.
+    flatDir { dirs 'libs' }
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.2.0'
+    implementation fg.deobf('blank:fts-geology:0.11.0')
+    // Only in the development game, to try the AmbientSounds compatibility against the real thing. Never shipped.
+    if (file('libs/ambientsounds-6.3.8.jar').exists() && !project.hasProperty('noAmbientSounds')) {
+        runtimeOnly fg.deobf('blank:ambientsounds:6.3.8')
+        runtimeOnly fg.deobf('blank:creativecore:2.12.40')
+    }
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+/*
+ * The rules the data has to keep, checked on every build. Each was learnt from a crash or a silence:
+ *  - every placed feature the addon adds belongs to exactly one biome, and every feature modifier targets a tag of one
+ *    biome: a placed feature shared between biomes let other mods' modifiers fall between them in different orders, and
+ *    the game crashed with "Feature order cycle" (twice on 2026-10-03);
+ *  - no vanilla or other mod's placed feature is added directly, for the same reason;
+ *  - every sound the soundscape names exists, and none is streamed: other mods fill the eight stream channels;
+ *  - both languages carry the same keys.
+ */
+tasks.register('validateData') {
+    group = 'verification'
+    description = 'Checks the data and sound rules the addon depends on.'
+    def res = file('src/main/resources')
+    inputs.dir(res)
+    inputs.file('src/main/java/com/jeladastudios/feelthenature/client/sound/Layer.java')
+    inputs.file('src/main/java/com/jeladastudios/feelthenature/client/sound/WaterVoices.java')
+    doLast {
+        def errors = []
+        def json = new JsonSlurper()
+        def ns = 'fts_feelthenature'
+        def data = new File(res, "data/${ns}")
+        // Every JSON file parses.
+        fileTree(res) { include '**/*.json' }.each { f ->
+            try { json.parse(f) } catch (e) { errors << "not valid JSON: ${res.toPath().relativize(f.toPath())}: ${e.message}" }
+        }
+        // Feature modifiers: one biome each, own placed features only, each placed feature used exactly once.
+        def placedDir = new File(data, 'worldgen/placed_feature')
+        def configuredDir = new File(data, 'worldgen/configured_feature')
+        def tagDir = new File(data, 'tags/worldgen/biome')
+        def used = [:].withDefault { 0 }
+        def biomesTargeted = [:].withDefault { [] }
+        new File(data, 'forge/biome_modifier').listFiles().findAll { it.name.endsWith('.json') }.each { f ->
+            def m = json.parse(f)
+            if (m.type != 'forge:add_features') return
+            def biomes = m.biomes
+            // A feature that belongs everywhere (the river banks) is added once, by one modifier, to the whole overworld;
+            // its place among other mods' features is then the same in every biome. Everything else goes biome by biome.
+            def broad = biomes == '#minecraft:is_overworld'
+            if (!broad && (!(biomes instanceof String) || !biomes.startsWith("#${ns}:"))) {
+                errors << "${f.name}: feature modifiers must target one of the addon's own one-biome tags or #minecraft:is_overworld, not ${biomes}"
+                return
+            }
+            if (!broad) {
+                def tag = new File(tagDir, biomes.substring(ns.length() + 2) + '.json')
+                if (!tag.exists()) { errors << "${f.name}: tag ${biomes} does not exist"; return }
+                def values = json.parse(tag).values
+                if (values.size() != 1) errors << "${f.name}: tag ${biomes} holds ${values.size()} biomes, must hold exactly one"
+                values.each { v -> biomesTargeted[(v instanceof Map ? v.id : v)] << f.name }
+            }
+            def features = m.features instanceof List ? m.features : [m.features]
+            features.each { id ->
+                if (!id.startsWith("${ns}:")) errors << "${f.name}: adds ${id}; only the addon's own placed features may be added"
+                used[id] += 1
+                if (!new File(placedDir, id.substring(ns.length() + 1) + '.json').exists()) errors << "${f.name}: placed feature ${id} does not exist"
+            }
+        }
+        used.each { id, n -> if (n > 1) errors << "placed feature ${id} is added ${n} times; each must belong to one biome" }
+        biomesTargeted.each { b, files -> if (files.size() > 1) errors << "biome ${b} is targeted by several feature modifiers: ${files}" }
+        placedDir.listFiles().findAll { it.name.endsWith('.json') }.each { f ->
+            def id = "${ns}:" + f.name - '.json'
+            if (!used.containsKey(id)) errors << "placed feature ${id} is never added to a biome"
+            def feature = json.parse(f).feature
+            if (feature instanceof String && feature.startsWith("${ns}:") && !new File(configuredDir, feature.substring(ns.length() + 1) + '.json').exists()) {
+                errors << "${f.name}: configured feature ${feature} does not exist"
+            }
+        }
+        // Sounds: every layer named, every file there, nothing streamed.
+        def soundsJson = new File(res, "assets/${ns}/sounds.json")
+        def sounds = json.parse(soundsJson)
+        sounds.each { event, def entry ->
+            entry.sounds.each { s ->
+                def name = s instanceof Map ? s.name : s
+                def file = new File(res, "assets/${ns}/sounds/" + name.substring(name.indexOf(':') + 1) + '.ogg')
+                if (!file.exists()) errors << "sounds.json ${event}: missing file ${file.name}"
+                if (s instanceof Map && s.stream) errors << "sounds.json ${event}: streamed; the stream channels are not ours to fill"
+            }
+        }
+        def layerSrc = file('src/main/java/com/jeladastudios/feelthenature/client/sound/Layer.java').text
+        (layerSrc =~ /\("([a-z_]+)", Group\./).each { all, name ->
+            if (!sounds.containsKey(name)) errors << "Layer ${name} has no entry in sounds.json"
+        }
+        // Water is heard from a place: its recordings must be mono, or OpenAL plays them from everywhere at once.
+        def waterSrc = file('src/main/java/com/jeladastudios/feelthenature/client/sound/WaterVoices.java').text
+        (waterSrc =~ /[A-Z]+\("([a-z_]+)", [0-9.]+f/).each { all, name ->
+            if (!sounds.containsKey(name)) { errors << "water sound ${name} has no entry in sounds.json"; return }
+            def ogg = new File(res, "assets/${ns}/sounds/${name}.ogg")
+            if (!ogg.exists()) return
+            byte[] head = new byte[256]
+            ogg.withInputStream { it.read(head) }
+            def text = new String(head, 'ISO-8859-1')
+            int at = text.indexOf('\u0001vorbis')
+            if (at < 0) errors << "${ogg.name}: not an Ogg Vorbis file"
+            else if (head[at + 11] != 1) errors << "${ogg.name}: has ${head[at + 11]} channels; a sound heard from a place must be mono"
+        }
+        // Languages carry the same keys, and every subtitle is in them.
+        def en = json.parse(new File(res, "assets/${ns}/lang/en_us.json")).keySet()
+        def tr = json.parse(new File(res, "assets/${ns}/lang/tr_tr.json")).keySet()
+        (en - tr).each { errors << "tr_tr lacks ${it}" }
+        (tr - en).each { errors << "en_us lacks ${it}" }
+        sounds.each { event, def entry -> if (entry.subtitle && !en.contains(entry.subtitle)) errors << "subtitle ${entry.subtitle} not in en_us" }
+        // The AmbientSounds compatibility silences its rain and wind: each override plays nothing.
+        fileTree(new File(res, 'assets/ambientsounds')) { include '**/*.json' }.each { f ->
+            def o = json.parse(f)
+            if (o.sounds == null || !o.sounds.isEmpty()) errors << "ambientsounds override ${f.name} must have an empty sounds list"
+            if (o.'sound-collections') errors << "ambientsounds override ${f.name} must not name sound collections"
+        }
+        if (!errors.isEmpty()) throw new GradleException("Data rules broken:\n  " + errors.join('\n  '))
+        logger.lifecycle("validateData: all rules hold (${used.size()} placed features, ${sounds.size()} sound events)")
+    }
+}
+tasks.named('check') { dependsOn 'validateData' }
+
+tasks.named('jar') {
+    manifest {
+        attributes([
+            'Specification-Title'   : 'FT\'s Geology: Feel the Nature',
+            'Specification-Vendor'  : 'Jelada Studios',
+            'Specification-Version' : '1',
+            'Implementation-Title'  : project.name,
+            'Implementation-Version': project.version
+        ])
+    }
+    // One jar in build/libs, the build that just ran.
+    doFirst {
+        delete fileTree(layout.buildDirectory.dir('libs')) { include '*.jar' }
+    }
+}
