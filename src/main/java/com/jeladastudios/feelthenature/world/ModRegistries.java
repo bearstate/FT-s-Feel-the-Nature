@@ -10,7 +10,10 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
-/** What the addon adds to the game's registries: its world features and the biome modifier type that sets atmosphere. */
+/**
+ * What the addon adds to the game's registries: its world features, a placement filter, and the biome modifier type
+ * that sets atmosphere.
+ */
 public final class ModRegistries {
 
     private ModRegistries() {}
@@ -29,9 +32,16 @@ public final class ModRegistries {
     public static final RegistryObject<Codec<AtmosphereModifier>> ATMOSPHERE =
             BIOME_MODIFIERS.register("atmosphere", () -> AtmosphereModifier.CODEC);
 
+    public static final DeferredRegister<net.minecraft.world.level.levelgen.placement.PlacementModifierType<?>> PLACEMENTS =
+            DeferredRegister.create(Registries.PLACEMENT_MODIFIER_TYPE, FeelTheNature.MODID);
+    /** A placement only where FT's Geology's plates give the ground a role: what grows on a volcano goes by the volcano. */
+    public static final RegistryObject<net.minecraft.world.level.levelgen.placement.PlacementModifierType<GeologyRoleFilter>> GEOLOGY_ROLE =
+            PLACEMENTS.register("geology_role", () -> () -> GeologyRoleFilter.CODEC);
+
     public static void register(IEventBus bus) {
         FEATURES.register(bus);
         BIOME_MODIFIERS.register(bus);
+        PLACEMENTS.register(bus);
         ModParticles.PARTICLES.register(bus);
         ModItems.ITEMS.register(bus);
         ModItems.RECIPES.register(bus);
