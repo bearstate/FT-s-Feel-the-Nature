@@ -30,6 +30,8 @@ import net.minecraftforge.fml.common.Mod;
  * the test window cannot be clicked.</p>
  *
  * <p>{@code /ftn_test tan} answers how long Tough As Nails has had the player dry ({@code FTN_TEST tan dry=N}).</p>
+ *
+ * <p>{@code /ftn_test role} answers what FT's Geology's plates make of the player's column ({@code FTN_TEST role volcanic_highland}).</p>
  */
 @Mod.EventBusSubscriber(modid = FeelTheNature.MODID)
 public final class TestCommands {
@@ -50,7 +52,14 @@ public final class TestCommands {
                 .then(Commands.literal("umbrella")
                         .then(Commands.literal("open").executes(c -> umbrella(c, true)))
                         .then(Commands.literal("close").executes(c -> umbrella(c, false))))
-                .then(Commands.literal("tan").executes(TestCommands::tan)));
+                .then(Commands.literal("tan").executes(TestCommands::tan))
+                .then(Commands.literal("role").executes(c -> {
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    String role = GeologyBridge.role(p.serverLevel(), p.getBlockX(), p.getBlockZ());
+                    c.getSource().sendSuccess(() -> Component.literal("FTN_TEST role " + role), false);
+                    return 1;
+                })));
     }
 
     /**
