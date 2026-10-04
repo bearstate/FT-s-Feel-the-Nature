@@ -64,6 +64,8 @@ public final class Soundscape {
     /** How wet the world round the player still is: the rain, and after it a minute or two of dripping. */
     private static float wet;
     private static float heardRain, heardWind;
+    /** What falls from the sky where the player stands, this tick. */
+    private static Biome.Precipitation falling = Biome.Precipitation.NONE;
     /** Whether the player holds an open umbrella, this tick. */
     private static boolean umbrellaOpen;
 
@@ -96,7 +98,9 @@ public final class Soundscape {
         }
         TARGETS.clear();
 
-        float rain = AROUND.precipitation == Biome.Precipitation.RAIN ? GeologyBridge.rain(level, 1f) : 0f;
+        // Rain is heard only where it falls as rain: snow falls silently.
+        falling = GeologyBridge.precipitation(level, player.blockPosition());
+        float rain = falling == Biome.Precipitation.RAIN ? GeologyBridge.rain(level, 1f) : 0f;
         heardRain = rain;
         float underWater = player.isUnderWater() ? 0.15f : 1f;
         float hear = AROUND.hear();
@@ -130,7 +134,7 @@ public final class Soundscape {
         StringBuilder b = new StringBuilder(String.format(java.util.Locale.ROOT,
                 "SOUNDSCAPE_TRACE pos=%d,%d,%d precip=%s rain=%.2f wind=%.2f hear=%.2f sky=%.2f open=%.2f"
                         + " leavesOver=%.2f wood=%.2f metal=%.2f glass=%.2f leaves=%.2f needles=%.2f water=%.2f rock=%.2f grass=%.2f layers=",
-                player.getBlockX(), player.getBlockY(), player.getBlockZ(), AROUND.precipitation, heardRain, heardWind,
+                player.getBlockX(), player.getBlockY(), player.getBlockZ(), falling, heardRain, heardWind,
                 AROUND.hear(), AROUND.sky, AROUND.openNear, AROUND.leavesOver, AROUND.woodOver, AROUND.metalOver,
                 AROUND.glassOver, AROUND.leaves, AROUND.conifers, AROUND.water, AROUND.rock, AROUND.grass));
         // Each track as name:volume, with a "v" after one fading out: the cap is on the tracks asked to play, and one
@@ -263,15 +267,19 @@ public final class Soundscape {
         // In the open the wind is all round; in a hollow, a room or a cave it is mostly gone. More of it high up.
         float exposed = hear * hear;
         float height = 0.4f + 0.6f * smooth((float) (player.getY() - 70) / 90f);
-        float bed = v * exposed * height;
+        // The wind comes and goes in gusts: louder in a gust, a lull between.
+        float gust = GeologyBridge.gust(1f);
+        float gusting = Mix.gusting(gust);
+        float bed = v * exposed * height * gusting;
         float[] beds = Mix.windBeds(speed);
         ask(Layer.WIND_BREEZE, bed * beds[0]);
         ask(Layer.WIND_STRONG, bed * beds[1]);
         ask(Layer.WIND_STORM, bed * beds[2]);
-        ask(Layer.WIND_ALPINE, v * exposed * smooth((float) (player.getY() - 163) / 100f) * (0.4f + 0.6f * smooth(speed / 4f)));
+        float alpine = smooth((float) (player.getY() - 163) / 100f) * (0.4f + 0.6f * smooth(speed / 4f));
+        ask(Layer.WIND_ALPINE, gusting * v * exposed * alpine);
         // What the wind moves is heard under the canopy as much as in the open; in a closed room or a cave, not at all.
         float reach = Math.min(1f, hear + AROUND.leavesOver);
-        float moving = v * smooth((speed - 0.3f) / 2.5f) * reach;
+        float moving = v * smooth((speed - 0.3f) / 2.5f) * reach * gusting;
         ask(Layer.WIND_LEAVES, share(AROUND.leaves) * moving);
         ask(Layer.WIND_CONIFERS, share(AROUND.conifers) * moving);
         ask(Layer.WIND_GRASS, share(AROUND.grass) * moving * hear);
@@ -279,7 +287,7 @@ public final class Soundscape {
         // In a gale a tree creaks now and then: seldom, quiet, and from a tree, not from everywhere.
         float trees = AROUND.leaves + AROUND.conifers;
         if (speed > 4.5f && trees > 0.3f && AROUND.tree != null && reach > 0.3f
-                && RANDOM.nextFloat() < (speed - 4.5f) / 6f / 400f) {
+                && RANDOM.nextFloat() < (speed - 4.5f) / 6f / 400f * gust * gust) {
             Minecraft.getInstance().getSoundManager().play(new SimpleSoundInstance(CREAK, SoundSource.AMBIENT,
                     0.3f * ClientConfig.DRIP_VOLUME.get().floatValue() * underWater,
                     0.9f + 0.2f * RANDOM.nextFloat(), RANDOM, false, 0, SoundInstance.Attenuation.LINEAR,

@@ -39,7 +39,9 @@ dependencies {
     // 47.4, as the user's modpack runs (47.4.10): Serene Seasons and Tough As Nails ask for 47.3 and some of the pack's
     // mods for 47.4. Nothing of 47.3 or 47.4 is used: the addon still runs on any 47 (mods.toml).
     minecraft 'net.minecraftforge:forge:1.20.1-47.4.23'
-    implementation fg.deobf('blank:fts-geology:0.11.0')
+    // Named ftn-core in libs, not fts-geology: ForgeGradle keeps the remapped copy in a cache every project shares, by
+    // that name, and another project building against fts-geology overwrote it while a test game ran on it (4 Oct).
+    implementation fg.deobf('blank:ftn-core:0.11.0')
     // Only in the development game, to try the seasons of the small life (client.life.SeasonBridge, which reads Serene
     // Seasons by reflection and needs nothing of it to build). Never shipped.
     if (file('libs/sereneseasons-9.1.0.3.jar').exists() && !project.hasProperty('noSeasons')) {

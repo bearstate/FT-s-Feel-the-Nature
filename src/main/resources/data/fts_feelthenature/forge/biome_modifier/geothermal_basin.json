@@ -1,6 +1,0 @@
-{
-  "type": "forge:add_features",
-  "biomes": "#fts_feelthenature:geothermal_basin",
-  "features": ["fts_feelthenature:basin_pine"],
-  "step": "vegetal_decoration"
-}

@@ -107,7 +107,9 @@ public final class AmbientLife {
             if (RANDOM.nextFloat() < 0.5f * (float) density * Seasons.pollen(season)) pollen(level, player, wx, wz);
         }
         if (rain < 0.8f) {
-            float chance = (0.04f + 0.05f * Math.min(wind, 8f)) * (float) density * Seasons.leaves(season);
+            // More of them torn off in a gust.
+            float chance = (0.04f + 0.05f * Math.min(wind, 8f)) * (float) density * Seasons.leaves(season)
+                    * com.jeladastudios.feelthenature.client.sound.Mix.gusting(GeologyBridge.gust(1f));
             for (int i = 0; i < 2; i++) if (RANDOM.nextFloat() < chance) leaf(level, player, wx, wz);
         }
         if (wind > 4.5f) {

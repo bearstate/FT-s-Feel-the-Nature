@@ -46,6 +46,19 @@ class MixTest {
     }
 
     @Test
+    void gustsSwellTheWindGently() {
+        // A swell and a lull round the mean, never silence and never twice as loud, and 1 at the mean wind itself.
+        assertEquals(1f, Mix.gusting(1f), EPS);
+        float last = 0f;
+        for (float g = 0f; g <= 3f; g += 0.05f) {
+            float k = Mix.gusting(g);
+            assertTrue(k >= 0.7f && k <= 1.35f, "gust " + g + " makes " + k);
+            assertTrue(k >= last - EPS, "louder gust heard quieter at " + g);
+            last = k;
+        }
+    }
+
+    @Test
     void noRainOnAnUmbrellaUnderARoof() {
         assertEquals(0f, Mix.onUmbrella(0f, 0f), EPS);
         assertEquals(1f, Mix.onUmbrella(1f, 0f), EPS);

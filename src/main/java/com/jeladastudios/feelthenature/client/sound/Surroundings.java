@@ -8,7 +8,6 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,8 +31,6 @@ final class Surroundings {
     float openNear = 1f;
     /** The share of the ground round the player that is deciduous canopy, needles, water, bare rock, or grass. */
     float leaves, conifers, water, rock, grass;
-    /** What falls where the player stands. */
-    Biome.Precipitation precipitation = Biome.Precipitation.NONE;
     /** A tree near the player, for a creak to come from; null where there is none. */
     BlockPos tree;
 
@@ -55,7 +52,6 @@ final class Surroundings {
 
     void look(ClientLevel level, LocalPlayer player) {
         BlockPos eye = BlockPos.containing(player.getEyePosition());
-        precipitation = level.getBiome(eye).value().getPrecipitationAt(eye);
         overhead(level, eye);
         openNear = ease(openNear, openAir(level, player));
         ground(level, eye);

@@ -1,13 +1,15 @@
 package com.jeladastudios.feelthenature;
 
-import com.jeladastudios.ftsgeology.weather.LocalWeather;
+import com.jeladastudios.ftsgeology.api.FtsGeologyApi;
 import net.minecraft.world.level.Level;
 
 /**
- * Every call the addon makes into FT's Geology, in one place. Its internals move as it grows; when they do, this file is
- * the one that changes. Once FT's Geology has a public API for addons these calls move onto it.
+ * Every call the addon makes into FT's Geology, in one place. Most go through its API for addons, {@link FtsGeologyApi},
+ * whose names and meanings stay put from one version to the next. A few it does not offer yet are called on its insides
+ * -- whether a block is its river water, the server's wind and rain at a place, and the river at a column with its
+ * sunk stretches told apart -- until its next API version brings them (CEKIRDEK_PROMPT, C11).
  *
- * <p>Until then a newer FT's Geology may have moved something the addon calls. That would end the game with a linkage
+ * <p>A newer FT's Geology may still have moved something the addon calls. That would end the game with a linkage
  * error in the middle of a tick, so each part -- the regional weather, the server's wind, the rivers, the world type --
  * is called behind a guard: the first time a call no longer links, the addon says so once in the log and that part
  * falls back to what vanilla offers, for the rest of the session. The rest goes on working.</p>
@@ -32,7 +34,7 @@ public final class GeologyBridge {
     public static boolean regionalWeather() {
         if (!weatherLinks) return false;
         try {
-            return LocalWeather.active();
+            return FtsGeologyApi.Client.active();
         } catch (LinkageError e) {
             weatherLinks = lost("its regional weather", e);
             return false;
@@ -46,7 +48,7 @@ public final class GeologyBridge {
     public static float rain(Level level, float partial) {
         if (regionalWeather()) {
             try {
-                return LocalWeather.rain(partial);
+                return FtsGeologyApi.Client.rain(partial);
             } catch (LinkageError e) {
                 weatherLinks = lost("its regional weather", e);
             }
@@ -58,7 +60,7 @@ public final class GeologyBridge {
     public static float rainComing(Level level) {
         if (regionalWeather()) {
             try {
-                return LocalWeather.rainComing();
+                return FtsGeologyApi.Client.rainComing();
             } catch (LinkageError e) {
                 weatherLinks = lost("its regional weather", e);
             }
@@ -69,7 +71,7 @@ public final class GeologyBridge {
     public static float thunder(Level level, float partial) {
         if (regionalWeather()) {
             try {
-                return LocalWeather.thunder(partial);
+                return FtsGeologyApi.Client.thunder(partial);
             } catch (LinkageError e) {
                 weatherLinks = lost("its regional weather", e);
             }
@@ -84,7 +86,7 @@ public final class GeologyBridge {
     public static float windX(Level level) {
         if (regionalWeather()) {
             try {
-                return LocalWeather.windX();
+                return FtsGeologyApi.Client.windX();
             } catch (LinkageError e) {
                 weatherLinks = lost("its regional weather", e);
             }
@@ -95,7 +97,7 @@ public final class GeologyBridge {
     public static float windZ(Level level) {
         if (regionalWeather()) {
             try {
-                return LocalWeather.windZ();
+                return FtsGeologyApi.Client.windZ();
             } catch (LinkageError e) {
                 weatherLinks = lost("its regional weather", e);
             }
@@ -103,7 +105,58 @@ public final class GeologyBridge {
         return fallbackWind(level) * 0.6f;
     }
 
+    /**
+     * How much of its mean strength the wind blows with now, about 0.3 to 1.8, rising and falling over a few seconds:
+     * FT's Geology's gusts, the same at the same moment on every client. 1 without its regional weather.
+     */
+    public static float gust(float partial) {
+        if (regionalWeather()) {
+            try {
+                return FtsGeologyApi.Client.gust(partial);
+            } catch (LinkageError e) {
+                weatherLinks = lost("its regional weather", e);
+            }
+        }
+        return 1f;
+    }
+
+    /**
+     * What falls from the sky where the player stands: nothing, rain or snow, by FT's Geology's local weather and the
+     * biome; without its regional weather, by the world's rain and the biome.
+     */
+    public static net.minecraft.world.level.biome.Biome.Precipitation precipitation(Level level,
+                                                                                    net.minecraft.core.BlockPos at) {
+        if (regionalWeather()) {
+            try {
+                return switch (FtsGeologyApi.Client.precipitation()) {
+                    case RAIN -> net.minecraft.world.level.biome.Biome.Precipitation.RAIN;
+                    case SNOW, HAIL -> net.minecraft.world.level.biome.Biome.Precipitation.SNOW;
+                    case NONE -> net.minecraft.world.level.biome.Biome.Precipitation.NONE;
+                };
+            } catch (LinkageError e) {
+                weatherLinks = lost("its regional weather", e);
+            }
+        }
+        if (level.getRainLevel(1f) <= 0.01f) return net.minecraft.world.level.biome.Biome.Precipitation.NONE;
+        return level.getBiome(at).value().getPrecipitationAt(at);
+    }
+
     // === The server side: FT's Geology's own world, its wind and its rivers ==================================
+
+    /**
+     * What FT's Geology's plates make of a column, by name -- {@code volcanic_highland}, {@code rift_valley},
+     * {@code geothermal_basin}, ... -- or {@code none}, outside its world too. Cached on its side; cheap enough to ask
+     * once a chunk while the world generates.
+     */
+    public static String role(net.minecraft.server.level.ServerLevel level, int x, int z) {
+        if (!worldLinks) return "none";
+        try {
+            return FtsGeologyApi.role(level, x, z);
+        } catch (LinkageError e) {
+            worldLinks = lost("its world's plates", e);
+            return "none";
+        }
+    }
 
     /**
      * The wind over a place on the server, in blocks a second: FT's Geology's own where its regional weather runs (the
@@ -144,7 +197,7 @@ public final class GeologyBridge {
     public static boolean isGeologyWorld(net.minecraft.server.level.ServerLevel level) {
         if (!worldLinks) return false;
         try {
-            return com.jeladastudios.ftsgeology.worldgen.terrain.GeologyWorld.isOwn(level);
+            return FtsGeologyApi.isGeologyWorld(level);
         } catch (LinkageError e) {
             worldLinks = lost("its world type", e);
             return false;
@@ -181,6 +234,22 @@ public final class GeologyBridge {
         } catch (LinkageError e) {
             riversLinks = lost("its river water", e);
             return false;
+        }
+    }
+
+    /**
+     * Whether a block of FT's Geology's river water is running. Its flow is 0 where the water stands still: behind a dam
+     * (FT's Water stills water that slows under 0.05 m/s), in a lake. Still river water is as silent as a pond.
+     */
+    public static boolean isRunningRiverWater(net.minecraft.world.level.block.state.BlockState state) {
+        if (!isRiverWater(state)) return false;
+        try {
+            var fluid = state.getFluidState();
+            var flow = com.jeladastudios.ftsgeology.fluid.RiverWaterFluid.FLOW;
+            return !fluid.hasProperty(flow) || fluid.getValue(flow) != 0;
+        } catch (LinkageError e) {
+            riversLinks = lost("its river water's flow", e);
+            return true;
         }
     }
 

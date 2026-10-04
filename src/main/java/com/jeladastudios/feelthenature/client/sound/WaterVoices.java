@@ -142,12 +142,15 @@ final class WaterVoices {
         }
     }
 
-    /** What a block's water is heard as: falling water, FT's Geology's river, a brook (vanilla water running), or none. */
+    /**
+     * What a block's water is heard as: falling water, FT's Geology's river where it runs, a brook (vanilla water
+     * running), or none -- still water, a river stilled behind a dam among it.
+     */
     private static Kind kind(BlockState s) {
         FluidState f = s.getFluidState();
         if (!f.is(FluidTags.WATER)) return null;
         if (f.hasProperty(FlowingFluid.FALLING) && f.getValue(FlowingFluid.FALLING)) return Kind.FALL;
-        if (GeologyBridge.isRiverWater(s)) return Kind.RIVER;
+        if (GeologyBridge.isRiverWater(s)) return GeologyBridge.isRunningRiverWater(s) ? Kind.RIVER : null;
         return f.isSource() ? null : Kind.STREAM;
     }
 

@@ -53,6 +53,15 @@ public final class Mix {
     }
 
     /**
+     * How a gust (FT's Geology's, about 0.3 to 1.8 of the mean wind) changes the wind's loudness: by much less than its
+     * strength, 0.72 to 1.32 -- the ear hears a gust as a swell, not as twice the wind -- and never past that.
+     */
+    public static float gusting(float gust) {
+        float g = Math.max(0.3f, Math.min(1.8f, gust));
+        return 0.6f + 0.4f * g;
+    }
+
+    /**
      * How much of the weather outside reaches the ear: the open sky over the player, or the open air they can hear
      * through a doorway or a cave's mouth, a little less. Nothing deep in a cave or in a closed room.
      */

@@ -1,6 +1,0 @@
-{
-  "replace": false,
-  "values": [
-    { "id": "fts_geology:volcanic_highland", "required": false }
-  ]
-}
