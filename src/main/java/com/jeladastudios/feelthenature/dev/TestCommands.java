@@ -31,8 +31,8 @@ import net.minecraftforge.fml.common.Mod;
  *
  * <p>{@code /ftn_test tan} answers how long Tough As Nails has had the player dry ({@code FTN_TEST tan dry=N}).</p>
  *
- * <p>{@code /ftn_test volcano <radius>} answers whether a large volcano's crater lies within so many blocks of the
- * player ({@code FTN_TEST volcano 400 true}).</p>
+ * <p>{@code /ftn_test volcano <radius> [x z]} answers whether a large volcano's crater lies within so many blocks of the
+ * player, or of the column given ({@code FTN_TEST volcano 400 true}).</p>
  *
  * <p>{@code /ftn_test role} answers what FT's Geology's plates make of the player's column ({@code FTN_TEST role volcanic_highland}).</p>
  */
@@ -57,14 +57,12 @@ public final class TestCommands {
                         .then(Commands.literal("close").executes(c -> umbrella(c, false))))
                 .then(Commands.literal("tan").executes(TestCommands::tan))
                 .then(Commands.literal("volcano")
-                        .then(Commands.argument("radius", IntegerArgumentType.integer(1, 20000)).executes(c -> {
-                            ServerPlayer p = c.getSource().getPlayer();
-                            if (p == null) return 0;
-                            int radius = IntegerArgumentType.getInteger(c, "radius");
-                            boolean near = GeologyBridge.nearVolcano(p.serverLevel(), p.getBlockX(), p.getBlockZ(), radius);
-                            c.getSource().sendSuccess(() -> Component.literal("FTN_TEST volcano " + radius + " " + near), false);
-                            return 1;
-                        })))
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(1, 20000))
+                                .executes(c -> volcano(c, null, null))
+                                .then(Commands.argument("x", IntegerArgumentType.integer())
+                                        .then(Commands.argument("z", IntegerArgumentType.integer())
+                                                .executes(c -> volcano(c, IntegerArgumentType.getInteger(c, "x"),
+                                                        IntegerArgumentType.getInteger(c, "z")))))))
                 .then(Commands.literal("role").executes(c -> {
                     ServerPlayer p = c.getSource().getPlayer();
                     if (p == null) return 0;
@@ -97,6 +95,17 @@ public final class TestCommands {
             c.getSource().sendSuccess(() -> Component.literal("FTN_TEST tan none"), false);
             return 0;
         }
+    }
+
+    /** Whether a large volcano's crater lies within a radius of a column: the player's, or the one given. */
+    private static int volcano(CommandContext<CommandSourceStack> c, Integer x, Integer z) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        int radius = IntegerArgumentType.getInteger(c, "radius");
+        boolean near = GeologyBridge.nearVolcano(player.serverLevel(), x == null ? player.getBlockX() : x,
+                z == null ? player.getBlockZ() : z, radius);
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST volcano " + radius + " " + near), false);
+        return 1;
     }
 
     /** Opens or closes the umbrella in the player's main hand, as a use would, without the sound. */
