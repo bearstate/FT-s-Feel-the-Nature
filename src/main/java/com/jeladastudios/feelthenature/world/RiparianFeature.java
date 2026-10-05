@@ -64,7 +64,7 @@ public class RiparianFeature extends Feature<NoneFeatureConfiguration> {
         for (int dx = 0; dx < 16; dx++) {
             for (int dz = 0; dz < 16; dz++) {
                 int x = x0 + dx, z = z0 + dz;
-                GeologyBridge.River river = GeologyBridge.river(x, z);
+                GeologyBridge.River river = GeologyBridge.river(level.getLevel(), x, z, BANK);
                 if (river == null) continue;
                 double bank = river.fromBank();
                 if (bank > BANK) continue;

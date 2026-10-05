@@ -5,9 +5,8 @@ import net.minecraft.world.level.Level;
 
 /**
  * Every call the addon makes into FT's Geology, in one place. Most go through its API for addons, {@link FtsGeologyApi},
- * whose names and meanings stay put from one version to the next. A few it does not offer yet are called on its insides
- * -- whether a block is its river water, the server's wind and rain at a place, and the river at a column with its
- * sunk stretches told apart -- until its next API version brings them (CEKIRDEK_PROMPT, C11).
+ * whose names and meanings stay put from one version to the next. One it does not offer yet is asked of its insides --
+ * whether its regional weather runs in a level on the server -- until its API brings it (CEKIRDEK_PROMPT, C11).
  *
  * <p>A newer FT's Geology may still have moved something the addon calls. That would end the game with a linkage
  * error in the middle of a tick, so each part -- the regional weather, the server's wind, the rivers, the world type --
@@ -159,17 +158,30 @@ public final class GeologyBridge {
     }
 
     /**
-     * The wind over a place on the server, in blocks a second: FT's Geology's own where its regional weather runs (the
-     * same wind its clients are told, a hold set with its command included), else the made-up one from the world's rain
-     * and thunder, as on the client.
+     * Whether FT's Geology's regional weather runs in a level on the server: its wind, rain and gusts there rather than
+     * the world's one weather. Its API does not say so yet (CEKIRDEK_PROMPT, C11: {@code weatherActive}), so this one
+     * question still goes to its insides.
+     */
+    private static boolean regionalOnServer(net.minecraft.server.level.ServerLevel level) {
+        if (!serverWindLinks) return false;
+        try {
+            return com.jeladastudios.ftsgeology.weather.Storms.on(level);
+        } catch (LinkageError e) {
+            serverWindLinks = lost("its regional weather on the server", e);
+            return false;
+        }
+    }
+
+    /**
+     * The mean wind over a place on the server, in blocks a second, gusts not counted: FT's Geology's own where its
+     * regional weather runs (the same wind its clients are told, a hold set with its command included), else the made-up
+     * one from the world's rain and thunder, as on the client.
      */
     public static float serverWind(net.minecraft.server.level.ServerLevel level, double x, double z) {
-        if (serverWindLinks) {
+        if (regionalOnServer(level)) {
             try {
-                if (com.jeladastudios.ftsgeology.weather.Storms.on(level)) {
-                    double[] w = com.jeladastudios.ftsgeology.weather.Atmosphere.wind(level, x, z);
-                    return (float) (Math.hypot(w[0], w[1]) * 20.0);
-                }
+                var w = FtsGeologyApi.windAt(level, x, z);
+                return (float) Math.hypot(w.x, w.z);
             } catch (LinkageError e) {
                 serverWindLinks = lost("its wind", e);
             }
@@ -178,15 +190,28 @@ public final class GeologyBridge {
     }
 
     /**
+     * How much of its mean strength the wind blows with at a place on the server now, about 0.3 to 1.8: the same gust a
+     * client standing there hears at the same tick. 1 where the weather is not regional. Server thread.
+     */
+    public static float serverGust(net.minecraft.server.level.ServerLevel level, double x, double z) {
+        if (regionalOnServer(level)) {
+            try {
+                return FtsGeologyApi.gustAt(level, x, z);
+            } catch (LinkageError e) {
+                serverWindLinks = lost("its gusts", e);
+            }
+        }
+        return 1f;
+    }
+
+    /**
      * How hard it rains at a place on the server, 0 to 1, by FT's Geology's regional weather; -1 where the rain is not
-     * regional (another dimension, or its regional rain turned off), where the world's one weather stands. On the
-     * server's own thread only; elsewhere FT's Geology answers with the world's weather.
+     * regional (another dimension, or its regional rain turned off), where the world's one weather stands. Server thread.
      */
     public static float rainAt(net.minecraft.server.level.ServerLevel level, int x, int z) {
-        if (!serverRainLinks) return -1f;
+        if (!serverRainLinks || !regionalOnServer(level)) return -1f;
         try {
-            if (!com.jeladastudios.ftsgeology.weather.Storms.on(level)) return -1f;
-            return com.jeladastudios.ftsgeology.weather.Storms.intensityAt(level, x, z);
+            return (float) FtsGeologyApi.rainAt(level, x, z);
         } catch (LinkageError e) {
             serverRainLinks = lost("its regional rain", e);
             return -1f;
@@ -204,6 +229,21 @@ public final class GeologyBridge {
         }
     }
 
+    /**
+     * Whether one of FT's Geology's large volcanoes -- strato, shield, caldera, fissure, volcanic island -- has its
+     * crater within {@code radius} blocks of a column, extinct ones too. It reads nothing loaded: safe, and the same,
+     * while the world generates. Cached on its side; ask once a chunk.
+     */
+    public static boolean nearVolcano(net.minecraft.server.level.ServerLevel level, int x, int z, int radius) {
+        if (!worldLinks) return false;
+        try {
+            return FtsGeologyApi.nearVolcano(level, x, z, radius, false);
+        } catch (LinkageError e) {
+            worldLinks = lost("its volcanoes", e);
+            return false;
+        }
+    }
+
     /** A river or lake near a column: how far from its channel's middle, how wide it is, and whether it is a lake. */
     public record River(double distance, double halfWidth, boolean lake) {
         /** Blocks out from the edge of the water: negative in the water, zero at its edge. */
@@ -212,14 +252,21 @@ public final class GeologyBridge {
         }
     }
 
-    /** The river nearest a column, or null where none runs near or the river network is not worked out yet. */
-    public static River river(int x, int z) {
+    /**
+     * The river or lake nearest a column, within {@code within} blocks past its bed; null where none runs so near, where
+     * the river network is not worked out there yet, or where the river runs underground, in a cave under a dry valley:
+     * no bank grows by a river nobody sees. Off the server thread it waits for the network, as world generation can.
+     */
+    public static River river(net.minecraft.server.level.ServerLevel level, int x, int z, double within) {
         if (!riversLinks) return null;
         try {
-            if (!com.jeladastudios.ftsgeology.hydrology.RiverNetwork.ready()) return null;
-            var at = com.jeladastudios.ftsgeology.hydrology.RiverNetwork.at(x, z);
-            if (at.distance() == Double.MAX_VALUE || at.sunk()) return null;
-            return new River(at.distance(), at.halfWidth(), at.lake());
+            // The cheap question first; the river's fuller one only where there is a river, for its sunk stretches.
+            var near = FtsGeologyApi.river(x, z, within);
+            if (near.isEmpty()) return null;
+            var channel = FtsGeologyApi.channel(level, x, z, within);
+            if (channel.status() == FtsGeologyApi.Status.PRESENT && channel.channel().sunk()) return null;
+            var r = near.get();
+            return new River(r.distance(), r.halfWidth(), r.lake());
         } catch (LinkageError e) {
             riversLinks = lost("its river network", e);
             return null;
@@ -230,27 +277,27 @@ public final class GeologyBridge {
     public static boolean isRiverWater(net.minecraft.world.level.block.state.BlockState state) {
         if (!riversLinks) return false;
         try {
-            return state.is(com.jeladastudios.ftsgeology.registry.ModBlocks.RIVER_WATER.get());
+            return FtsGeologyApi.isRiverWater(state);
         } catch (LinkageError e) {
             riversLinks = lost("its river water", e);
             return false;
         }
     }
 
+    /** From what speed river water counts as running, blocks a second: FT's Geology's own rule, 5 cm a second. */
+    private static final double RUNNING = 0.05;
+
     /**
-     * Whether a block of FT's Geology's river water is running. Its flow is 0 where the water stands still: behind a dam
-     * (FT's Water stills water that slows under 0.05 m/s), in a lake. Still river water is as silent as a pond.
+     * Whether a block of FT's Geology's river water is running, on the client: its flow across the ground faster than
+     * 5 cm a second. Still where it stands behind a dam or in a lake, or where FT's Water has slowed it; still river
+     * water is as silent as a pond. The flow is the fluid's own ({@code FluidState.getFlow}), which FT's Geology answers
+     * for its water, and FT's Water for the water it runs.
      */
-    public static boolean isRunningRiverWater(net.minecraft.world.level.block.state.BlockState state) {
+    public static boolean isRunningRiverWater(net.minecraft.world.level.BlockGetter level,
+                                              net.minecraft.core.BlockPos pos,
+                                              net.minecraft.world.level.block.state.BlockState state) {
         if (!isRiverWater(state)) return false;
-        try {
-            var fluid = state.getFluidState();
-            var flow = com.jeladastudios.ftsgeology.fluid.RiverWaterFluid.FLOW;
-            return !fluid.hasProperty(flow) || fluid.getValue(flow) != 0;
-        } catch (LinkageError e) {
-            riversLinks = lost("its river water's flow", e);
-            return true;
-        }
+        return state.getFluidState().getFlow(level, pos).horizontalDistanceSqr() > RUNNING * RUNNING;
     }
 
     private static float fallbackWind(Level level) {

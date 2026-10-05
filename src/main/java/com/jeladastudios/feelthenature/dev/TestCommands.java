@@ -136,7 +136,7 @@ public final class TestCommands {
             int by = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz);
             BlockState ground = level.getBlockState(new BlockPos(bx, by - 1, bz));
             if (Math.abs(by - 1 - y) > 1 || !ground.is(BlockTags.DIRT)) continue;
-            GeologyBridge.River river = GeologyBridge.river(bx, bz);
+            GeologyBridge.River river = GeologyBridge.river(level, bx, bz, 3);
             if (river == null || river.lake() || river.fromBank() < 0 || river.fromBank() > 3) continue;
             return new BlockPos(bx, by, bz);
         }

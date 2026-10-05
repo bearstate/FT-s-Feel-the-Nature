@@ -117,7 +117,7 @@ final class WaterVoices {
                 cells++;
                 m.setY(level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1);
                 if (Math.abs(m.getY() - eye.getY()) > SURFACE_HEIGHT) continue;
-                Kind k = kind(level.getBlockState(m));
+                Kind k = kind(level, m);
                 if (k == null) continue;
                 surface[k.ordinal()]++;
                 closer(k, m, eye, best, found);
@@ -127,7 +127,7 @@ final class WaterVoices {
             m.set(eye.getX() + RANDOM.nextInt(2 * REACH + 1) - REACH, eye.getY() + RANDOM.nextInt(2 * HEIGHT + 1) - HEIGHT,
                     eye.getZ() + RANDOM.nextInt(2 * REACH + 1) - REACH);
             if (!level.hasChunkAt(m)) continue;
-            Kind k = kind(level.getBlockState(m));
+            Kind k = kind(level, m);
             if (k == null) continue;
             count[k.ordinal()]++;
             closer(k, m, eye, best, found);
@@ -146,11 +146,12 @@ final class WaterVoices {
      * What a block's water is heard as: falling water, FT's Geology's river where it runs, a brook (vanilla water
      * running), or none -- still water, a river stilled behind a dam among it.
      */
-    private static Kind kind(BlockState s) {
+    private static Kind kind(net.minecraft.world.level.BlockGetter level, BlockPos at) {
+        BlockState s = level.getBlockState(at);
         FluidState f = s.getFluidState();
         if (!f.is(FluidTags.WATER)) return null;
         if (f.hasProperty(FlowingFluid.FALLING) && f.getValue(FlowingFluid.FALLING)) return Kind.FALL;
-        if (GeologyBridge.isRiverWater(s)) return GeologyBridge.isRunningRiverWater(s) ? Kind.RIVER : null;
+        if (GeologyBridge.isRiverWater(s)) return GeologyBridge.isRunningRiverWater(level, at, s) ? Kind.RIVER : null;
         return f.isSource() ? null : Kind.STREAM;
     }
 
