@@ -1,6 +1,6 @@
 {
   "type": "forge:add_features",
   "biomes": "#minecraft:is_overworld",
-  "features": ["fts_feelthenature:riparian", "fts_feelthenature:volcanic_bombs"],
+  "features": ["fts_feelthenature:riparian", "fts_feelthenature:volcanic_bombs", "fts_feelthenature:volcanic_bombs_near"],
   "step": "vegetal_decoration"
 }

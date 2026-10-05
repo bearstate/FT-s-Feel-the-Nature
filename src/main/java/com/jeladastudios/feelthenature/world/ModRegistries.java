@@ -37,6 +37,9 @@ public final class ModRegistries {
     /** A placement only where FT's Geology's plates give the ground a role: what grows on a volcano goes by the volcano. */
     public static final RegistryObject<net.minecraft.world.level.levelgen.placement.PlacementModifierType<GeologyRoleFilter>> GEOLOGY_ROLE =
             PLACEMENTS.register("geology_role", () -> () -> GeologyRoleFilter.CODEC);
+    /** A placement only round a large volcano's crater: what an eruption throws out lands round its vent. */
+    public static final RegistryObject<net.minecraft.world.level.levelgen.placement.PlacementModifierType<NearVolcanoFilter>> NEAR_VOLCANO =
+            PLACEMENTS.register("near_volcano", () -> () -> NearVolcanoFilter.CODEC);
 
     public static void register(IEventBus bus) {
         FEATURES.register(bus);
