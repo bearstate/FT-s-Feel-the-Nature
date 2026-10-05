@@ -31,6 +31,9 @@ import net.minecraftforge.fml.common.Mod;
  *
  * <p>{@code /ftn_test tan} answers how long Tough As Nails has had the player dry ({@code FTN_TEST tan dry=N}).</p>
  *
+ * <p>{@code /ftn_test volcano <radius>} answers whether a large volcano's crater lies within so many blocks of the
+ * player ({@code FTN_TEST volcano 400 true}).</p>
+ *
  * <p>{@code /ftn_test role} answers what FT's Geology's plates make of the player's column ({@code FTN_TEST role volcanic_highland}).</p>
  */
 @Mod.EventBusSubscriber(modid = FeelTheNature.MODID)
@@ -53,6 +56,15 @@ public final class TestCommands {
                         .then(Commands.literal("open").executes(c -> umbrella(c, true)))
                         .then(Commands.literal("close").executes(c -> umbrella(c, false))))
                 .then(Commands.literal("tan").executes(TestCommands::tan))
+                .then(Commands.literal("volcano")
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(1, 20000)).executes(c -> {
+                            ServerPlayer p = c.getSource().getPlayer();
+                            if (p == null) return 0;
+                            int radius = IntegerArgumentType.getInteger(c, "radius");
+                            boolean near = GeologyBridge.nearVolcano(p.serverLevel(), p.getBlockX(), p.getBlockZ(), radius);
+                            c.getSource().sendSuccess(() -> Component.literal("FTN_TEST volcano " + radius + " " + near), false);
+                            return 1;
+                        })))
                 .then(Commands.literal("role").executes(c -> {
                     ServerPlayer p = c.getSource().getPlayer();
                     if (p == null) return 0;
@@ -136,8 +148,9 @@ public final class TestCommands {
             int by = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz);
             BlockState ground = level.getBlockState(new BlockPos(bx, by - 1, bz));
             if (Math.abs(by - 1 - y) > 1 || !ground.is(BlockTags.DIRT)) continue;
-            GeologyBridge.River river = GeologyBridge.river(level, bx, bz, 3);
+            GeologyBridge.River river = GeologyBridge.river(bx, bz, 3);
             if (river == null || river.lake() || river.fromBank() < 0 || river.fromBank() > 3) continue;
+            if (GeologyBridge.sunk(level, bx, bz, 3)) continue;
             return new BlockPos(bx, by, bz);
         }
         return null;

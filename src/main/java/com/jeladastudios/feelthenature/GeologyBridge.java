@@ -253,23 +253,35 @@ public final class GeologyBridge {
     }
 
     /**
-     * The river or lake nearest a column, within {@code within} blocks past its bed; null where none runs so near, where
-     * the river network is not worked out there yet, or where the river runs underground, in a cave under a dry valley:
-     * no bank grows by a river nobody sees. Off the server thread it waits for the network, as world generation can.
+     * The river or lake nearest a column, within {@code within} blocks past its bed; null where none runs so near or the
+     * river network is not worked out there yet. Cheap. A river running underground here is among them: ask
+     * {@link #sunk} where that matters.
      */
-    public static River river(net.minecraft.server.level.ServerLevel level, int x, int z, double within) {
+    public static River river(int x, int z, double within) {
         if (!riversLinks) return null;
         try {
-            // The cheap question first; the river's fuller one only where there is a river, for its sunk stretches.
-            var near = FtsGeologyApi.river(x, z, within);
-            if (near.isEmpty()) return null;
-            var channel = FtsGeologyApi.channel(level, x, z, within);
-            if (channel.status() == FtsGeologyApi.Status.PRESENT && channel.channel().sunk()) return null;
-            var r = near.get();
-            return new River(r.distance(), r.halfWidth(), r.lake());
+            var r = FtsGeologyApi.river(x, z, within);
+            return r.isEmpty() ? null : new River(r.get().distance(), r.get().halfWidth(), r.get().lake());
         } catch (LinkageError e) {
             riversLinks = lost("its river network", e);
             return null;
+        }
+    }
+
+    /**
+     * Whether the river at a column runs underground, in a cave under a dry valley, for a stretch of up to one cell of
+     * FT's Geology's river network. Dearer than {@link #river}: ask it only where there is a river, and once for
+     * neighbouring columns. Off the server thread it waits for the network, as world generation can; on it, a stretch
+     * not worked out yet counts as open.
+     */
+    public static boolean sunk(net.minecraft.server.level.ServerLevel level, int x, int z, double within) {
+        if (!riversLinks) return false;
+        try {
+            var channel = FtsGeologyApi.channel(level, x, z, within);
+            return channel.status() == FtsGeologyApi.Status.PRESENT && channel.channel().sunk();
+        } catch (LinkageError e) {
+            riversLinks = lost("its river network", e);
+            return false;
         }
     }
 
