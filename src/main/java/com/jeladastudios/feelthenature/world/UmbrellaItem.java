@@ -75,7 +75,9 @@ public class UmbrellaItem extends Item {
             return;
         }
         ServerLevel server = (ServerLevel) level;
-        float wind = GeologyBridge.serverWind(server, holder.getX(), holder.getZ());
+        // The wind as it blows now: its mean strength in the gust or the lull of this moment.
+        float wind = GeologyBridge.serverWind(server, holder.getX(), holder.getZ())
+                * GeologyBridge.serverGust(server, holder.getX(), holder.getZ());
         // Under a roof or deep in a forest's shelter, the gusts do not reach it.
         if (holder.getEyeY() < server.getHeight(Heightmap.Types.MOTION_BLOCKING, holder.getBlockX(), holder.getBlockZ())) {
             wind *= 0.15f;
@@ -87,7 +89,7 @@ public class UmbrellaItem extends Item {
         level.playSound(null, holder.getX(), holder.getEyeY(), holder.getZ(), ModSounds.UMBRELLA_INVERT.get(),
                 SoundSource.PLAYERS, 0.8f, 0.9f + 0.2f * level.random.nextFloat());
         if (com.jeladastudios.feelthenature.dev.TestCommands.ON) {
-            FeelTheNature.LOGGER.info("UMBRELLA_INVERTED wind={}", String.format(java.util.Locale.ROOT, "%.1f", wind));
+            FeelTheNature.LOGGER.info("UMBRELLA_INVERTED gust={}", String.format(java.util.Locale.ROOT, "%.1f", wind));
         }
     }
 
