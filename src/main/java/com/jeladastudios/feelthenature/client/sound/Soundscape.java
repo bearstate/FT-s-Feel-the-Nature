@@ -376,7 +376,14 @@ public final class Soundscape {
                 && (id.getPath().equals("weather.rain") || id.getPath().equals("weather.rain.above"))) {
             event.setSound(null);
         }
+        // For the game test: FT's Geology's other sounds -- a quake's rumble, its siren -- go on playing.
+        if (TRACE && event.getSound() != null && id.getNamespace().equals("fts_geology") && GEOLOGY_HEARD.add(id.getPath())) {
+            FeelTheNature.LOGGER.info("GEOLOGY_SOUND_PLAYED {}", id);
+        }
     }
+
+    /** For the game test: FT's Geology's sounds played so far, each logged the first time. */
+    private static final java.util.Set<String> GEOLOGY_HEARD = new java.util.HashSet<>();
 
     @SubscribeEvent
     public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
