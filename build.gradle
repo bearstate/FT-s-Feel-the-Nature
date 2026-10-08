@@ -27,7 +27,7 @@ minecraft {
             mods { fts_feelthenature { source sourceSets.main } }
         }
         // A dedicated server, for the client to join over the network: what runs on each side is then split as it is
-        // for players. Its folder (run/server) holds the EULA the user accepted for these tests (9 Oct).
+        // for players. Its folder (run/server) holds the EULA the user accepted for these tests (8 Oct).
         server {
             workingDirectory project.file('run/server')
             property 'forge.logging.console.level', 'debug'

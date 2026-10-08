@@ -35,7 +35,7 @@ class MixTest {
     @Test
     void aStormsEdgeIsHeard() {
         // FT's Geology draws a drizzle's few faint streaks from the first trace of rain: from there on a quiet patter is
-        // heard, never louder than a steady rain. (Under 0.01 it was drawn and not heard, 9 Oct.)
+        // heard, never louder than a steady rain. (Under 0.01 it was drawn and not heard, 8 Oct.)
         for (float r = 0.007f; r <= 0.08f; r += 0.0005f) {
             float p = power(Mix.rainBeds(r));
             assertTrue(p >= 0.15f, "a drizzle of " + r + " heard only at " + p);
