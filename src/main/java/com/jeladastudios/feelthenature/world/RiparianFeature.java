@@ -61,17 +61,11 @@ public class RiparianFeature extends Feature<NoneFeatureConfiguration> {
         int x0 = context.origin().getX() & ~15, z0 = context.origin().getZ() & ~15;
         boolean placed = false;
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
-        // Whether the river runs underground, by quarter of the chunk: a sunk stretch runs tens of blocks, and the
-        // question is dearer than the river's own, so it is asked once a quarter, where a river first comes near.
-        Boolean[] sunk = new Boolean[4];
         for (int dx = 0; dx < 16; dx++) {
             for (int dz = 0; dz < 16; dz++) {
                 int x = x0 + dx, z = z0 + dz;
                 GeologyBridge.River river = GeologyBridge.river(x, z, BANK);
                 if (river == null) continue;
-                int quarter = (dx >> 3) * 2 + (dz >> 3);
-                if (sunk[quarter] == null) sunk[quarter] = GeologyBridge.sunk(level.getLevel(), x, z, BANK);
-                if (sunk[quarter]) continue;
                 double bank = river.fromBank();
                 if (bank > BANK) continue;
                 int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);

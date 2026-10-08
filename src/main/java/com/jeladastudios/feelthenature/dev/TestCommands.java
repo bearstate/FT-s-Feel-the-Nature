@@ -159,7 +159,6 @@ public final class TestCommands {
             if (Math.abs(by - 1 - y) > 1 || !ground.is(BlockTags.DIRT)) continue;
             GeologyBridge.River river = GeologyBridge.river(bx, bz, 3);
             if (river == null || river.lake() || river.fromBank() < 0 || river.fromBank() > 3) continue;
-            if (GeologyBridge.sunk(level, bx, bz, 3)) continue;
             return new BlockPos(bx, by, bz);
         }
         return null;

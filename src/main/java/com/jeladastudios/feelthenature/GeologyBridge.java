@@ -5,8 +5,7 @@ import net.minecraft.world.level.Level;
 
 /**
  * Every call the addon makes into FT's Geology, in one place. Most go through its API for addons, {@link FtsGeologyApi},
- * whose names and meanings stay put from one version to the next. One it does not offer yet is asked of its insides --
- * whether its regional weather runs in a level on the server -- until its API brings it (CEKIRDEK_PROMPT, C11).
+ * whose names and meanings stay put from one version to the next; nothing else of FT's Geology is called.
  *
  * <p>A newer FT's Geology may still have moved something the addon calls. That would end the game with a linkage
  * error in the middle of a tick, so each part -- the regional weather, the server's wind, the rivers, the world type --
@@ -159,13 +158,12 @@ public final class GeologyBridge {
 
     /**
      * Whether FT's Geology's regional weather runs in a level on the server: its wind, rain and gusts there rather than
-     * the world's one weather. Its API does not say so yet (CEKIRDEK_PROMPT, C11: {@code weatherActive}), so this one
-     * question still goes to its insides.
+     * the world's one weather. Only the overworld, with its regional rain on.
      */
     private static boolean regionalOnServer(net.minecraft.server.level.ServerLevel level) {
         if (!serverWindLinks) return false;
         try {
-            return com.jeladastudios.ftsgeology.weather.Storms.on(level);
+            return FtsGeologyApi.weatherActive(level);
         } catch (LinkageError e) {
             serverWindLinks = lost("its regional weather on the server", e);
             return false;
@@ -253,35 +251,19 @@ public final class GeologyBridge {
     }
 
     /**
-     * The river or lake nearest a column, within {@code within} blocks past its bed; null where none runs so near or the
-     * river network is not worked out there yet. Cheap. A river running underground here is among them: ask
-     * {@link #sunk} where that matters.
+     * The river or lake nearest a column, within {@code within} blocks past its bed; null where none runs so near, where
+     * the river network is not worked out there yet, or where the river runs underground, in a cave under a dry valley:
+     * no bank grows by a river nobody sees. Cheap enough to ask of every column while the world generates.
      */
     public static River river(int x, int z, double within) {
         if (!riversLinks) return null;
         try {
             var r = FtsGeologyApi.river(x, z, within);
-            return r.isEmpty() ? null : new River(r.get().distance(), r.get().halfWidth(), r.get().lake());
+            if (r.isEmpty() || FtsGeologyApi.riverSunk(x, z, within)) return null;
+            return new River(r.get().distance(), r.get().halfWidth(), r.get().lake());
         } catch (LinkageError e) {
             riversLinks = lost("its river network", e);
             return null;
-        }
-    }
-
-    /**
-     * Whether the river at a column runs underground, in a cave under a dry valley, for a stretch of up to one cell of
-     * FT's Geology's river network. Dearer than {@link #river}: ask it only where there is a river, and once for
-     * neighbouring columns. Off the server thread it waits for the network, as world generation can; on it, a stretch
-     * not worked out yet counts as open.
-     */
-    public static boolean sunk(net.minecraft.server.level.ServerLevel level, int x, int z, double within) {
-        if (!riversLinks) return false;
-        try {
-            var channel = FtsGeologyApi.channel(level, x, z, within);
-            return channel.status() == FtsGeologyApi.Status.PRESENT && channel.channel().sunk();
-        } catch (LinkageError e) {
-            riversLinks = lost("its river network", e);
-            return false;
         }
     }
 
@@ -296,14 +278,18 @@ public final class GeologyBridge {
         }
     }
 
-    /** From what speed river water counts as running, blocks a second: FT's Geology's own rule, 5 cm a second. */
-    private static final double RUNNING = 0.05;
+    /**
+     * From what push river water counts as running. FT's Geology's rule is 5 cm a second; where FT's Water runs the
+     * water, the fluid's push is its speed over 1.4 (what carries a swimmer at the water's speed), so 5 cm a second
+     * pushes 0.036. FT's Geology's own water pushes 0 standing and 0.5 running, well clear of it either way.
+     */
+    private static final double RUNNING = 0.05 / 1.4;
 
     /**
      * Whether a block of FT's Geology's river water is running, on the client: its flow across the ground faster than
      * 5 cm a second. Still where it stands behind a dam or in a lake, or where FT's Water has slowed it; still river
-     * water is as silent as a pond. The flow is the fluid's own ({@code FluidState.getFlow}), which FT's Geology answers
-     * for its water, and FT's Water for the water it runs.
+     * water is as silent as a pond. The flow is the fluid's own push ({@code FluidState.getFlow}), which FT's Geology
+     * answers for its water, and FT's Water for the water it runs.
      */
     public static boolean isRunningRiverWater(net.minecraft.world.level.BlockGetter level,
                                               net.minecraft.core.BlockPos pos,
