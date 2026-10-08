@@ -6,6 +6,7 @@ license = "GPL-3.0-or-later"
 modId = "fts_feelthenature"
 version = "${file.jarVersion}"
 displayName = "FT's Geology: Feel the Nature"
+logoFile = "logo.png"
 authors = "Jelada Studios"
 credits = "Sounds: every recording is CC0, from Freesound; the recordists are named in CREDITS-sounds.md, in the jar."
 description = '''
