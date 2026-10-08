@@ -65,6 +65,9 @@ public final class TestCommands {
                                 .then(Commands.argument("z", IntegerArgumentType.integer())
                                         .executes(c -> snowslope(c, IntegerArgumentType.getInteger(c, "x"),
                                                 IntegerArgumentType.getInteger(c, "z"))))))
+                .then(Commands.literal("seashore")
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
+                                .executes(c -> seashore(c, IntegerArgumentType.getInteger(c, "radius")))))
                 .then(Commands.literal("coast")
                         .then(Commands.argument("radius", IntegerArgumentType.integer(64, 8000))
                                 .executes(c -> coast(c, IntegerArgumentType.getInteger(c, "radius")))))
@@ -175,6 +178,47 @@ public final class TestCommands {
         }
         c.getSource().sendSuccess(() -> Component.literal("FTN_TEST coast none"), false);
         return 0;
+    }
+
+    /**
+     * Takes the player to the nearest shore of the sea itself in the country loaded round them: dry land beside a
+     * column whose top water, at the sea's level, is vanilla's with the open air over it. The generator's ground cannot
+     * tell the sea from a valley under the sea's level that FT's Geology drains later; the world built can. Answers
+     * {@code FTN_TEST seashore x z} or {@code FTN_TEST seashore none}.
+     */
+    private static int seashore(CommandContext<CommandSourceStack> c, int radius) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        int sea = level.getSeaLevel(), px = player.getBlockX(), pz = player.getBlockZ();
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        for (int r = 0; r <= radius; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int x = px + dx, z = pz + dz;
+                    if (!level.hasChunk(x >> 4, z >> 4) || !openSea(level, m.set(x, sea - 1, z))) continue;
+                    for (Direction d : Direction.Plane.HORIZONTAL) {
+                        int lx = x + d.getStepX(), lz = z + d.getStepZ();
+                        if (!level.hasChunk(lx >> 4, lz >> 4)) continue;
+                        int g = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, lx, lz);
+                        if (g < sea || !level.getFluidState(new BlockPos(lx, g - 1, lz)).isEmpty()) continue;
+                        player.teleportTo(level, lx + 0.5, g + 1, lz + 0.5, player.getYRot(), 40f);
+                        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST seashore " + lx + " " + lz), false);
+                        return 1;
+                    }
+                }
+            }
+        }
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST seashore none"), false);
+        return 0;
+    }
+
+    /** Vanilla's water with the open air over it: the sea's top water, not a river's, a lake's or an aquifer's. */
+    private static boolean openSea(ServerLevel level, BlockPos.MutableBlockPos at) {
+        BlockState s = level.getBlockState(at);
+        if (!s.getFluidState().is(net.minecraft.tags.FluidTags.WATER) || GeologyBridge.isRiverWater(s)) return false;
+        return level.getBlockState(at.above()).isAir();
     }
 
     /**
