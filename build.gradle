@@ -5,7 +5,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
 }
 
-version = '0.1.0'
+version = '1.0.0'
 group = 'com.jeladastudios.feelthenature'
 archivesBaseName = 'fts-feel-the-nature'
 
@@ -243,6 +243,9 @@ tasks.named('jar') {
             'MixinConfigs'          : 'fts_feelthenature.mixins.json'
         ])
     }
+    // The licence and the recordists' names go with the jar.
+    from('LICENSE') { rename { 'LICENSE_fts_feelthenature' } }
+    from('CREDITS-sounds.md')
     // One jar in build/libs, the build that just ran.
     doFirst {
         delete fileTree(layout.buildDirectory.dir('libs')) { include '*.jar' }
