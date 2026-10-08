@@ -11,7 +11,8 @@ The first release. Forge 1.20.1 (47.2 or newer), with FT's Geology 0.11.0 or new
   beginning; a long rain dying away is heard ending.
 - **What it falls on**: leaves and conifer needles, open water, bare rock, the crown of a tree over you, a wooden,
   metal or glass roof, a window. Drips go on falling from the leaves after the rain has stopped.
-- **Snow and hail fall quietly.** No rain is heard where it snows.
+- **Snow falls quietly.** No rain is heard where it snows. A drizzle at a storm's edge is a quiet patter, heard as soon
+  as it is seen falling.
 - **Wind** from a breeze to a gale, strongest on the heights, in the leaves, the pines and the grass round you. It
   swells and lulls with FT's Geology's gusts, the same gusts on every client. In a storm the trees creak now and then.
 - **Water**: a brook running over the ground, FT's Geology's rivers where they run (a river stilled behind a dam

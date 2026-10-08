@@ -11,19 +11,33 @@ public final class Mix {
     /**
      * The rain strength over which it is raining to the ear: no bed sounds at or under it, and a rain that rises past it
      * after a dry while begins with the recording of a rain beginning. One number for both, so the beds can never have
-     * started before the beginning is played.
+     * started before the beginning is played. As low as the least rain FT's Geology draws: it draws a drizzle's few
+     * streaks from the first trace of rain, and a rain seen falling is heard.
      */
-    public static final float WET = 0.01f;
+    public static final float WET = 0.0005f;
 
     /**
      * How loud the light, steady and heavy rain beds are at a rain strength from 0 to 1, before their own gains. They
-     * overlap where they hand over, so no strength of rain falls between two beds and goes quiet.
+     * overlap where they hand over, so no strength of rain falls between two beds and goes quiet. A drizzle at a
+     * storm's edge is a quiet patter, as the few streaks drawn for it are faint: some 0.4 of the light bed once past
+     * its first trace, the whole of it from a rain of about 0.08.
      */
     public static float[] rainBeds(float rain) {
-        float l = smooth((rain - WET) / 0.07f) * (1f - smooth((rain - 0.3f) / 0.2f));
+        float l = smooth((rain - WET) / 0.014f) * (0.38f + 0.62f * smooth((rain - WET) / 0.08f))
+                * (1f - smooth((rain - 0.3f) / 0.2f));
         float m = smooth((rain - 0.25f) / 0.15f) * (1f - smooth((rain - 0.6f) / 0.2f));
         float h = smooth((rain - 0.55f) / 0.2f);
         return new float[]{l, m, h};
+    }
+
+    /**
+     * How much of a full rain's sound a rain of this strength is, 0 to 1: the beds together, full from a rain of about
+     * 0.08. The recording of a rain beginning is played this loud, so a drizzle at a storm's edge does not begin as a
+     * downpour would.
+     */
+    public static float rainHeard(float rain) {
+        float[] b = rainBeds(rain);
+        return Math.min(1f, (float) Math.sqrt(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]) / 0.7f);
     }
 
     /**
@@ -31,7 +45,8 @@ public final class Mix {
      * the one hands over to the other as the rain grows, and neither sounds before the rain does ({@link #WET}).
      */
     public static float[] umbrellaBeds(float rain) {
-        float light = smooth((rain - WET) / 0.07f) * (1f - smooth((rain - 0.4f) / 0.25f));
+        float light = smooth((rain - WET) / 0.014f) * (0.38f + 0.62f * smooth((rain - WET) / 0.08f))
+                * (1f - smooth((rain - 0.4f) / 0.25f));
         float heavy = smooth((rain - 0.3f) / 0.25f);
         return new float[]{light, heavy};
     }

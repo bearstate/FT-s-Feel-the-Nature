@@ -132,9 +132,10 @@ public final class Soundscape {
 
     private static void trace(LocalPlayer player) {
         StringBuilder b = new StringBuilder(String.format(java.util.Locale.ROOT,
-                "SOUNDSCAPE_TRACE pos=%d,%d,%d precip=%s rain=%.2f wind=%.2f hear=%.2f sky=%.2f open=%.2f"
+                "SOUNDSCAPE_TRACE pos=%d,%d,%d precip=%s rain=%.2f drawn=%.4f wind=%.2f hear=%.2f sky=%.2f open=%.2f"
                         + " leavesOver=%.2f wood=%.2f metal=%.2f glass=%.2f leaves=%.2f needles=%.2f water=%.2f rock=%.2f grass=%.2f layers=",
-                player.getBlockX(), player.getBlockY(), player.getBlockZ(), falling, heardRain, heardWind,
+                player.getBlockX(), player.getBlockY(), player.getBlockZ(), falling, heardRain,
+                player.level().getRainLevel(1f), heardWind,
                 AROUND.hear(), AROUND.sky, AROUND.openNear, AROUND.leavesOver, AROUND.woodOver, AROUND.metalOver,
                 AROUND.glassOver, AROUND.leaves, AROUND.conifers, AROUND.water, AROUND.rock, AROUND.grass));
         // Each track as name:volume, with a "v" after one fading out: the cap is on the tracks asked to play, and one
@@ -174,11 +175,13 @@ public final class Soundscape {
         boolean heard = intro != null || TRACKS.containsKey(Layer.RAIN_LIGHT) || TRACKS.containsKey(Layer.RAIN_MEDIUM)
                 || TRACKS.containsKey(Layer.RAIN_HEAVY);
         if (rain > Mix.WET && !heard && dryTicks > DRY_FOR_INTRO && gain > 0.02f) {
-            boolean hard = GeologyBridge.rainComing(level) >= 0.5f;
+            // As loud as the rain it is coming to: a drizzle at a storm's edge begins as a drizzle.
+            float coming = GeologyBridge.rainComing(level);
+            boolean hard = coming >= 0.5f;
             Layer which = hard ? Layer.RAIN_START_HEAVY : Layer.RAIN_START_LIGHT;
             introLength = hard ? 900 : 800;
             introHandover = hard ? 660 : 560;
-            intro = new LayerTrack(which, which.gain * gain, STEP, now);
+            intro = new LayerTrack(which, which.gain * gain * Mix.rainHeard(Math.max(rain, coming)), STEP, now);
             Minecraft.getInstance().getSoundManager().play(intro);
         }
         dryTicks = rain > Mix.WET ? 0 : dryTicks + 1;
@@ -189,7 +192,8 @@ public final class Soundscape {
                 intro = null;
             } else {
                 hold = smooth((intro.age - introHandover) / (float) (introLength - introHandover));
-                intro.target = rain <= Mix.WET ? 0f : intro.layer.gain * gain;
+                intro.target = rain <= Mix.WET ? 0f
+                        : intro.layer.gain * gain * Mix.rainHeard(Math.max(rain, GeologyBridge.rainComing(level)));
             }
         }
         // A long rain dying away ends with the recording of a rain ending: the last of the beds fade into it over its

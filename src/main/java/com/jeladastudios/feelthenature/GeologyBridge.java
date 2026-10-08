@@ -124,18 +124,28 @@ public final class GeologyBridge {
      */
     public static net.minecraft.world.level.biome.Biome.Precipitation precipitation(Level level,
                                                                                     net.minecraft.core.BlockPos at) {
+        // From the least rain FT's Geology draws: its drizzle's few streaks are seen, so they are heard. Its own answer
+        // starts only at 0.01, and a storm's edge under that was drawn falling and heard dry.
+        if (rain(level, 1f) <= com.jeladastudios.feelthenature.client.sound.Mix.WET) {
+            return net.minecraft.world.level.biome.Biome.Precipitation.NONE;
+        }
         if (regionalWeather()) {
             try {
-                return switch (FtsGeologyApi.Client.precipitation()) {
-                    case RAIN -> net.minecraft.world.level.biome.Biome.Precipitation.RAIN;
-                    case SNOW, HAIL -> net.minecraft.world.level.biome.Biome.Precipitation.SNOW;
-                    case NONE -> net.minecraft.world.level.biome.Biome.Precipitation.NONE;
-                };
+                switch (FtsGeologyApi.Client.precipitation()) {
+                    case SNOW:
+                        return net.minecraft.world.level.biome.Biome.Precipitation.SNOW;
+                    case RAIN:
+                    case HAIL:
+                        // Hail drums as hard as a downpour; of the two sounds the addon has, it is the rain's.
+                        return net.minecraft.world.level.biome.Biome.Precipitation.RAIN;
+                    default:
+                        // Under its own 0.01: what the biome lets fall, as it would answer over it.
+                        break;
+                }
             } catch (LinkageError e) {
                 weatherLinks = lost("its regional weather", e);
             }
         }
-        if (level.getRainLevel(1f) <= 0.01f) return net.minecraft.world.level.biome.Biome.Precipitation.NONE;
         return level.getBiome(at).value().getPrecipitationAt(at);
     }
 

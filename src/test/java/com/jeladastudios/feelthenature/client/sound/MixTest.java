@@ -33,6 +33,24 @@ class MixTest {
     }
 
     @Test
+    void aStormsEdgeIsHeard() {
+        // FT's Geology draws a drizzle's few faint streaks from the first trace of rain: from there on a quiet patter is
+        // heard, never louder than a steady rain. (Under 0.01 it was drawn and not heard, 9 Oct.)
+        for (float r = 0.007f; r <= 0.08f; r += 0.0005f) {
+            float p = power(Mix.rainBeds(r));
+            assertTrue(p >= 0.15f, "a drizzle of " + r + " heard only at " + p);
+        }
+        float last = 0f;
+        for (float r = 0f; r <= 1.0001f; r += 0.002f) {
+            float h = Mix.rainHeard(r);
+            assertTrue(h >= last - EPS && h <= 1f + EPS, "rain heard " + h + " at " + r);
+            last = h;
+        }
+        assertEquals(1f, Mix.rainHeard(0.1f), EPS);
+        assertTrue(Mix.rainHeard(0.005f) < 0.3f, "a storm's edge begins as loud as a rain: " + Mix.rainHeard(0.005f));
+    }
+
+    @Test
     void umbrellaFollowsTheRain() {
         // Silent before the rain begins, heard through every strength of it, the drumming only growing with it.
         for (float r = 0f; r <= Mix.WET; r += 0.0005f) assertEquals(0f, power(Mix.umbrellaBeds(r)), EPS, "patter at rain " + r);
