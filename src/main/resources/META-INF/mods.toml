@@ -1,12 +1,14 @@
 modLoader = "javafml"
 loaderVersion = "[47,)"
 license = "GPL-3.0-or-later"
+issueTrackerURL = "https://github.com/bearstate/FT-s-Feel-the-Nature/issues"
 
 [[mods]]
 modId = "fts_feelthenature"
 version = "${file.jarVersion}"
 displayName = "FT's Geology: Feel the Nature"
 logoFile = "logo.png"
+displayURL = "https://github.com/bearstate/FT-s-Feel-the-Nature"
 authors = "Jelada Studios"
 credits = "Sounds: every recording is CC0, from Freesound; the recordists are named in CREDITS-sounds.md, in the jar."
 description = '''
