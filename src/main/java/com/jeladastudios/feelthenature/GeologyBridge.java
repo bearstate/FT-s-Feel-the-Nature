@@ -309,7 +309,12 @@ public final class GeologyBridge {
         return state.getFluidState().getFlow(level, pos).horizontalDistanceSqr() > RUNNING * RUNNING;
     }
 
+    /**
+     * The made-up wind where FT's Geology's is not: a breeze under a sky, more of it in rain and thunder; none in a
+     * world without a sky of its own (the Nether, the End), as FT's Geology has none there either.
+     */
     private static float fallbackWind(Level level) {
+        if (!level.dimensionType().hasSkyLight()) return 0f;
         return 1.0f + 2.0f * level.getRainLevel(1f) + 5.0f * level.getThunderLevel(1f);
     }
 }
