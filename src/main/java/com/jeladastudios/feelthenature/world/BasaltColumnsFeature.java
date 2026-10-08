@@ -109,10 +109,16 @@ public class BasaltColumnsFeature extends Feature<NoneFeatureConfiguration> {
         return columns + faces > 0;
     }
 
-    /** Whether the sea stands at a block: vanilla's water, not a river's or a lake's. */
-    private static boolean sea(WorldGenLevel level, BlockPos at) {
+    /**
+     * Whether the sea stands at its top water block: vanilla's water, not a river's or a lake's, with the open air
+     * over it -- not the water of an aquifer or a cave at the sea's level under the land.
+     */
+    private static boolean sea(WorldGenLevel level, BlockPos.MutableBlockPos at) {
         BlockState s = level.getBlockState(at);
-        return s.getFluidState().is(FluidTags.WATER) && !GeologyBridge.isRiverWater(s);
+        if (!s.getFluidState().is(FluidTags.WATER) || GeologyBridge.isRiverWater(s)) return false;
+        BlockState over = level.getBlockState(at.move(0, 1, 0));
+        at.move(0, -1, 0);
+        return over.isAir() || over.canBeReplaced() && over.getFluidState().isEmpty();
     }
 
     /** The top of the solid ground at a column, from a little over the shore's highest down to under the sea. */

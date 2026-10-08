@@ -32,7 +32,8 @@ import net.minecraftforge.fml.common.Mod;
  * <p>{@code /ftn_test tan} answers how long Tough As Nails has had the player dry ({@code FTN_TEST tan dry=N}).</p>
  *
  * <p>{@code /ftn_test coast <radius>} takes the player to the nearest sea shore by the generator's ground
- * ({@code FTN_TEST coast x z}).</p>
+ * ({@code FTN_TEST coast x z}); {@code /ftn_test snowslope <x> <z>} from a mountain's top down to a little over its snow
+ * line ({@code FTN_TEST snowslope x y z line=N}).</p>
  *
  * <p>{@code /ftn_test volcano <radius> [x z]} answers whether a large volcano's crater lies within so many blocks of the
  * player, or of the column given ({@code FTN_TEST volcano 400 true}).</p>
@@ -59,6 +60,11 @@ public final class TestCommands {
                         .then(Commands.literal("open").executes(c -> umbrella(c, true)))
                         .then(Commands.literal("close").executes(c -> umbrella(c, false))))
                 .then(Commands.literal("tan").executes(TestCommands::tan))
+                .then(Commands.literal("snowslope")
+                        .then(Commands.argument("x", IntegerArgumentType.integer())
+                                .then(Commands.argument("z", IntegerArgumentType.integer())
+                                        .executes(c -> snowslope(c, IntegerArgumentType.getInteger(c, "x"),
+                                                IntegerArgumentType.getInteger(c, "z"))))))
                 .then(Commands.literal("coast")
                         .then(Commands.argument("radius", IntegerArgumentType.integer(64, 8000))
                                 .executes(c -> coast(c, IntegerArgumentType.getInteger(c, "radius")))))
@@ -148,7 +154,10 @@ public final class TestCommands {
                 for (int dz = -r; dz <= r; dz += step) {
                     if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
                     int x = px + dx, z = pz + dz;
-                    if (floor.applyAsInt(x, z) >= sea - 3) continue;
+                    // The open sea, not a river's channel or a pond cut under the sea's level: deep a way round too.
+                    if (floor.applyAsInt(x, z) >= sea - 3 || floor.applyAsInt(x + 24, z) >= sea - 2
+                            || floor.applyAsInt(x - 24, z) >= sea - 2 || floor.applyAsInt(x, z + 24) >= sea - 2
+                            || floor.applyAsInt(x, z - 24) >= sea - 2) continue;
                     // The sea here: walk back towards the player until the ground comes up out of it.
                     double len = Math.hypot(dx, dz);
                     for (int t = 1; t <= len; t++) {
@@ -163,6 +172,33 @@ public final class TestCommands {
             }
         }
         c.getSource().sendSuccess(() -> Component.literal("FTN_TEST coast none"), false);
+        return 0;
+    }
+
+    /**
+     * Takes the player from a mountain's top down its flank to a little over its snow line: snowy ground still, but
+     * under the storms that a summit stands over. Answers {@code FTN_TEST snowslope x y z line=N} or
+     * {@code FTN_TEST snowslope none}.
+     */
+    private static int snowslope(CommandContext<CommandSourceStack> c, int x0, int z0) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        var source = level.getChunkSource();
+        for (int way = 0; way < 16; way++) {
+            double a = way * Math.PI / 8;
+            for (int t = 8; t <= 2000; t += 8) {
+                int x = x0 + (int) Math.round(Math.cos(a) * t), z = z0 + (int) Math.round(Math.sin(a) * t);
+                int h = source.getGenerator().getBaseHeight(x, z, Heightmap.Types.WORLD_SURFACE_WG, level, source.randomState());
+                int line = GeologyBridge.snowLine(level, x, z);
+                if (h > line + 24) continue;
+                if (h < line + 4) break;
+                player.teleportTo(level, x + 0.5, h + 2, z + 0.5, player.getYRot(), 30f);
+                c.getSource().sendSuccess(() -> Component.literal("FTN_TEST snowslope " + x + " " + h + " " + z + " line=" + line), false);
+                return 1;
+            }
+        }
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST snowslope none"), false);
         return 0;
     }
 

@@ -216,6 +216,17 @@ public final class GeologyBridge {
         }
     }
 
+    /** The height of the snow line over a column, from FT's Geology's climate; out of reach where it cannot say. */
+    public static int snowLine(net.minecraft.server.level.ServerLevel level, int x, int z) {
+        if (!worldLinks) return Integer.MAX_VALUE;
+        try {
+            return FtsGeologyApi.snowLine(level, x, z);
+        } catch (LinkageError e) {
+            worldLinks = lost("its climate", e);
+            return Integer.MAX_VALUE;
+        }
+    }
+
     /** Whether a level is made by FT's Geology's own world type, where its rivers and rock are. */
     public static boolean isGeologyWorld(net.minecraft.server.level.ServerLevel level) {
         if (!worldLinks) return false;
