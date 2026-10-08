@@ -15,11 +15,11 @@ bin/
 # FT's Geology's own jar, compiled against but never shipped
 libs/
 
-# Planning notes, never in the public repo
+# Notes and local tools kept out of the repository
 PLAN.md
 CEKIRDEK_PROMPT.md
 SES_ADAYLARI*.md
 OTURUM_*
 
-# Local test tools (paths are this machine's)
+# Local test tools
 tools/

@@ -20,14 +20,14 @@ minecraft {
             // FT's Geology carries mixins; in the development world its refmap has to be read in official names.
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            // One line a second of what the soundscape hears and plays, for the automated game test (tools/).
+            // One line a second of what the soundscape hears and plays, for the automated game test (a local script, not in the repository).
             property 'fts_feelthenature.trace', 'true'
             // The compatibility mixins (Tough As Nails); in the jar they are named in its manifest.
             arg '-mixin.config=fts_feelthenature.mixins.json'
             mods { fts_feelthenature { source sourceSets.main } }
         }
         // A dedicated server, for the client to join over the network: what runs on each side is then split as it is
-        // for players. Its folder (run/server) holds the EULA the user accepted for these tests (8 Oct).
+        // for players. Its folder (run/server) needs an eula.txt of its own.
         server {
             workingDirectory project.file('run/server')
             property 'forge.logging.console.level', 'debug'
@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    // 47.4, as the user's modpack runs (47.4.10): Serene Seasons and Tough As Nails ask for 47.3 and some of the pack's
+    // 47.4, as the modpack the addon was made with runs (47.4.10): Serene Seasons and Tough As Nails ask for 47.3 and some of the pack's
     // mods for 47.4. Nothing of 47.3 or 47.4 is used: the addon runs from 47.2 on (mods.toml; tried on 47.2.0, 8 Oct).
     // -Pforge=47.2.0 and the like tries the addon on another Forge 47 (with -PnoSeasons -PnoAmbientSounds, which ask for
     // newer ones).
@@ -69,7 +69,7 @@ dependencies {
         runtimeOnly fg.deobf('blank:ambientsounds:6.3.8')
         runtimeOnly fg.deobf('blank:creativecore:2.12.40')
     }
-    // With -Ppack, a slice of the user's modpack in the development game, for the game test against its worldgen: the
+    // With -Ppack, a slice of the modpack the addon was made with in the development game, for the game test against its worldgen: the
     // mods whose biome modifiers once fell between the addon's and crashed the game (Croptopia, HBM), Dynamic Trees,
     // Naturalist and Wildernature, with what they need, and Terralith, whose biomes the pack lays on FT's Geology's
     // terrain. Copied into libs/ by hand; never shipped.
