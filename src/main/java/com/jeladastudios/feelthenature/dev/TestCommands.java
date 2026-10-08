@@ -158,6 +158,8 @@ public final class TestCommands {
                     if (floor.applyAsInt(x, z) >= sea - 3 || floor.applyAsInt(x + 24, z) >= sea - 2
                             || floor.applyAsInt(x - 24, z) >= sea - 2 || floor.applyAsInt(x, z + 24) >= sea - 2
                             || floor.applyAsInt(x, z - 24) >= sea - 2) continue;
+                    // Nor one of FT's Geology's lakes, or a wide river's mouth: its own water, not the sea's.
+                    if (GeologyBridge.river(x, z, 4) != null) continue;
                     // The sea here: walk back towards the player until the ground comes up out of it.
                     double len = Math.hypot(dx, dz);
                     for (int t = 1; t <= len; t++) {
