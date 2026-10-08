@@ -1,0 +1,5 @@
+{
+  "type": "forge:remove_features",
+  "biomes": "#fts_feelthenature:basalt_cliffs",
+  "features": "#fts_feelthenature:terralith_basalt_columns"
+}

@@ -28,6 +28,8 @@ public final class ModRegistries {
             FEATURES.register("boulder", () -> new BoulderFeature(BoulderFeature.Config.CODEC));
     public static final RegistryObject<RiparianFeature> RIPARIAN =
             FEATURES.register("riparian", () -> new RiparianFeature(net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration.CODEC));
+    public static final RegistryObject<BasaltColumnsFeature> BASALT_COLUMNS =
+            FEATURES.register("basalt_columns", () -> new BasaltColumnsFeature(net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration.CODEC));
 
     public static final RegistryObject<Codec<AtmosphereModifier>> ATMOSPHERE =
             BIOME_MODIFIERS.register("atmosphere", () -> AtmosphereModifier.CODEC);

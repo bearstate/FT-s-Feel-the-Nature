@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "terralith:cliffs/basalt/basalt_column", "required": false },
+    { "id": "terralith:cliffs/basalt/basalt_column_upper", "required": false }
+  ]
+}

@@ -31,6 +31,9 @@ import net.minecraftforge.fml.common.Mod;
  *
  * <p>{@code /ftn_test tan} answers how long Tough As Nails has had the player dry ({@code FTN_TEST tan dry=N}).</p>
  *
+ * <p>{@code /ftn_test coast <radius>} takes the player to the nearest sea shore by the generator's ground
+ * ({@code FTN_TEST coast x z}).</p>
+ *
  * <p>{@code /ftn_test volcano <radius> [x z]} answers whether a large volcano's crater lies within so many blocks of the
  * player, or of the column given ({@code FTN_TEST volcano 400 true}).</p>
  *
@@ -56,6 +59,9 @@ public final class TestCommands {
                         .then(Commands.literal("open").executes(c -> umbrella(c, true)))
                         .then(Commands.literal("close").executes(c -> umbrella(c, false))))
                 .then(Commands.literal("tan").executes(TestCommands::tan))
+                .then(Commands.literal("coast")
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(64, 8000))
+                                .executes(c -> coast(c, IntegerArgumentType.getInteger(c, "radius")))))
                 .then(Commands.literal("volcano")
                         .then(Commands.argument("radius", IntegerArgumentType.integer(1, 20000))
                                 .executes(c -> volcano(c, null, null))
@@ -70,6 +76,31 @@ public final class TestCommands {
                     c.getSource().sendSuccess(() -> Component.literal("FTN_TEST role " + role), false);
                     return 1;
                 })));
+    }
+
+    /**
+     * Says once the server has started what Terralith's basalt cliff biome is left to place, after the biome modifiers:
+     * the addon's columns, and none of Terralith's spires ({@code FTN_TEST basalt_cliffs ours=1 terralith=0}), or that
+     * Terralith is not there.
+     */
+    @SubscribeEvent
+    public static void basaltCliffs(net.minecraftforge.event.server.ServerStartedEvent event) {
+        if (!ON) return;
+        var biomes = event.getServer().registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.BIOME);
+        var biome = biomes.get(new net.minecraft.resources.ResourceLocation("terralith", "basalt_cliffs"));
+        if (biome == null) {
+            FeelTheNature.LOGGER.info("FTN_TEST basalt_cliffs none");
+            return;
+        }
+        int ours = 0, terralith = 0;
+        for (var step : biome.getGenerationSettings().features()) {
+            for (var feature : step) {
+                String id = feature.unwrapKey().map(k -> k.location().toString()).orElse("");
+                if (id.equals("fts_feelthenature:basalt_columns")) ours++;
+                if (id.startsWith("terralith:cliffs/basalt/basalt_column")) terralith++;
+            }
+        }
+        FeelTheNature.LOGGER.info("FTN_TEST basalt_cliffs ours={} terralith={}", ours, terralith);
     }
 
     /**
@@ -95,6 +126,44 @@ public final class TestCommands {
             c.getSource().sendSuccess(() -> Component.literal("FTN_TEST tan none"), false);
             return 0;
         }
+    }
+
+    /**
+     * Takes the player to the nearest sea shore, by the generator's own ground (nothing need be generated): the land a
+     * block from the water, where the sea floor drops under the sea's level and the ground beside it stands over it.
+     * Rings out every 32 blocks, then the shore found to the block. Answers {@code FTN_TEST coast x z} or
+     * {@code FTN_TEST coast none}.
+     */
+    private static int coast(CommandContext<CommandSourceStack> c, int radius) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        var source = level.getChunkSource();
+        int sea = level.getSeaLevel(), px = player.getBlockX(), pz = player.getBlockZ();
+        java.util.function.IntBinaryOperator floor = (x, z) -> source.getGenerator()
+                .getBaseHeight(x, z, Heightmap.Types.OCEAN_FLOOR_WG, level, source.randomState());
+        int step = 32;
+        for (int r = step; r <= radius; r += step) {
+            for (int dx = -r; dx <= r; dx += step) {
+                for (int dz = -r; dz <= r; dz += step) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int x = px + dx, z = pz + dz;
+                    if (floor.applyAsInt(x, z) >= sea - 3) continue;
+                    // The sea here: walk back towards the player until the ground comes up out of it.
+                    double len = Math.hypot(dx, dz);
+                    for (int t = 1; t <= len; t++) {
+                        int lx = x - (int) Math.round(dx / len * t), lz = z - (int) Math.round(dz / len * t);
+                        int g = floor.applyAsInt(lx, lz);
+                        if (g < sea) continue;
+                        player.teleportTo(level, lx + 0.5, g + 2, lz + 0.5, player.getYRot(), 40f);
+                        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST coast " + lx + " " + lz), false);
+                        return 1;
+                    }
+                }
+            }
+        }
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST coast none"), false);
+        return 0;
     }
 
     /** Whether a large volcano's crater lies within a radius of a column: the player's, or the one given. */

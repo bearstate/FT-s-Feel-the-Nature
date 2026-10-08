@@ -57,10 +57,11 @@ dependencies {
     }
     // With -Ppack, a slice of the user's modpack in the development game, for the game test against its worldgen: the
     // mods whose biome modifiers once fell between the addon's and crashed the game (Croptopia, HBM), Dynamic Trees,
-    // Naturalist and Wildernature, with what they need. Copied into libs/ by hand; never shipped.
+    // Naturalist and Wildernature, with what they need, and Terralith, whose biomes the pack lays on FT's Geology's
+    // terrain. Copied into libs/ by hand; never shipped.
     if (project.hasProperty('pack')) {
         ['croptopia:4.0.1', 'epherolib:1.2.0', 'hbm:2.0', 'architectury:9.2.14', 'clothconfig:11.1.136', 'geckolib:4.8.4',
-         'dynamictrees:1.4.11', 'naturalist:5.0', 'wildernature:1.0.6', 'curios:5.14.1'].each { runtimeOnly fg.deobf("blank:${it}") }
+         'dynamictrees:1.4.11', 'naturalist:5.0', 'wildernature:1.0.6', 'curios:5.14.1', 'terralith:2.5.4'].each { runtimeOnly fg.deobf("blank:${it}") }
     }
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -104,6 +105,20 @@ tasks.register('validateData') {
         def biomesTargeted = [:].withDefault { [] }
         new File(data, 'forge/biome_modifier').listFiles().findAll { it.name.endsWith('.json') }.each { f ->
             def m = json.parse(f)
+            // Another mod's features taken out: through the addon's own tags, every entry optional, so the game loads
+            // the same without that mod.
+            if (m.type == 'forge:remove_features') {
+                [biomes: 'tags/worldgen/biome', features: 'tags/worldgen/placed_feature'].each { key, dir ->
+                    def ref = m[key]
+                    if (!(ref instanceof String) || !ref.startsWith("#${ns}:")) { errors << "${f.name}: ${key} must be one of the addon's own tags, not ${ref}"; return }
+                    def tag = new File(data, "${dir}/${ref.substring(ns.length() + 2)}.json")
+                    if (!tag.exists()) { errors << "${f.name}: tag ${ref} does not exist"; return }
+                    json.parse(tag).values.each { v ->
+                        if (!(v instanceof Map) || v.required != false) errors << "${tag.name}: ${v} must be marked \"required\": false"
+                    }
+                }
+                return
+            }
             if (m.type != 'forge:add_features') return
             def biomes = m.biomes
             // A feature that belongs everywhere (the river banks) is added once, by one modifier, to the whole overworld;

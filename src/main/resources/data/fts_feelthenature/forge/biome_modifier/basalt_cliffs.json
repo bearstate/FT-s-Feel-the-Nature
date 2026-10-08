@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#fts_feelthenature:basalt_cliffs",
+  "features": ["fts_feelthenature:basalt_columns"],
+  "step": "raw_generation"
+}
