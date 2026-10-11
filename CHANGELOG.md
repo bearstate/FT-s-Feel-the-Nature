@@ -1,3 +1,10 @@
+# FT's Geology: Feel the Nature 1.0.1
+
+- **Moss carpets no longer float on water.** The forests' moss was laid wherever there was air, and a carpet holds
+  on anything but air, water included; it now keeps to soil and rock. Ground already generated keeps what it has.
+
+---
+
 # FT's Geology: Feel the Nature 1.0.0
 
 The first release. Forge 1.20.1 (47.2 or newer), with FT's Geology 0.11.0 or newer.

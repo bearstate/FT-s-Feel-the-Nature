@@ -65,6 +65,21 @@ public final class TestCommands {
                                 .then(Commands.argument("z", IntegerArgumentType.integer())
                                         .executes(c -> snowslope(c, IntegerArgumentType.getInteger(c, "x"),
                                                 IntegerArgumentType.getInteger(c, "z"))))))
+                .then(Commands.literal("floating")
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(1, 32)).executes(c -> {
+                            // What the ground's carpets and plants stand on round the player: none of them on water.
+                            ServerPlayer p = c.getSource().getPlayer();
+                            if (p == null) return 0;
+                            int r = IntegerArgumentType.getInteger(c, "radius"), onWater = 0, onGround = 0;
+                            for (BlockPos at : BlockPos.betweenClosed(p.blockPosition().offset(-r, -4, -r), p.blockPosition().offset(r, 4, r))) {
+                                if (!p.serverLevel().getBlockState(at).is(net.minecraft.world.level.block.Blocks.MOSS_CARPET)) continue;
+                                if (p.serverLevel().getFluidState(at.below()).isEmpty()) onGround++;
+                                else onWater++;
+                            }
+                            int w = onWater, g = onGround;
+                            c.getSource().sendSuccess(() -> Component.literal("FTN_TEST floating moss=" + w + " grounded=" + g), false);
+                            return 1;
+                        })))
                 .then(Commands.literal("seashore")
                         .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
                                 .executes(c -> seashore(c, IntegerArgumentType.getInteger(c, "radius")))))
