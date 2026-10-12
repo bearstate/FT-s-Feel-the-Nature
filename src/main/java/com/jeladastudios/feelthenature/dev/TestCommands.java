@@ -80,6 +80,31 @@ public final class TestCommands {
                             c.getSource().sendSuccess(() -> Component.literal("FTN_TEST floating moss=" + w + " grounded=" + g), false);
                             return 1;
                         })))
+                .then(Commands.literal("biome")
+                        .then(Commands.argument("id", net.minecraft.commands.arguments.ResourceLocationArgument.id())
+                                .executes(c -> {
+                                    // The nearest ground in the country loaded whose biome, as built, is the one named.
+                                    ServerPlayer p = c.getSource().getPlayer();
+                                    if (p == null) return 0;
+                                    var id = net.minecraft.commands.arguments.ResourceLocationArgument.getId(c, "id");
+                                    ServerLevel level = p.serverLevel();
+                                    for (int r = 0; r <= 180; r += 4) {
+                                        for (int dx = -r; dx <= r; dx += 4) {
+                                            for (int dz = -r; dz <= r; dz += 4) {
+                                                if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                                                int x = p.getBlockX() + dx, z = p.getBlockZ() + dz;
+                                                if (!level.hasChunk(x >> 4, z >> 4)) continue;
+                                                int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                                                if (!level.getBiome(new BlockPos(x, y, z)).is(id)) continue;
+                                                p.teleportTo(level, x + 0.5, y + 1, z + 0.5, p.getYRot(), 30f);
+                                                c.getSource().sendSuccess(() -> Component.literal("FTN_TEST biome " + x + " " + y + " " + z), false);
+                                                return 1;
+                                            }
+                                        }
+                                    }
+                                    c.getSource().sendSuccess(() -> Component.literal("FTN_TEST biome none"), false);
+                                    return 0;
+                                })))
                 .then(Commands.literal("seashore")
                         .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
                                 .executes(c -> seashore(c, IntegerArgumentType.getInteger(c, "radius")))))
@@ -229,6 +254,7 @@ public final class TestCommands {
         return 0;
     }
 
+    /**
     /** Vanilla's water with the open air over it: the sea's top water, not a river's, a lake's or an aquifer's. */
     private static boolean openSea(ServerLevel level, BlockPos.MutableBlockPos at) {
         BlockState s = level.getBlockState(at);
