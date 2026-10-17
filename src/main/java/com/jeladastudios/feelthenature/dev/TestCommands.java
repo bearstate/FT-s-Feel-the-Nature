@@ -96,6 +96,7 @@ public final class TestCommands {
                                                 if (!level.hasChunk(x >> 4, z >> 4)) continue;
                                                 int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
                                                 if (!level.getBiome(new BlockPos(x, y, z)).is(id)) continue;
+                                                if (!openGround(level, x, y, z)) continue;
                                                 p.teleportTo(level, x + 0.5, y + 1, z + 0.5, p.getYRot(), 30f);
                                                 c.getSource().sendSuccess(() -> Component.literal("FTN_TEST biome " + x + " " + y + " " + z), false);
                                                 return 1;
@@ -255,6 +256,22 @@ public final class TestCommands {
     }
 
     /**
+    /**
+     * Whether the ground round a column is open and level enough for the test field: of sixteen points on a ring 26
+     * blocks out, most stand within five blocks of its height. A field against a cliff, or in a narrow valley, hears
+     * the weather and the wind otherwise than in the open.
+     */
+    private static boolean openGround(ServerLevel level, int x, int y, int z) {
+        int near = 0;
+        for (int way = 0; way < 16; way++) {
+            double a = way * Math.PI / 8;
+            int px = x + (int) Math.round(Math.cos(a) * 26), pz = z + (int) Math.round(Math.sin(a) * 26);
+            if (!level.hasChunk(px >> 4, pz >> 4)) return false;
+            if (Math.abs(level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, px, pz) - y) <= 5) near++;
+        }
+        return near >= 13;
+    }
+
     /** Vanilla's water with the open air over it: the sea's top water, not a river's, a lake's or an aquifer's. */
     private static boolean openSea(ServerLevel level, BlockPos.MutableBlockPos at) {
         BlockState s = level.getBlockState(at);

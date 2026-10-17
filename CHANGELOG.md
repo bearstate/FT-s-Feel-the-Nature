@@ -1,3 +1,21 @@
+# FT's Geology: Feel the Nature 1.1.0
+
+The country's creatures, heard where they would be.
+
+- **Birds by day** in what grows round you: songbirds in broadleaf woods, a quieter chorus in the conifers, skylarks
+  over open grass.
+- **The dawn chorus**: from an hour before sunrise, strongest just after it, fullest in spring.
+- **Crickets** on warm, dry nights; **frogs** by still fresh water in the evening (a light rain does not stop them);
+  **bees** over flowers on dry days.
+- **Now and then a single call** from somewhere: a hawk high over open country by day, an owl from a tree in a wood
+  at night, a loon far out on a large lake in a cool country.
+- Rain and gales quiet the birds, cold ground and winter quiet the insects and the frogs; with Serene Seasons each
+  keeps its season.
+- A `faunaVolume` setting in the client config (0 turns them off).
+- Recordings from Freesound, all CC0 but the loon's (nicStage, CC BY 4.0); credited in `CREDITS-sounds.md`.
+
+---
+
 # FT's Geology: Feel the Nature 1.0.1
 
 - **Moss carpets no longer float on water.** The forests' moss was laid wherever there was air, and a carpet holds
