@@ -33,7 +33,8 @@ import net.minecraftforge.fml.common.Mod;
  *   <li>fireflies on a warm, dry night, low over grass and by water -- never in the cold or the rain;</li>
  *   <li>pollen over flowers on a dry day;</li>
  *   <li>leaves coming down from broadleaf crowns, more in a wind, carried with it -- needles hardly fall;</li>
- *   <li>snow blown off the surface by a strong wind.</li>
+ *   <li>snow blown off the surface by a strong wind;</li>
+ *   <li>mist rising off still water on a calm, cold morning ({@link Steam}).</li>
  * </ul>
  *
  * <p>Nothing is spawned with the game's particles set to minimal, and only a few tries are made a tick, so the counts
@@ -47,7 +48,7 @@ public final class AmbientLife {
     private static final int REACH = 16;
 
     /** Counts since the last trace line, for the automated game test. */
-    static int fireflies, pollen, leaves, drift;
+    static int fireflies, pollen, leaves, drift, steam;
     /** Serene Seasons' sub-season the last tick, or -1. */
     private static int season = -1;
     private static long costNanos, costMax;
@@ -82,6 +83,7 @@ public final class AmbientLife {
         public static void register(RegisterParticleProvidersEvent event) {
             event.registerSpriteSet(ModParticles.FIREFLY.get(), FireflyParticle.Provider::new);
             event.registerSpriteSet(ModParticles.POLLEN.get(), PollenParticle.Provider::new);
+            event.registerSpriteSet(ModParticles.STEAM.get(), SteamParticle.Provider::new);
             event.registerSpecial(ModParticles.FALLING_LEAF.get(), new FallingLeafParticle.Provider());
         }
     }
@@ -116,6 +118,22 @@ public final class AmbientLife {
             float chance = Math.min(1f, (wind - 4.5f) / 5f) * (float) density;
             for (int i = 0; i < 3; i++) if (RANDOM.nextFloat() < chance) spindrift(level, player, wx, wz);
         }
+        float temperature = com.jeladastudios.feelthenature.client.sound.Fauna.temperature(biome.getBaseTemperature(), player.getY());
+        float mist = Steam.strength(time, temperature, wind, rain, GeologyBridge.fog(), season);
+        if (mist > 0.01f) {
+            for (int i = 0; i < 10; i++) if (RANDOM.nextFloat() < 0.7f * mist * (float) density) steam(level, player, wx, wz);
+        }
+    }
+
+    private static void steam(ClientLevel level, LocalPlayer player, float wx, float wz) {
+        BlockPos top = column(level, player, 24, Heightmap.Types.MOTION_BLOCKING);
+        if (top == null) return;
+        // Still, open water: a lake's or a pond's surface, or a river's, under the sky -- not a waterfall's curtain.
+        var water = level.getFluidState(top.below());
+        if (!water.is(FluidTags.WATER) || !water.isSource() || !level.getBlockState(top).isAir() || !level.canSeeSky(top)) return;
+        level.addParticle(ModParticles.STEAM.get(), top.getX() + RANDOM.nextDouble(), top.getY() - 0.05 + RANDOM.nextDouble() * 0.25,
+                top.getZ() + RANDOM.nextDouble(), wx, 0, wz);
+        steam++;
     }
 
     /**
@@ -214,8 +232,9 @@ public final class AmbientLife {
     }
 
     public static String countsAndReset() {
-        String s = "fireflies:" + fireflies + ",pollen:" + pollen + ",leaves:" + leaves + ",drift:" + drift + ",season:" + season;
-        fireflies = pollen = leaves = drift = 0;
+        String s = "fireflies:" + fireflies + ",pollen:" + pollen + ",leaves:" + leaves + ",drift:" + drift + ",steam:" + steam
+                + ",season:" + season;
+        fireflies = pollen = leaves = drift = steam = 0;
         return s;
     }
 }

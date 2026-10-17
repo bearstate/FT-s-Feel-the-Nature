@@ -10,9 +10,10 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
 /**
- * The small life in the air: fireflies on a warm night, pollen over a meadow by day, a leaf coming down from a crown.
+ * The small life in the air: fireflies on a warm night, pollen over a meadow by day, a leaf coming down from a crown,
+ * mist rising off still water on a cold morning.
  * The types are registered on both sides; how they look and move is client-only ({@code client.life}). They are drawn
- * with the game's own textures -- its glow and dust sprites, and the leaves' own block texture -- not new art.
+ * with the game's own textures -- its glow, dust and smoke sprites, and the leaves' own block texture -- not new art.
  */
 public final class ModParticles {
 
@@ -22,6 +23,7 @@ public final class ModParticles {
 
     public static final RegistryObject<SimpleParticleType> FIREFLY = PARTICLES.register("firefly", () -> new SimpleParticleType(false));
     public static final RegistryObject<SimpleParticleType> POLLEN = PARTICLES.register("pollen", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> STEAM = PARTICLES.register("steam", () -> new SimpleParticleType(false));
 
     /** A leaf of a given block, falling: drawn with that block's texture and tinted as the block is. */
     @SuppressWarnings("deprecation")

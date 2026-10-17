@@ -118,6 +118,18 @@ public final class GeologyBridge {
         return 1f;
     }
 
+    /** How thick FT's Geology's ground fog lies round the player, 0 to 1; 0 without its regional weather. */
+    public static float fog() {
+        if (regionalWeather()) {
+            try {
+                return FtsGeologyApi.Client.fog();
+            } catch (LinkageError e) {
+                weatherLinks = lost("its regional weather", e);
+            }
+        }
+        return 0f;
+    }
+
     /**
      * What falls from the sky where the player stands: nothing, rain or snow, by FT's Geology's local weather and the
      * biome; without its regional weather, by the world's rain and the biome.
