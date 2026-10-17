@@ -6,6 +6,7 @@ import com.jeladastudios.feelthenature.GeologyBridge;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.resources.ResourceLocation;
@@ -111,6 +112,8 @@ public final class Soundscape {
         surfaces(rain, hear, underWater);
         drips(rain, hear, underWater);
         wind(level, player, hear, underWater);
+        // Snow quiets the birds as rain does: what falls, of either kind.
+        fauna(level, player, GeologyBridge.rain(level, 1f), hear, underWater);
         apply(now);
         WaterVoices.tick(level, player, now, underWater);
         long spent = System.nanoTime() - t0;
@@ -147,6 +150,9 @@ public final class Soundscape {
         boolean holding = player.getMainHandItem().getItem() instanceof com.jeladastudios.feelthenature.world.UmbrellaItem
                 || player.getOffhandItem().getItem() instanceof com.jeladastudios.feelthenature.world.UmbrellaItem;
         b.append(" umbrella=").append(umbrellaOpen ? "open" : holding ? "closed" : "none");
+        var biome = player.level().getBiome(player.blockPosition());
+        b.append(" biome=").append(biome.unwrapKey().map(k -> k.location().toString()).orElse("?"))
+                .append(String.format(java.util.Locale.ROOT, ":%.2f", biome.value().getBaseTemperature()));
         b.append(" life=").append(com.jeladastudios.feelthenature.client.life.AmbientLife.countsAndReset());
         // Microseconds a tick, on average and at the most, for the soundscape and for the small life.
         b.append(String.format(java.util.Locale.ROOT, " cost=sound:%d/%d,", costNanos / Math.max(1, costTicks) / 1000, costMax / 1000))
@@ -297,6 +303,68 @@ public final class Soundscape {
                     0.9f + 0.2f * RANDOM.nextFloat(), RANDOM, false, 0, SoundInstance.Attenuation.LINEAR,
                     AROUND.tree.getX() + 0.5, AROUND.tree.getY() + 0.5, AROUND.tree.getZ() + 0.5, false));
         }
+    }
+
+    // === The creatures ==========================================================
+
+    private static final ResourceLocation HAWK = new ResourceLocation(FeelTheNature.MODID, "hawk_call");
+    private static final ResourceLocation OWL = new ResourceLocation(FeelTheNature.MODID, "owl_hoot");
+    private static final ResourceLocation LOON = new ResourceLocation(FeelTheNature.MODID, "loon_call");
+
+    /**
+     * The birds, the crickets, the frogs and the bees round the player ({@link Fauna}), heard as far as the outside
+     * reaches them; and now and then a single call from a place: a hawk high over open country, an owl in a wood, a
+     * loon out on a lake.
+     */
+    private static void fauna(ClientLevel level, LocalPlayer player, float rain, float hear, float underWater) {
+        float v = underWater * ClientConfig.FAUNA_VOLUME.get().floatValue();
+        if (v <= 0f) return;
+        BlockPos at = player.blockPosition();
+        float temperature = Fauna.temperature(level.getBiome(at).value().getBaseTemperature(), player.getY());
+        Fauna.Place place = new Fauna.Place(AROUND.leaves, AROUND.conifers, AROUND.open, AROUND.flowers,
+                AROUND.stillWater, AROUND.sky);
+        Fauna.Moment moment = new Fauna.Moment(level.getDayTime(),
+                com.jeladastudios.feelthenature.client.life.SeasonBridge.subSeason(level, at), temperature, rain, heardWind);
+        Fauna.Beds b = Fauna.beds(place, moment);
+        // Under the canopy the birds are all round as much as in the open; in a room or a cave, not at all.
+        float reach = Math.min(1f, hear + AROUND.leavesOver) * v;
+        ask(Layer.BIRDS_FOREST, b.forest() * reach);
+        ask(Layer.BIRDS_CONIFER, b.conifer() * reach);
+        ask(Layer.BIRDS_MEADOW, b.meadow() * hear * v);
+        ask(Layer.DAWN_BROADLEAF, b.dawnBroadleaf() * reach);
+        ask(Layer.DAWN_CONIFER, b.dawnConifer() * reach);
+        ask(Layer.CRICKETS, b.crickets() * hear * v);
+        ask(Layer.FROGS, b.frogs() * hear * v);
+        ask(Layer.BEES, b.bees() * hear * v);
+
+        if (hear < 0.3f) return;
+        if (RANDOM.nextFloat() < Fauna.hawkChance(place, moment, player.getY())) {
+            // High and far over the open country.
+            call(HAWK, player, 30 + RANDOM.nextInt(30), 15 + RANDOM.nextInt(20), 0.5f * v);
+        }
+        if (RANDOM.nextFloat() < Fauna.owlChance(place, moment)) {
+            if (AROUND.tree != null) call(OWL, AROUND.tree, 0.45f * v);
+            else call(OWL, player, 15 + RANDOM.nextInt(15), 5, 0.45f * v);
+        }
+        if (RANDOM.nextFloat() < Fauna.loonChance(place, moment)) {
+            call(LOON, player, 40 + RANDOM.nextInt(40), 0, 0.55f * v);
+        }
+    }
+
+    /** A single call from a place some way off the player, in a random direction, and this much higher. */
+    private static void call(ResourceLocation id, LocalPlayer player, int distance, int above, float volume) {
+        double a = RANDOM.nextDouble() * Math.PI * 2;
+        playCall(id, player.getX() + Math.cos(a) * distance, player.getEyeY() + above, player.getZ() + Math.sin(a) * distance, volume);
+    }
+
+    private static void call(ResourceLocation id, BlockPos from, float volume) {
+        playCall(id, from.getX() + 0.5, from.getY() + 0.5, from.getZ() + 0.5, volume);
+    }
+
+    private static void playCall(ResourceLocation id, double x, double y, double z, float volume) {
+        Minecraft.getInstance().getSoundManager().play(new SimpleSoundInstance(id, SoundSource.AMBIENT, volume,
+                0.95f + 0.1f * RANDOM.nextFloat(), RANDOM, false, 0, SoundInstance.Attenuation.NONE, x, y, z, false));
+        if (TRACE) FeelTheNature.LOGGER.info("FAUNA_CALL {}", id.getPath());
     }
 
     // === Playing ================================================================

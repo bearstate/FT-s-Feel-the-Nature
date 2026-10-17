@@ -9,7 +9,7 @@ public final class ClientConfig {
 
     public static final ForgeConfigSpec SPEC;
     public static final ForgeConfigSpec.BooleanValue SOUNDSCAPE;
-    public static final ForgeConfigSpec.DoubleValue RAIN_VOLUME, SURFACE_VOLUME, WIND_VOLUME, DRIP_VOLUME;
+    public static final ForgeConfigSpec.DoubleValue RAIN_VOLUME, SURFACE_VOLUME, WIND_VOLUME, DRIP_VOLUME, FAUNA_VOLUME;
     public static final ForgeConfigSpec.IntValue MAX_LAYERS;
     public static final ForgeConfigSpec.BooleanValue DEBUG_LINE;
     public static final ForgeConfigSpec.BooleanValue AMBIENT_LIFE;
@@ -29,6 +29,9 @@ public final class ClientConfig {
                 .defineInRange("windVolume", 1.0, 0.0, 2.0);
         DRIP_VOLUME = b.comment("Water dripping from leaves and roofs after the rain, and trees creaking in a gale.")
                 .defineInRange("dripVolume", 1.0, 0.0, 2.0);
+        FAUNA_VOLUME = b.comment("The country's creatures: birds by day and a chorus at dawn, crickets and owls at night, frogs by",
+                        "still water, bees over flowers, now and then a hawk or a loon. 0 turns them off.")
+                .defineInRange("faunaVolume", 1.0, 0.0, 2.0);
         MAX_LAYERS = b.comment("At most this many layers play at once; when more are called for, the quietest give way",
                         "first. Each layer playing holds its recording in memory, a few megabytes.")
                 .defineInRange("maxLayers", 8, 2, 16);

@@ -1,5 +1,6 @@
 package com.jeladastudios.feelthenature.client.sound;
 
+import com.jeladastudios.feelthenature.GeologyBridge;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -31,6 +32,11 @@ final class Surroundings {
     float openNear = 1f;
     /** The share of the ground round the player that is deciduous canopy, needles, water, bare rock, or grass. */
     float leaves, conifers, water, rock, grass;
+    /**
+     * For the creatures: the share of the ground that is open land (grass, flowers, bare soil), flowers, and still
+     * fresh water (a lake or a pond, not a running river or the sea).
+     */
+    float open, flowers, stillWater;
     /** A tree near the player, for a creak to come from; null where there is none. */
     BlockPos tree;
 
@@ -122,7 +128,7 @@ final class Surroundings {
 
     /** The ground round the player that the rain falls on and the wind moves, from forty random columns. */
     private void ground(ClientLevel level, BlockPos eye) {
-        int n = 0, cLeaves = 0, cNeedles = 0, cWater = 0, cRock = 0, cGrass = 0;
+        int n = 0, cLeaves = 0, cNeedles = 0, cWater = 0, cRock = 0, cGrass = 0, cOpen = 0, cFlowers = 0, cStill = 0;
         BlockPos found = null;
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
         for (int i = 0; i < COLUMNS; i++) {
@@ -136,11 +142,22 @@ final class Surroundings {
             n++;
             if (s.getFluidState().is(FluidTags.WATER)) {
                 cWater++;
+                if (s.getFluidState().isSource() && !GeologyBridge.isRunningRiverWater(level, m, s)
+                        && !level.getBiome(m).is(net.minecraft.tags.BiomeTags.IS_OCEAN)
+                        && !level.getBiome(m).is(net.minecraft.tags.BiomeTags.IS_BEACH)) {
+                    cStill++;
+                }
             } else if (s.is(BlockTags.LEAVES)) {
                 if (conifer(s)) cNeedles++; else cLeaves++;
                 if (found == null || random.nextInt(3) == 0) found = m.immutable();
+            } else if (s.is(BlockTags.FLOWERS)) {
+                cFlowers++;
+                cOpen++;
             } else if (s.is(Blocks.GRASS) || s.is(Blocks.TALL_GRASS) || s.is(Blocks.FERN) || s.is(Blocks.LARGE_FERN)) {
+                cOpen++;
                 cGrass++;
+            } else if (s.is(Blocks.GRASS_BLOCK) || s.is(BlockTags.DIRT)) {
+                cOpen++;
             } else if (rocky(s)) {
                 cRock++;
             }
@@ -151,6 +168,9 @@ final class Surroundings {
             water = ease(water, cWater / (float) n);
             rock = ease(rock, cRock / (float) n);
             grass = ease(grass, cGrass / (float) n);
+            open = ease(open, cOpen / (float) n);
+            flowers = ease(flowers, cFlowers / (float) n);
+            stillWater = ease(stillWater, cStill / (float) n);
         }
         tree = found;
     }

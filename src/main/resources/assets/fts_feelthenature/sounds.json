@@ -29,5 +29,16 @@
   "rain_on_umbrella_light": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_on_umbrella_light", "stream": false } ] },
   "rain_on_umbrella_heavy": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_on_umbrella_heavy", "stream": false } ] },
   "umbrella_open": { "category": "player", "subtitle": "subtitles.fts_feelthenature.umbrella_open", "sounds": [ { "name": "fts_feelthenature:umbrella_open" } ] },
-  "umbrella_invert": { "category": "player", "subtitle": "subtitles.fts_feelthenature.umbrella_invert", "sounds": [ { "name": "fts_feelthenature:umbrella_open", "pitch": 0.75 } ] }
+  "umbrella_invert": { "category": "player", "subtitle": "subtitles.fts_feelthenature.umbrella_invert", "sounds": [ { "name": "fts_feelthenature:umbrella_open", "pitch": 0.75 } ] },
+  "birds_forest": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:birds_forest_1", "stream": false }, { "name": "fts_feelthenature:birds_forest_2", "stream": false } ] },
+  "birds_conifer": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:birds_conifer", "stream": false } ] },
+  "birds_meadow": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:birds_meadow", "stream": false } ] },
+  "dawn_broadleaf": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:dawn_broadleaf", "stream": false } ] },
+  "dawn_conifer": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:dawn_conifer", "stream": false } ] },
+  "crickets_night": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:crickets_night", "stream": false } ] },
+  "frogs_pond": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:frogs_pond", "stream": false } ] },
+  "bees_meadow": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:bees_meadow", "stream": false } ] },
+  "hawk_call": { "category": "ambient", "subtitle": "subtitles.fts_feelthenature.hawk_call", "sounds": [ { "name": "fts_feelthenature:hawk_1" }, { "name": "fts_feelthenature:hawk_2" }, { "name": "fts_feelthenature:hawk_3" } ] },
+  "owl_hoot": { "category": "ambient", "subtitle": "subtitles.fts_feelthenature.owl_hoot", "sounds": [ { "name": "fts_feelthenature:owl_1" }, { "name": "fts_feelthenature:owl_2" }, { "name": "fts_feelthenature:owl_3" } ] },
+  "loon_call": { "category": "ambient", "subtitle": "subtitles.fts_feelthenature.loon_call", "sounds": [ { "name": "fts_feelthenature:loon_1" }, { "name": "fts_feelthenature:loon_2" }, { "name": "fts_feelthenature:loon_3" } ] }
 }

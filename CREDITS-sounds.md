@@ -1,7 +1,7 @@
 # Sound credits
 
-Every recording in this addon comes from [Freesound](https://freesound.org) and is released under
-**Creative Commons 0** (public domain dedication). No attribution is required, but the recordists are credited here
+Every recording in this addon comes from [Freesound](https://freesound.org). All but one are released under
+**Creative Commons 0** (public domain dedication); the loon's calls are under **CC BY 4.0** and credited below as that licence asks. The recordists are credited here
 with thanks. Each file was cut, looped and level-matched for the game; no other changes unless noted.
 
 | In the addon | Original recording | Recordist | Licence | Edits |
@@ -34,3 +34,18 @@ with thanks. Each file was cut, looped and level-matched for the game; no other 
 | `stream_small` | [Stream River Water Up Close](https://freesound.org/people/jackthemurray/sounds/433589/) | jackthemurray | CC0 | mono |
 | `river_flow` | [Small river](https://freesound.org/people/MicheleFalleri/sounds/578465/) | MicheleFalleri | CC0 | mono |
 | `waterfall_small` | [Hidden waterfall](https://freesound.org/people/BassmanJourney/sounds/632107/) | BassmanJourney | CC0 | mono, the treble softened |
+| `birds_forest_1` | [Forest_Summer_Day_Quiet_Calm_Birds_Insects_Atmo_Nowind_Finland_June_Warm](https://freesound.org/people/Villehardt/sounds/613995/) | Villehardt | CC0 | 0:46 to 2:01 |
+| `birds_forest_2` | [summer forest atmosphere with birds and insects](https://freesound.org/people/Garuda1982/sounds/693184/) | Garuda1982 | CC0 | 0:02 to 1:17 |
+| `dawn_broadleaf` | [Woodland dawn chorus Stereo .flac](https://freesound.org/people/JohnBlackburn14/sounds/571473/) | JohnBlackburn14 | CC0 | 5:40 to 6:55, a 60 Hz high-pass |
+| `dawn_conifer` | [Bird ambience. Coniferous forest dawn chorus.](https://freesound.org/people/SamsterBirdies/sounds/745273/) | SamsterBirdies | CC0 | 0:51 to 2:06 |
+| `birds_conifer` | [Nord_Odal_Nyhus_04_juni_2011_open_forest_birds_insects_wind_through_large_pines](https://freesound.org/people/nfsgit/sounds/121960/) | nfsgit | CC0 | 0:04 to 1:19 |
+| `birds_meadow` | [Skylarks Over Windy Dunes](https://freesound.org/people/Kinoton/sounds/635912/) | Kinoton | CC0 | 1:26 to 2:41, an 80 Hz high-pass |
+| `hawk_1` to `hawk_3` | [red-tailed-hawk.wav](https://freesound.org/people/1888software/sounds/575524/) | 1888software | CC0 | three calls cut out |
+| `owl_1` to `owl_3` | [CricketsandTawnyOwl.wav](https://freesound.org/people/raoul_slayer/sounds/203598/) | raoul_slayer | CC0 | three hoots cut out |
+| `crickets_night` | [crickets.wav](https://freesound.org/people/ES335-001/sounds/440574/) | ES335-001 | CC0 | 2:48 to 4:03 |
+| `bees_meadow` | [Bees gallore - garden hedge full of bees](https://freesound.org/people/myrinvp/sounds/859809/) | myrinvp | CC0 | 0:05 to 1:05 |
+| `frogs_pond` | [grenouilles.WAV](https://freesound.org/people/nicotep/sounds/547899/) | nicotep | CC0 | 0:35 to 1:50 |
+| `loon_1` to `loon_3` | [Loon / Diver call 1](https://freesound.org/people/nicStage/sounds/432605/) | nicStage | **CC BY 4.0** | three calls cut out |
+
+The loon's calls are by **nicStage**, under [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/):
+"Loon / Diver call 1" (https://freesound.org/people/nicStage/sounds/432605/), cut into three calls and level-matched.

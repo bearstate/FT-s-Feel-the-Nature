@@ -42,9 +42,18 @@ public enum Layer {
     WIND_ALPINE("wind_alpine", Group.WIND, 0.4f, true),
     WIND_LEAVES("wind_leaves", Group.WIND, 0.3f, true),
     WIND_CONIFERS("wind_conifers", Group.WIND, 0.38f, true),
-    WIND_GRASS("wind_grass", Group.WIND, 0.3f, true);
+    WIND_GRASS("wind_grass", Group.WIND, 0.3f, true),
+    // The creatures: birds by day in what grows round, the dawn chorus, crickets, frogs and bees.
+    BIRDS_FOREST("birds_forest", Group.FAUNA, 0.35f, true),
+    BIRDS_CONIFER("birds_conifer", Group.FAUNA, 0.3f, true),
+    BIRDS_MEADOW("birds_meadow", Group.FAUNA, 0.3f, true),
+    DAWN_BROADLEAF("dawn_broadleaf", Group.FAUNA, 0.4f, true),
+    DAWN_CONIFER("dawn_conifer", Group.FAUNA, 0.4f, true),
+    CRICKETS("crickets_night", Group.FAUNA, 0.3f, true),
+    FROGS("frogs_pond", Group.FAUNA, 0.35f, true),
+    BEES("bees_meadow", Group.FAUNA, 0.25f, true);
 
-    public enum Group { RAIN, SURFACE, WIND, DRIP }
+    public enum Group { RAIN, SURFACE, WIND, DRIP, FAUNA }
 
     public final ResourceLocation id;
     public final Group group;
@@ -66,6 +75,6 @@ public enum Layer {
 
     /** The game's own volume slider each layer answers to. */
     public SoundSource source() {
-        return group == Group.DRIP ? SoundSource.AMBIENT : SoundSource.WEATHER;
+        return group == Group.DRIP || group == Group.FAUNA ? SoundSource.AMBIENT : SoundSource.WEATHER;
     }
 }
