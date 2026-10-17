@@ -81,6 +81,24 @@ public class FallenLogFeature extends Feature<FallenLogFeature.Config> {
                 level.setBlock(top, (random.nextBoolean() ? Blocks.BROWN_MUSHROOM : Blocks.RED_MUSHROOM).defaultBlockState(), 2);
             }
         }
+        // Along a wet forest's log, the wood rotting into the ground beside it: dark soil, and mushrooms in it. Podzol
+        // keeps a mushroom alive in any light, as the rotting wood would.
+        if (config.mossChance() > 0.2f) {
+            for (int i = 0; i < length; i++) {
+                for (Direction side : new Direction[]{along.getClockWise(), along.getCounterClockWise()}) {
+                    if (random.nextFloat() > 0.35f) continue;
+                    m.set(origin).move(along, i).move(side).move(Direction.DOWN);
+                    BlockState soil = level.getBlockState(m);
+                    if (!(soil.is(Blocks.GRASS_BLOCK) || soil.is(Blocks.DIRT) || soil.is(Blocks.COARSE_DIRT))) continue;
+                    if (!clear(level.getBlockState(m.above()))) continue;
+                    level.setBlock(m, Blocks.PODZOL.defaultBlockState(), 2);
+                    if (random.nextFloat() < 0.45f) {
+                        level.setBlock(m.above(), (random.nextFloat() < 0.7f ? Blocks.BROWN_MUSHROOM : Blocks.RED_MUSHROOM)
+                                .defaultBlockState(), 2);
+                    }
+                }
+            }
+        }
         return true;
     }
 

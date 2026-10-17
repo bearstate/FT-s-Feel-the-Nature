@@ -81,7 +81,7 @@ public class BoulderFeature extends Feature<BoulderFeature.Config> {
     }
 
     /** The first rock under the soil here, or null where there is none within reach. */
-    private static BlockState rockUnder(WorldGenLevel level, BlockPos origin) {
+    static BlockState rockUnder(WorldGenLevel level, BlockPos origin) {
         BlockPos.MutableBlockPos m = origin.mutable();
         for (int d = 1; d <= PROBE; d++) {
             BlockState s = level.getBlockState(m.move(0, -1, 0));

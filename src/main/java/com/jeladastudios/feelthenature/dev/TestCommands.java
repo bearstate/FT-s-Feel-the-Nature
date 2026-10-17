@@ -106,6 +106,16 @@ public final class TestCommands {
                                     c.getSource().sendSuccess(() -> Component.literal("FTN_TEST biome none"), false);
                                     return 0;
                                 })))
+                .then(Commands.literal("log")
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
+                                .executes(c -> fallenLog(c, IntegerArgumentType.getInteger(c, "radius")))))
+                .then(Commands.literal("snowpatch")
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
+                                .executes(c -> snowPatch(c, IntegerArgumentType.getInteger(c, "radius")))))
+                .then(Commands.literal("waterfall")
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
+                                .executes(c -> waterfall(c, IntegerArgumentType.getInteger(c, "radius"), false))
+                                .then(Commands.literal("wet").executes(c -> waterfall(c, IntegerArgumentType.getInteger(c, "radius"), true)))))
                 .then(Commands.literal("seashore")
                         .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
                                 .executes(c -> seashore(c, IntegerArgumentType.getInteger(c, "radius")))))
@@ -227,6 +237,141 @@ public final class TestCommands {
      * tell the sea from a valley under the sea's level that FT's Geology drains later; the world built can. Answers
      * {@code FTN_TEST seashore x z} or {@code FTN_TEST seashore none}.
      */
+    private static int waterfall(CommandContext<CommandSourceStack> c, int radius, boolean wet) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        int px = player.getBlockX(), pz = player.getBlockZ();
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        int[] drops = new int[5];
+        for (int r = 0; r <= radius; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int x = px + dx, z = pz + dz;
+                    if (!level.hasChunk(x >> 4, z >> 4)) continue;
+                    int g = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                    m.set(x, g, z);
+                    if (!level.getBlockState(m).is(net.minecraft.world.level.block.Blocks.MOSS_CARPET)) m.move(0, -1, 0);
+                    // Over the edge, the lip's water first spreads a block before it falls.
+                    if (!falling(level, m) && level.getFluidState(m).is(net.minecraft.tags.FluidTags.WATER)) m.move(0, -1, 0);
+                    int top = m.getY(), drop = 0;
+                    while (drop < 40 && falling(level, m)) {
+                        drop++;
+                        m.move(0, -1, 0);
+                    }
+                    if (drop > 0) drops[Math.min(drop, 4)]++;
+                    if (drop < 4) continue;
+                    if (wet) com.jeladastudios.feelthenature.world.RiparianFeature.spray(level, new BlockPos(x, top, z), level.random);
+                    int fy = m.getY(), moss = 0;
+                    for (BlockPos p : BlockPos.betweenClosed(x - 3, fy - 1, z - 3, x + 3, fy + 3, z + 3)) {
+                        if (level.getBlockState(p).is(net.minecraft.world.level.block.Blocks.MOSSY_COBBLESTONE)) moss++;
+                    }
+                    player.teleportTo(level, x + 6.5, fy + 4, z + 6.5, 135f, 25f);
+                    int mossy = moss;
+                    c.getSource().sendSuccess(() -> Component.literal("FTN_TEST waterfall " + x + " " + fy + " " + z
+                            + " drop=" + (top - fy) + " mossy=" + mossy), false);
+                    return 1;
+                }
+            }
+        }
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST waterfall none drops=" + java.util.Arrays.toString(drops)), false);
+        return 0;
+    }
+
+    /**
+     * Takes the player beside the nearest fallen log in the country loaded round them: a lying log with moss on it.
+     * Answers {@code FTN_TEST log x y z podzol=N mushrooms=N} or {@code FTN_TEST log none}.
+     */
+    private static int fallenLog(CommandContext<CommandSourceStack> c, int radius) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        int px = player.getBlockX(), pz = player.getBlockZ();
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        for (int r = 0; r <= radius; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int x = px + dx, z = pz + dz;
+                    if (!level.hasChunk(x >> 4, z >> 4)) continue;
+                    int g = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                    m.set(x, g, z);
+                    if (!level.getBlockState(m).is(net.minecraft.world.level.block.Blocks.MOSS_CARPET)) m.move(0, -1, 0);
+                    var top = level.getBlockState(m);
+                    if (!top.is(net.minecraft.world.level.block.Blocks.MOSS_CARPET)) continue;
+                    var log = level.getBlockState(m.below());
+                    if (!log.is(net.minecraft.tags.BlockTags.LOGS)
+                            || !log.hasProperty(net.minecraft.world.level.block.RotatedPillarBlock.AXIS)
+                            || log.getValue(net.minecraft.world.level.block.RotatedPillarBlock.AXIS) == Direction.Axis.Y) continue;
+                    int y = m.getY() - 1, podzol = 0, mushrooms = 0;
+                    for (BlockPos p : BlockPos.betweenClosed(x - 6, y - 2, z - 6, x + 6, y + 1, z + 6)) {
+                        var s = level.getBlockState(p);
+                        if (s.is(net.minecraft.world.level.block.Blocks.PODZOL)) podzol++;
+                        if (s.is(net.minecraft.world.level.block.Blocks.BROWN_MUSHROOM) || s.is(net.minecraft.world.level.block.Blocks.RED_MUSHROOM)) mushrooms++;
+                    }
+                    player.teleportTo(level, x + 3.5, y + 3, z + 3.5, 135f, 35f);
+                    int pd = podzol, mu = mushrooms;
+                    c.getSource().sendSuccess(() -> Component.literal("FTN_TEST log " + x + " " + y + " " + z
+                            + " podzol=" + pd + " mushrooms=" + mu), false);
+                    return 1;
+                }
+            }
+        }
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST log none"), false);
+        return 0;
+    }
+
+    /**
+     * Takes the player over the nearest patch of snow lying among bare ground in the country loaded round them: a snow
+     * block on top with no snow on the ground six blocks to the west, east, north or south of it. Answers
+     * {@code FTN_TEST snowpatch x y z biome} or {@code FTN_TEST snowpatch none}.
+     */
+    private static int snowPatch(CommandContext<CommandSourceStack> c, int radius) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        int px = player.getBlockX(), pz = player.getBlockZ();
+        for (int r = 0; r <= radius; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int x = px + dx, z = pz + dz;
+                    if (!level.hasChunk(x >> 4, z >> 4) || !snowTop(level, x, z, true)) continue;
+                    boolean bare = false;
+                    for (Direction d : Direction.Plane.HORIZONTAL) {
+                        int bx = x + d.getStepX() * 6, bz = z + d.getStepZ() * 6;
+                        if (level.hasChunk(bx >> 4, bz >> 4) && !snowTop(level, bx, bz, false)) bare = true;
+                    }
+                    if (!bare) continue;
+                    int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                    String biome = level.getBiome(new BlockPos(x, y, z)).unwrapKey().map(k -> k.location().toString()).orElse("?");
+                    player.teleportTo(level, x + 0.5, y + 8, z - 7.5, 0f, 40f);
+                    c.getSource().sendSuccess(() -> Component.literal("FTN_TEST snowpatch " + x + " " + y + " " + z + " " + biome), false);
+                    return 1;
+                }
+            }
+        }
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST snowpatch none"), false);
+        return 0;
+    }
+
+    /** Whether a column's top is snow: a snow block (firm) or any snow at all. */
+    private static boolean snowTop(ServerLevel level, int x, int z, boolean firm) {
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        var top = level.getBlockState(new BlockPos(x, y - 1, z));
+        if (top.is(net.minecraft.world.level.block.Blocks.SNOW_BLOCK)) return true;
+        if (firm) return false;
+        return level.getBlockState(new BlockPos(x, y, z)).is(net.minecraft.world.level.block.Blocks.SNOW)
+                || top.is(net.minecraft.world.level.block.Blocks.SNOW);
+    }
+
+    private static boolean falling(ServerLevel level, BlockPos at) {
+        var f = level.getFluidState(at);
+        return f.is(net.minecraft.tags.FluidTags.WATER) && f.hasProperty(net.minecraft.world.level.material.FlowingFluid.FALLING)
+                && f.getValue(net.minecraft.world.level.material.FlowingFluid.FALLING);
+    }
+
     private static int seashore(CommandContext<CommandSourceStack> c, int radius) {
         ServerPlayer player = c.getSource().getPlayer();
         if (player == null) return 0;
