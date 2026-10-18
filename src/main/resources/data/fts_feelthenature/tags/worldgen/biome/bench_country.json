@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "fts_geology:alpine_meadow", "required": false },
+    { "id": "fts_geology:treeline", "required": false },
+    { "id": "fts_geology:subalpine_forest", "required": false },
+    { "id": "fts_geology:montane_forest", "required": false }
+  ]
+}

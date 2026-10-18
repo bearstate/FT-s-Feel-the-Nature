@@ -1,6 +1,0 @@
-{
-  "feature": "fts_feelthenature:view_bench",
-  "placement": [
-    { "type": "minecraft:rarity_filter", "chance": 10 }
-  ]
-}

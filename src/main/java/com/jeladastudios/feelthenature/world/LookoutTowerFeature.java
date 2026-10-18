@@ -26,15 +26,15 @@ import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
 /**
- * A fire lookout on a summit: a glazed cab on four splayed timber legs, braced in X between girts, a switchback stair
- * up the middle, a walkway round the cab under the eaves, a hipped roof. Kept as a weather station as much as a lookout:
- * FT's Geology's instruments -- the terminal and the barometer and hygrometer inside, the rain gauge and thermometer on
- * the walkway's corner posts in the open, the anemometer on the roof's peak -- and lived in: a bed, a stove and its
- * chimney, a lantern, the fire finder on its stand in the middle of the floor.
+ * A fire lookout on a summit: a glazed cab on four splayed timber legs, girts and knee braces at each step, a
+ * switchback stair up the middle, a walkway round the cab under the eaves carried on brackets, a hipped roof. Kept as a
+ * weather station as much as a lookout: FT's Geology's instruments -- the terminal and the barometer and hygrometer
+ * inside, the rain gauge and thermometer on the walkway's corner posts in the open, the anemometer on the roof's peak --
+ * and lived in: a bed, a stove and its chimney, lanterns, the fire finder on its stand in the middle of the floor.
  *
- * <p>Built in place from blocks, turned to one of four ways at random. The legs stand on piers taken down to the ground,
- * so a slope under the tower does not leave it hanging; where FT's Geology is not installed its instruments are left
- * out.</p>
+ * <p>Built in place from blocks, turned to one of four ways at random, the ground under it left as it lies: the legs
+ * stand down into it where it is higher and on stone footings taken down to it where it is lower. Where FT's Geology is
+ * not installed its instruments are left out.</p>
  */
 public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
@@ -83,23 +83,25 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         BlockPos site = site(level, chunk);
         if (site == null || site.getX() >> 4 != chunk.x || site.getZ() >> 4 != chunk.z) return false;
         // The tower stands on the summit as the world built it: the most level spot within a few blocks of the summit
-        // found, the higher where two are as level, if any is level enough.
+        // found, the higher where two are as level, if any is level enough; its foot at the ground in its middle, where the
+        // stair comes down.
         int fx = 0, fz = 0, fy = 0, rough = Integer.MAX_VALUE;
         for (int ox = -SHIFT; ox <= SHIFT; ox += 4) {
             for (int oz = -SHIFT; oz <= SHIFT; oz += 4) {
-                int x = site.getX() + ox, z = site.getZ() + oz, lo = Integer.MAX_VALUE, hi = Integer.MIN_VALUE;
+                int x = site.getX() + ox, z = site.getZ() + oz, lo = Integer.MAX_VALUE, hi = Integer.MIN_VALUE, mid = 0;
                 for (int dx = -5; dx <= 5; dx += 5) {
                     for (int dz = -5; dz <= 5; dz += 5) {
                         int h = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x + dx, z + dz);
                         lo = Math.min(lo, h);
                         hi = Math.max(hi, h);
+                        if (dx == 0 && dz == 0) mid = h;
                     }
                 }
-                if (hi - lo < rough || (hi - lo == rough && lo > fy)) {
+                if (hi - lo < rough || (hi - lo == rough && mid > fy)) {
                     rough = hi - lo;
                     fx = x;
                     fz = z;
-                    fy = lo;
+                    fy = mid;
                 }
             }
         }
@@ -199,10 +201,17 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         return sum / 12.0;
     }
 
-    /** The tower built with its foot at a point, turned one of four ways. */
+    /**
+     * The tower built with its foot at a point, turned one of four ways. The ground is left as it lies under it: what
+     * grows there is cleared, a way is cut for the stair and the door to it, the legs stand down into the ground where it
+     * is higher and on stone footings taken down to it where it is lower.
+     */
     public static boolean build(WorldGenLevel level, BlockPos foot, RandomSource random) {
         Builder b = new Builder(level, foot, Rotation.getRandom(random));
-        b.clear(5, FLOOR + 10);
+        b.clearGrowth(6, FLOOR + 10);
+        // The stair's well, and the way in to its foot from the west.
+        b.carve(-2, 2, -1, 1, 0, FLOOR - 1);
+        b.carve(-6, -3, -1, 1, 0, 2);
         legs(b);
         stair(b);
         cab(b);
@@ -230,17 +239,45 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
                         int o = legAt(y - 1);
                         b.set(sx * o, y, sz * o, post);
                         b.set(sx * r, y, sz * o, post);
+                        b.set(sx * o, y, sz * r, post);
                     }
                 }
                 b.pier(sx * legAt(0), sz * legAt(0), Blocks.STONE_BRICKS.defaultBlockState());
             }
         }
-        // Girts round the frame at each step, and under the walkway.
-        for (int y : new int[]{4, 9, FLOOR - 1}) girts(b, y, legAt(y));
-        // X-bracing on each face between the girts.
-        brace(b, 0, 4, legAt(0));
-        brace(b, 5, 9, legAt(5));
-        brace(b, 10, FLOOR - 1, legAt(10));
+        // Girts round the frame at each step and under the walkway, a knee brace under each where it meets a leg.
+        for (int y : new int[]{4, 9, FLOOR - 1}) {
+            int r = legAt(y);
+            girts(b, y, r);
+            knees(b, y - 1, r);
+        }
+        // Brackets under the walkway's edge, from the top girts out.
+        corbels(b, FLOOR - 1, 4);
+    }
+
+    /** Upside-down stairs in the corners between the legs and a girt over them, their foot against the leg. */
+    private static void knees(Builder b, int y, int r) {
+        for (int sx = -1; sx <= 1; sx += 2) {
+            for (int sz = -1; sz <= 1; sz += 2) {
+                b.setIfAir(sx * (r - 1), y, sz * r, upside(sx > 0 ? Direction.EAST : Direction.WEST));
+                b.setIfAir(sx * r, y, sz * (r - 1), upside(sz > 0 ? Direction.SOUTH : Direction.NORTH));
+            }
+        }
+    }
+
+    /** A ring of upside-down stairs at a height, their foot inward: the walkway's edge carried out on brackets. */
+    private static void corbels(Builder b, int y, int r) {
+        for (int i = -r; i <= r; i++) {
+            b.setIfAir(i, y, -r, upside(Direction.SOUTH));
+            b.setIfAir(i, y, r, upside(Direction.NORTH));
+            b.setIfAir(-r, y, i, upside(Direction.EAST));
+            b.setIfAir(r, y, i, upside(Direction.WEST));
+        }
+    }
+
+    private static BlockState upside(Direction facing) {
+        return Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(StairBlock.FACING, facing)
+                .setValue(StairBlock.HALF, net.minecraft.world.level.block.state.properties.Half.TOP);
     }
 
     private static void girts(Builder b, int y, int r) {
@@ -249,23 +286,6 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
             b.set(i, y, r, log(Direction.Axis.X));
             b.set(-r, y, i, log(Direction.Axis.Z));
             b.set(r, y, i, log(Direction.Axis.Z));
-        }
-    }
-
-    /** A pair of diagonals of fence posts across each face, from girt to girt. */
-    private static void brace(Builder b, int y0, int y1, int r) {
-        BlockState fence = Blocks.SPRUCE_FENCE.defaultBlockState();
-        int span = 2 * r - 2;
-        if (span <= 0 || y1 - y0 < 2) return;
-        for (int i = 0; i <= span; i++) {
-            int a = -r + 1 + i;
-            int up = y0 + 1 + Math.round((float) i * (y1 - y0 - 2) / span), down = y1 - 1 - (up - y0 - 1);
-            for (int y : new int[]{up, down}) {
-                b.setIfAir(a, y, -r, fence);
-                b.setIfAir(a, y, r, fence);
-                b.setIfAir(-r, y, a, fence);
-                b.setIfAir(r, y, a, fence);
-            }
         }
     }
 
@@ -384,6 +404,9 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         b.geology(5, FLOOR + 2, -5, "rain_gauge", Direction.SOUTH);
         b.geology(-5, FLOOR + 2, 5, "thermometer", Direction.NORTH);
         b.geology(0, FLOOR + 9, 0, "anemometer", Direction.SOUTH);
+        // Lanterns on the other two corner posts.
+        b.set(-5, FLOOR + 2, -5, Blocks.LANTERN.defaultBlockState());
+        b.set(5, FLOOR + 2, 5, Blocks.LANTERN.defaultBlockState());
         // A pot of something green on the sill by the door.
         if (random.nextBoolean()) b.set(2, f, 1, Blocks.POTTED_FERN.defaultBlockState());
     }

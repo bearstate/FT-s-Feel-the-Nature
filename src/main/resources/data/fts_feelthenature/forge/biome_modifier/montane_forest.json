@@ -1,6 +1,6 @@
 {
   "type": "forge:add_features",
   "biomes": "#fts_feelthenature:montane_forest",
-  "features": ["fts_feelthenature:montane_fallen_log","fts_feelthenature:montane_moss","fts_feelthenature:montane_boulder","fts_feelthenature:montane_lily_of_the_valley","fts_feelthenature:montane_large_fern","fts_feelthenature:montane_bench"],
+  "features": ["fts_feelthenature:montane_fallen_log","fts_feelthenature:montane_moss","fts_feelthenature:montane_boulder","fts_feelthenature:montane_lily_of_the_valley","fts_feelthenature:montane_large_fern"],
   "step": "vegetal_decoration"
 }

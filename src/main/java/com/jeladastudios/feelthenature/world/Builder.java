@@ -68,6 +68,34 @@ final class Builder {
         }
     }
 
+    /**
+     * What grows in a box cleared, the ground left as it lies: trees, leaves, plants and loose snow, not soil or rock.
+     * x and z from -r to r, y from 0 to the height.
+     */
+    void clearGrowth(int r, int height) {
+        for (int x = -r; x <= r; x++) {
+            for (int z = -r; z <= r; z++) {
+                for (int y = 0; y <= height; y++) {
+                    BlockState s = level.getBlockState(at(x, y, z));
+                    if (s.isAir()) continue;
+                    boolean ground = s.isSolidRender(level, m) && !s.is(BlockTags.LOGS) && !s.is(BlockTags.LEAVES);
+                    if (!ground && s.getFluidState().isEmpty()) level.setBlock(m, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+                }
+            }
+        }
+    }
+
+    /** The ground cut away in a box, from y0 to y1, where a way through it is wanted. */
+    void carve(int x0, int x1, int z0, int z1, int y0, int y1) {
+        for (int x = x0; x <= x1; x++) {
+            for (int z = z0; z <= z1; z++) {
+                for (int y = y0; y <= y1; y++) {
+                    if (!level.getBlockState(at(x, y, z)).isAir()) level.setBlock(m, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+                }
+            }
+        }
+    }
+
     /** A pier of a block under a point, down to firm ground. */
     void pier(int x, int z, BlockState block) {
         for (int y = -1; y >= -12; y--) {

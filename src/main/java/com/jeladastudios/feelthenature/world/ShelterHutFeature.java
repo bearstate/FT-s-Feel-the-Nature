@@ -32,6 +32,11 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  */
 public class ShelterHutFeature extends Feature<NoneFeatureConfiguration> {
 
+    /** The country shelters are built in: the high pastures and the tree line. */
+    static final net.minecraft.tags.TagKey<net.minecraft.world.level.biome.Biome> COUNTRY = net.minecraft.tags.TagKey.create(
+            net.minecraft.core.registries.Registries.BIOME,
+            new net.minecraft.resources.ResourceLocation(com.jeladastudios.feelthenature.FeelTheNature.MODID, "shelter_country"));
+
     public ShelterHutFeature(Codec<NoneFeatureConfiguration> codec) {
         super(codec);
     }
@@ -42,6 +47,7 @@ public class ShelterHutFeature extends Feature<NoneFeatureConfiguration> {
         RandomSource random = context.random();
         BlockPos origin = context.origin();
         int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, origin.getX(), origin.getZ());
+        if (!level.getBiome(new BlockPos(origin.getX(), y, origin.getZ())).is(COUNTRY)) return false;
         // Near enough level and open over the hut's footprint and a block round it: what stands higher is cut away,
         // what lies lower built up.
         for (int dx = -4; dx <= 4; dx++) {

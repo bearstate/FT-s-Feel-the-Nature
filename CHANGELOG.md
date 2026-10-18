@@ -13,10 +13,11 @@ The country's small details, and its mornings.
 - **Motes in the sun**: dust glinting in the shafts of light through a wood's crowns on a still, dry day.
 - **Snow off the crowns**: a gust shakes the snow off the trees that hold it.
 - **Fire lookouts** on prominent summits of hill and mountain country, one in a stretch of country at most: a glazed
-  cab on four splayed timber legs, braced in X, a switchback stair up the middle, a walkway under the eaves. Kept as a
-  weather station with FT's Geology's instruments (the terminal, barometer and hygrometer inside, the rain gauge and
-  thermometer on the walkway's posts, the anemometer on the roof), and lived in: a bed, a stove and its smoking
-  chimney, the fire finder on its stand in the middle of the floor.
+  cab on four splayed timber legs, girts and knee braces at each step, a switchback stair up the middle, a walkway
+  under the eaves carried on brackets. Kept as a weather station with FT's Geology's instruments (the terminal,
+  barometer and hygrometer inside, the rain gauge and thermometer on the walkway's posts, the anemometer on the roof),
+  and lived in: a bed, a stove and its smoking chimney, lanterns, the fire finder on its stand in the middle of the
+  floor. The legs stand into the ground or on stone footings, the ground left as it lies.
 - **Cairns** on the bare tops of the alpine meadows and the scree, of the rock under them.
 - **Mountain shelters** on the high pastures: a dry-stone hut with a pitched roof, a stove and a bunk.
 - **Benches** where the ground falls away before a view.
