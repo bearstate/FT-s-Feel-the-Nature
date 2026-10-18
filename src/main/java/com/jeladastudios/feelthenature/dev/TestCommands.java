@@ -124,6 +124,7 @@ public final class TestCommands {
                         .then(Commands.argument("drop", com.mojang.brigadier.arguments.DoubleArgumentType.doubleArg(0, 100))
                                 .executes(c -> fallsHere(c, IntegerArgumentType.getInteger(c, "radius"),
                                         com.mojang.brigadier.arguments.DoubleArgumentType.getDouble(c, "drop"))))))
+                .then(Commands.literal("trail").executes(TestCommands::trail))
                 .then(Commands.literal("tower").executes(TestCommands::tower))
                 .then(Commands.literal("towersite").executes(TestCommands::towerSite))
                 .then(Commands.literal("towersites").then(Commands.argument("radius", IntegerArgumentType.integer(0, 6))
@@ -554,6 +555,23 @@ public final class TestCommands {
                 com.jeladastudios.feelthenature.GeologyBridge.groundHeight(level, player.getBlockX(), player.getBlockZ())));
         String out = s.toString();
         c.getSource().sendSuccess(() -> Component.literal(out), false);
+        return 1;
+    }
+
+    /** The trail of the nearest lookout: its points, length and foot; the player taken to its middle. */
+    private static int trail(CommandContext<CommandSourceStack> c) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        var trails = com.jeladastudios.feelthenature.world.TrailFeature.nearPublic(level, player.getBlockX(), player.getBlockZ());
+        if (trails.isEmpty()) {
+            c.getSource().sendSuccess(() -> Component.literal("FTN_TEST trail none"), false);
+            return 0;
+        }
+        int[] t = trails.get(0);
+        player.teleportTo(level, t[4] + 0.5, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, t[4], t[5]) + 12, t[5] + 0.5, 0f, 70f);
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST trail points=" + t[0] + " from " + t[1] + " " + t[2]
+                + " foot " + t[3] + " " + t[6] + " mid " + t[4] + " " + t[5]), false);
         return 1;
     }
 

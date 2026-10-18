@@ -25,6 +25,8 @@ public class RescueSignFeature extends Feature<NoneFeatureConfiguration> {
 
     /** How far from a lookout its boards are put up, in blocks. */
     static final int REACH = 400;
+    /** One chance in how many a chunk has a board: one a trail crosses, and one elsewhere near a lookout. */
+    static final int ALONG = 4, ELSEWHERE = 500;
 
     public RescueSignFeature(Codec<NoneFeatureConfiguration> codec) {
         super(codec);
@@ -37,9 +39,24 @@ public class RescueSignFeature extends Feature<NoneFeatureConfiguration> {
         int x0 = context.origin().getX() & ~15, z0 = context.origin().getZ() & ~15;
         BlockPos tower = nearestTower(level, x0 + 8, z0 + 8);
         if (tower == null) return false;
+        // Mostly on the trees along a lookout's trail; elsewhere seldom.
+        java.util.List<int[]> beside = new java.util.ArrayList<>();
+        for (TrailFeature.Trail t : TrailFeature.near(level, x0 + 8, z0 + 8)) {
+            if (!t.crosses(x0, z0, x0 + 15, z0 + 15)) continue;
+            for (int i = 0; i < t.xs().length; i++) {
+                for (int dx = -3; dx <= 3; dx++) {
+                    for (int dz = -3; dz <= 3; dz++) {
+                        int x = t.xs()[i] + dx, z = t.zs()[i] + dz;
+                        if (Math.abs(dx) + Math.abs(dz) >= 2 && x >= x0 && x < x0 + 16 && z >= z0 && z < z0 + 16) beside.add(new int[]{x, z});
+                    }
+                }
+            }
+        }
+        if (beside.isEmpty() ? random.nextInt(ELSEWHERE) != 0 : random.nextInt(ALONG) != 0) return false;
         // A trunk standing on the ground in this chunk, with room beside it at eye height.
         for (int tries = 0; tries < 24; tries++) {
-            int x = x0 + random.nextInt(16), z = z0 + random.nextInt(16);
+            int[] spot = beside.isEmpty() ? new int[]{x0 + random.nextInt(16), z0 + random.nextInt(16)} : beside.get(random.nextInt(beside.size()));
+            int x = spot[0], z = spot[1];
             // Down the trunk from its top to the ground it stands on; the board at a walker's eye, two blocks up it.
             BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1, z);
             if (!level.getBlockState(m).is(BlockTags.LOGS)) continue;

@@ -1,6 +1,6 @@
 {
   "type": "forge:add_features",
   "biomes": "#minecraft:is_overworld",
-  "features": "fts_feelthenature:lookout_tower",
+  "features": ["fts_feelthenature:trail", "fts_feelthenature:lookout_tower"],
   "step": "top_layer_modification"
 }

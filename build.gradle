@@ -77,6 +77,11 @@ dependencies {
         ['croptopia:4.0.1', 'epherolib:1.2.0', 'hbm:2.0', 'architectury:9.2.14', 'clothconfig:11.1.136', 'geckolib:4.8.4',
          'dynamictrees:1.4.11', 'naturalist:5.0', 'wildernature:1.0.6', 'curios:5.14.1', 'terralith:2.5.4'].each { runtimeOnly fg.deobf("blank:${it}") }
     }
+    // With -Pradio, Simple Radio (the ham fork) and what it needs, for the lookouts' radio stations. Copied into libs/ by
+    // hand; never shipped.
+    if (project.hasProperty('radio')) {
+        ['simpleradio:4.5.7.9-ham', 'voicechat:2.6.22', 'lexiconfig:1.4.21'].each { runtimeOnly fg.deobf("blank:${it}") }
+    }
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

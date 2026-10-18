@@ -96,7 +96,9 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         if (foot == null) return false;
         // Its foot at the ground as the world built it in its middle, where the stair comes down.
         int fy = world.applyAsInt(foot[0], foot[1]);
-        return build(level, new BlockPos(foot[0], fy, foot[1]), context.random(), nearestLandmark(server, foot[0], foot[1]));
+        BlockPos at = new BlockPos(foot[0], fy, foot[1]);
+        var view = nearestLandmark(server, foot[0], foot[1]);
+        return build(level, at, rotation(level, at, view), context.random(), view);
     }
 
     /**
@@ -334,6 +336,12 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     public static boolean build(WorldGenLevel level, BlockPos foot, RandomSource random,
                                 com.jeladastudios.feelthenature.GeologyBridge.Landmark view) {
         Rotation rotation = view == null ? Rotation.getRandom(random) : toward(view.x() - foot.getX(), view.z() - foot.getZ());
+        return build(level, foot, rotation, random, view);
+    }
+
+    /** The tower built turned a given way. */
+    static boolean build(WorldGenLevel level, BlockPos foot, Rotation rotation, RandomSource random,
+                         com.jeladastudios.feelthenature.GeologyBridge.Landmark view) {
         Builder b = new Builder(level, foot, rotation);
         Builder.built("lookout", foot);
         b.clearGrowth(6, FLOOR + 10);
@@ -346,8 +354,126 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         roof(b);
         fit(b, random);
         if (view != null) nameBoard(b, view);
+        radio(b, random);
+        weather(b, random);
         b.join();
         return true;
+    }
+
+    /** The rescue frequency the lookouts listen on, the 2 m band's calling frequency: what their boards and log name. */
+    static final String RESCUE_FREQUENCY = "145.500";
+
+    /**
+     * With Simple Radio installed, the lookout kept as a radio station too, as the real ones are: a station on the cab's
+     * south wall with its antenna tuner on it, set to the rescue frequency, its battery charged, linked by coax to a
+     * dual-band antenna on a mast in an enclosure of iron bars beside the tower -- a lightning rod on a pole by it,
+     * since the radio draws strikes -- and room in the enclosure for whoever comes to put power in. Its charge does
+     * not last: a station left alone runs down, as an abandoned one would.
+     */
+    private static void radio(Builder b, RandomSource random) {
+        if (!net.minecraftforge.fml.ModList.get().isLoaded("simpleradio")) return;
+        Block station = radioBlock("station"), antenna = radioBlock("dual_band_antenna"), tuner = radioBlock("antenna_tuner");
+        if (station == null || antenna == null || tuner == null) return;
+        // The enclosure, a few blocks out from the tower's south-east side as drawn, on the ground as it lies there.
+        BlockPos c = b.at(12, 0, 6).immutable();
+        int y = b.level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, c.getX(), c.getZ());
+        Builder k = new Builder(b.level, new BlockPos(c.getX(), y, c.getZ()), b.rotation);
+        for (int[] corner : new int[][]{{-3, -3}, {3, -3}, {-3, 3}, {3, 3}}) {
+            BlockPos p = k.at(corner[0], 0, corner[1]);
+            int h = b.level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ());
+            if (Math.abs(h - y) > 3 || !b.level.getFluidState(p.below()).isEmpty()) return;
+        }
+        k.clearGrowth(4, 12);
+        k.carve(-3, 3, -3, 3, 0, 4);
+        for (int x = -3; x <= 3; x++) {
+            for (int z = -3; z <= 3; z++) {
+                k.set(x, -1, z, random.nextBoolean() ? Blocks.GRAVEL.defaultBlockState() : Blocks.COARSE_DIRT.defaultBlockState());
+                k.fillDown(x, -2, z, Blocks.COBBLESTONE.defaultBlockState());
+                boolean ring = Math.abs(x) == 3 || Math.abs(z) == 3;
+                // The bars round it, two high, a way in on the side towards the tower.
+                if (ring && !(x == -3 && z == 0)) {
+                    k.set(x, 0, z, Blocks.IRON_BARS.defaultBlockState());
+                    k.set(x, 1, z, Blocks.IRON_BARS.defaultBlockState());
+                }
+            }
+        }
+        // The mast and the antenna on it; the lightning rod's pole two blocks off.
+        for (int h = 0; h <= 8; h++) k.set(1, h, 1, Blocks.IRON_BARS.defaultBlockState());
+        k.set(1, 9, 1, antenna.defaultBlockState());
+        for (int h = 0; h <= 7; h++) k.set(1, h, -1, Blocks.IRON_BARS.defaultBlockState());
+        k.set(1, 8, -1, Blocks.LIGHTNING_ROD.defaultBlockState());
+        k.join();
+        // The station on the cab's south wall, its tuner on it.
+        int f = FLOOR + 1;
+        BlockState s = station.defaultBlockState();
+        if (s.hasProperty(HorizontalDirectionalBlock.FACING)) s = s.setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH);
+        b.set(1, f, 2, s);
+        BlockPos at = b.at(1, f, 2).immutable();
+        b.set(1, f + 1, 2, tuner.defaultBlockState());
+        BlockPos aerial = k.at(1, 9, 1).immutable();
+        var entity = b.level.getBlockEntity(at);
+        if (entity != null) {
+            var tag = entity.saveWithoutMetadata();
+            tag.putString("frequency", RESCUE_FREQUENCY);
+            tag.putString("modulation", "FM");
+            tag.putInt("watts", 25);
+            tag.putDouble("energy", 10_000);
+            var coax = new net.minecraft.nbt.CompoundTag();
+            coax.put("antenna", net.minecraft.nbt.NbtUtils.writeBlockPos(aerial));
+            coax.putInt("items", 0);
+            coax.putDouble("length", Math.sqrt(at.distSqr(aerial)));
+            tag.put("coax", coax);
+            entity.load(tag);
+        }
+        Builder.built("radio_station", aerial);
+    }
+
+    private static Block radioBlock(String name) {
+        Block block = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(new net.minecraft.resources.ResourceLocation("simpleradio", name));
+        return block == null || block == Blocks.AIR ? null : block;
+    }
+
+    /**
+     * The years on it: the footings' stone mossy and cracked where it stands in the wet of the ground, and in a mild,
+     * wet country vines up the legs' outer faces from the foot, a few blocks, more on one leg than another.
+     */
+    private static void weather(Builder b, RandomSource random) {
+        int r = legAt(0);
+        var biome = b.level.getBiome(b.at(0, 0, 0)).value();
+        float downfall = biome.getModifiedClimateSettings().downfall(), warmth = biome.getBaseTemperature();
+        boolean vines = warmth >= 0.4f && warmth < 1.5f && downfall >= 0.5f;
+        for (int sx = -1; sx <= 1; sx += 2) {
+            for (int sz = -1; sz <= 1; sz += 2) {
+                // The footing, from the leg down.
+                for (int y = -1; y >= -12; y--) {
+                    if (!b.get(sx * r, y, sz * r).is(Blocks.STONE_BRICKS)) break;
+                    float f = random.nextFloat();
+                    if (f < 0.4f) b.set(sx * r, y, sz * r, Blocks.MOSSY_STONE_BRICKS.defaultBlockState());
+                    else if (f < 0.55f) b.set(sx * r, y, sz * r, Blocks.CRACKED_STONE_BRICKS.defaultBlockState());
+                }
+                if (!vines) continue;
+                int up = 2 + random.nextInt(5);
+                for (Direction out : new Direction[]{sx > 0 ? Direction.EAST : Direction.WEST, sz > 0 ? Direction.SOUTH : Direction.NORTH}) {
+                    for (int y = 0; y < up; y++) {
+                        int vx = sx * r + out.getStepX(), vz = sz * r + out.getStepZ();
+                        if (!b.get(vx, y, vz).isAir() || random.nextFloat() < 0.2f) continue;
+                        b.set(vx, y, vz, Blocks.VINE.defaultBlockState()
+                                .setValue(net.minecraft.world.level.block.VineBlock.getPropertyForFace(out.getOpposite()), true));
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * The way a tower at a spot is turned: its door to the mountain it looks to, else one of four by the world's seed and
+     * the spot -- the same answer every time it is asked, so its trail can be laid from its stair before it is built.
+     */
+    static Rotation rotation(WorldGenLevel level, BlockPos foot, com.jeladastudios.feelthenature.GeologyBridge.Landmark view) {
+        if (view != null) return toward(view.x() - foot.getX(), view.z() - foot.getZ());
+        long h = level.getSeed() ^ (foot.getX() * 73428767L) ^ (foot.getZ() * 912931L);
+        h ^= h >>> 29;
+        return Rotation.values()[(int) Math.floorMod(h * 0x9E3779B97F4A7C15L >>> 33, 4L)];
     }
 
     /** The turn that brings the tower's east side, its door's, round to face a way across the ground. */
@@ -413,6 +539,36 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         }
         // Brackets under the walkway's edge, from the top girts out.
         corbels(b, FLOOR - 1, 4);
+        // An X across every face of every tier, girt to girt -- but the west face of the foot, where the way in is.
+        int low = 0;
+        for (int i = 0; i < GIRTS.length; i++) {
+            int r = legAt(low);
+            braces(b, low, GIRTS[i] - 1, r, i > 0);
+            low = GIRTS[i] + 1;
+        }
+    }
+
+    /**
+     * The two diagonals of an X on the faces of a tier, from a leg's foot to the far leg's head, of stairs climbing the
+     * way each diagonal climbs: a beam of timber at a slope, not a line of posts. Nothing that stands there is moved.
+     */
+    private static void braces(Builder b, int y0, int y1, int r, boolean west) {
+        int w = 2 * r - 2, h = y1 - y0;
+        if (w <= 0 || h < 2) return;
+        for (int i = 0; i <= w; i++) {
+            int a = -r + 1 + i;
+            int up = y0 + Math.round((float) i * h / w), down = y0 + Math.round((float) (w - i) * h / w);
+            // North and south faces run along x; east and west along z.
+            for (int[] face : new int[][]{{0, -1}, {0, 1}, {1, 0}, {-1, 0}}) {
+                if (face[0] == -1 && !west) continue;
+                boolean alongX = face[0] == 0;
+                int fx = alongX ? a : face[0] * r, fz = alongX ? face[1] * r : a;
+                b.setIfAir(fx, up, fz, Blocks.SPRUCE_STAIRS.defaultBlockState()
+                        .setValue(StairBlock.FACING, alongX ? Direction.EAST : Direction.SOUTH));
+                b.setIfAir(fx, down, fz, Blocks.SPRUCE_STAIRS.defaultBlockState()
+                        .setValue(StairBlock.FACING, alongX ? Direction.WEST : Direction.NORTH));
+            }
+        }
     }
 
     /** Upside-down stairs in the corners between the legs and a girt over them, their foot against the leg. */
@@ -510,40 +666,71 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         BlockState door = Blocks.SPRUCE_DOOR.defaultBlockState().setValue(DoorBlock.FACING, Direction.WEST);
         b.set(3, FLOOR + 1, 0, door.setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER));
         b.set(3, FLOOR + 2, 0, door.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER));
-        // The ceiling.
-        for (int x = -3; x <= 3; x++) for (int z = -3; z <= 3; z++) b.set(x, FLOOR + 4, z, plank);
+        // The ceiling, open in the middle up into the lantern-room over the roof.
+        for (int x = -3; x <= 3; x++) {
+            for (int z = -3; z <= 3; z++) {
+                if (Math.abs(x) > 1 || Math.abs(z) > 1) b.set(x, FLOOR + 4, z, plank);
+            }
+        }
     }
 
-    /** A hipped roof over the cab and the walkway, in dark oak, stepping in a block a course, a block at its peak. */
+    /**
+     * The roof, as the lookouts' are: a hipped roof of dark oak over the cab and the walkway, stepping in a block a course,
+     * and up out of it a lantern-room -- a little glazed cupola with a hipped roof of its own over an overhang, its floor
+     * open down into the cab so the light comes in from above. A whole block at its peak for the anemometer.
+     */
     private static void roof(Builder b) {
         BlockState plank = Blocks.DARK_OAK_PLANKS.defaultBlockState();
-        for (int c = 0; c <= 3; c++) {
-            int y = FLOOR + 4 + c, r = 4 - c;
-            for (int x = -r; x <= r; x++) {
-                for (int z = -r; z <= r; z++) {
-                    int ax = Math.abs(x), az = Math.abs(z);
-                    if (ax < r && az < r) {
-                        b.set(x, y, z, plank);
-                        continue;
-                    }
-                    Direction in;
-                    StairsShape shape = StairsShape.STRAIGHT;
-                    if (ax == r && az == r) {
-                        // A corner: the outer corner piece, facing in along x.
-                        in = x > 0 ? Direction.WEST : Direction.EAST;
-                        shape = (x > 0) == (z > 0) ? StairsShape.OUTER_LEFT : StairsShape.OUTER_RIGHT;
-                    } else if (ax == r) {
-                        in = x > 0 ? Direction.WEST : Direction.EAST;
-                    } else {
-                        in = z > 0 ? Direction.NORTH : Direction.SOUTH;
-                    }
-                    b.set(x, y, z, Blocks.DARK_OAK_STAIRS.defaultBlockState().setValue(StairBlock.FACING, in)
-                            .setValue(StairBlock.SHAPE, shape));
+        // The main roof: courses at four, three and two blocks out; the last only its ring, round the lantern-room.
+        for (int c = 0; c <= 2; c++) hipCourse(b, FLOOR + 4 + c, 4 - c, c < 2 ? plank : null, c < 2 ? 1 : 99);
+        // The lantern-room: a log at each corner, glass between, two blocks high.
+        int base = FLOOR + 6;
+        for (int y = base; y <= base + 1; y++) {
+            for (int i = -1; i <= 1; i++) {
+                for (int[] side : new int[][]{{i, -1}, {i, 1}, {-1, i}, {1, i}}) {
+                    boolean corner = Math.abs(side[0]) == 1 && Math.abs(side[1]) == 1;
+                    b.set(side[0], y, side[1], corner ? log(Direction.Axis.Y) : Blocks.GLASS_PANE.defaultBlockState());
                 }
             }
         }
-        // A whole block at the peak, for the anemometer to stand on.
-        b.set(0, FLOOR + 8, 0, plank);
+        // Its roof: out over an overhang, then up to the peak.
+        hipCourse(b, base + 2, 2, plank, -1);
+        hipCourse(b, base + 3, 1, plank, -1);
+        b.set(0, base + 4, 0, plank);
+        // A lantern hung under it, over the opening.
+        b.set(0, base + 1, 0, Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true));
+    }
+
+    /** The height of the block the anemometer stands on, at the lantern-room's peak. */
+    static final int PEAK = FLOOR + 10;
+
+    /**
+     * One course of a hipped roof at a height, its ring of stairs facing in at {@code r} blocks out, its inside filled
+     * with a block (or left open where {@code fill} is null) but for a hole {@code hole} blocks out from the middle (none
+     * where it is -1).
+     */
+    private static void hipCourse(Builder b, int y, int r, BlockState fill, int hole) {
+        for (int x = -r; x <= r; x++) {
+            for (int z = -r; z <= r; z++) {
+                int ax = Math.abs(x), az = Math.abs(z);
+                if (ax < r && az < r) {
+                    if (fill != null && (ax > hole || az > hole)) b.set(x, y, z, fill);
+                    continue;
+                }
+                Direction in;
+                StairsShape shape = StairsShape.STRAIGHT;
+                if (ax == r && az == r) {
+                    // A corner: the outer corner piece, facing in along x.
+                    in = x > 0 ? Direction.WEST : Direction.EAST;
+                    shape = (x > 0) == (z > 0) ? StairsShape.OUTER_LEFT : StairsShape.OUTER_RIGHT;
+                } else if (ax == r) {
+                    in = x > 0 ? Direction.WEST : Direction.EAST;
+                } else {
+                    in = z > 0 ? Direction.NORTH : Direction.SOUTH;
+                }
+                b.set(x, y, z, Blocks.DARK_OAK_STAIRS.defaultBlockState().setValue(StairBlock.FACING, in).setValue(StairBlock.SHAPE, shape));
+            }
+        }
     }
 
     /**
@@ -561,12 +748,12 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         b.geology(-2, f, -1, "hygrometer", Direction.EAST);
         b.geology(-2, f, 1, "barometer", Direction.EAST);
         b.set(-1, f, 0, Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(StairBlock.FACING, Direction.EAST));
-        // The fire finder in the middle, a lantern over it.
+        // The fire finder in the middle, under the lantern-room.
         b.set(0, f, 0, Blocks.CARTOGRAPHY_TABLE.defaultBlockState());
-        b.set(0, FLOOR + 3, 0, Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true));
-        // The stove and its chimney.
+        // The stove in the corner.
         b.set(-2, f, 2, Blocks.FURNACE.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.EAST));
-        chimney(b, -2, f + 1, 2, FLOOR + 7);
+        // Its chimney built into the wall behind it, up past the eaves.
+        chimney(b, -3, f, 2, FLOOR + 7);
         // The bed along the east wall, its head to the south; the way in from the door kept clear.
         BlockState bed = Blocks.WHITE_BED.defaultBlockState().setValue(BedBlock.FACING, Direction.SOUTH);
         b.set(2, f, 2, bed.setValue(BedBlock.PART, BedPart.HEAD));
@@ -583,7 +770,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         b.set(5, f + 1, 5, Blocks.LIGHTNING_ROD.defaultBlockState());
         b.set(-5, f + 1, -5, Blocks.LANTERN.defaultBlockState());
         b.set(-4, f, 1, Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(StairBlock.FACING, Direction.EAST));
-        b.geology(0, FLOOR + 9, 0, "anemometer", Direction.SOUTH);
+        b.geology(0, PEAK + 1, 0, "anemometer", Direction.SOUTH);
     }
 
     /** The loot the lookout's barrels are filled from, and the visitors' book with a little of it. */
