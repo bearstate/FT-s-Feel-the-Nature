@@ -33,8 +33,9 @@ import net.minecraftforge.fml.common.Mod;
  *   <li>fireflies on a warm, dry night, low over grass and by water -- never in the cold or the rain;</li>
  *   <li>pollen over flowers on a dry day;</li>
  *   <li>leaves coming down from broadleaf crowns, more in a wind, carried with it -- needles hardly fall;</li>
- *   <li>snow blown off the surface by a strong wind;</li>
- *   <li>mist rising off still water on a calm, cold morning ({@link Steam}).</li>
+ *   <li>snow blown off the surface by a strong wind, and shaken off the crowns that hold it by a gust;</li>
+ *   <li>mist rising off still water on a calm, cold morning ({@link Steam});</li>
+ *   <li>motes of dust glinting in the shafts of sun through a wood's crowns on a still, dry day.</li>
  * </ul>
  *
  * <p>Nothing is spawned with the game's particles set to minimal, and only a few tries are made a tick, so the counts
@@ -48,7 +49,7 @@ public final class AmbientLife {
     private static final int REACH = 16;
 
     /** Counts since the last trace line, for the automated game test. */
-    static int fireflies, pollen, leaves, drift, steam;
+    static int fireflies, pollen, leaves, drift, steam, motes, clumps;
     /** Serene Seasons' sub-season the last tick, or -1. */
     private static int season = -1;
     private static long costNanos, costMax;
@@ -84,6 +85,7 @@ public final class AmbientLife {
             event.registerSpriteSet(ModParticles.FIREFLY.get(), FireflyParticle.Provider::new);
             event.registerSpriteSet(ModParticles.POLLEN.get(), PollenParticle.Provider::new);
             event.registerSpriteSet(ModParticles.STEAM.get(), SteamParticle.Provider::new);
+            event.registerSpriteSet(ModParticles.MOTE.get(), MoteParticle.Provider::new);
             event.registerSpecial(ModParticles.FALLING_LEAF.get(), new FallingLeafParticle.Provider());
         }
     }
@@ -118,11 +120,42 @@ public final class AmbientLife {
             float chance = Math.min(1f, (wind - 4.5f) / 5f) * (float) density;
             for (int i = 0; i < 3; i++) if (RANDOM.nextFloat() < chance) spindrift(level, player, wx, wz);
         }
+        if (wind > 2f) {
+            // A gust shakes the snow off the crowns that hold it.
+            float chance = Math.min(1f, (wind - 2f) / 8f) * 0.25f * (float) density
+                    * com.jeladastudios.feelthenature.client.sound.Mix.gusting(GeologyBridge.gust(1f));
+            for (int i = 0; i < 3; i++) if (RANDOM.nextFloat() < chance) snowClump(level, player, wx, wz);
+        }
         float temperature = com.jeladastudios.feelthenature.client.sound.Fauna.temperature(biome.getBaseTemperature(), player.getY());
         float mist = Steam.strength(time, temperature, wind, rain, GeologyBridge.fog(), season);
+        // Motes in the sun under the trees: a still, dry day, most of them when the sun is low and its shafts slant in.
+        if (day && rain < 0.02f && wind < 4f && !level.isThundering()) {
+            float low = 1f - Math.min(1f, Math.min(Math.abs(time - 1000), Math.abs(time - 11500)) / 3000f);
+            float chance = (0.35f + 0.45f * low) * (float) density;
+            for (int i = 0; i < 4; i++) if (RANDOM.nextFloat() < chance) mote(level, player);
+        }
         if (mist > 0.01f) {
             for (int i = 0; i < 24; i++) if (RANDOM.nextFloat() < 0.8f * mist * (float) density) steam(level, player, wx, wz);
         }
+    }
+
+    /**
+     * A mote in a shaft of sun: a point of air that sees the sky straight up, with a crown of leaves a couple of blocks
+     * to one side of it -- a gap in a wood's canopy, where the light comes down through the dust.
+     */
+    private static void mote(ClientLevel level, LocalPlayer player) {
+        int x = player.getBlockX() + RANDOM.nextInt(17) - 8, z = player.getBlockZ() + RANDOM.nextInt(17) - 8;
+        BlockPos p = new BlockPos(x, player.getBlockY() + RANDOM.nextInt(5) - 1, z);
+        if (!level.hasChunkAt(p) || !level.getBlockState(p).isAir() || !level.canSeeSky(p)) return;
+        boolean crown = false;
+        for (net.minecraft.core.Direction d : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+            BlockPos.MutableBlockPos m = p.relative(d, 2).mutable();
+            for (int up = 1; up <= 10 && !crown; up++) crown = level.getBlockState(m.move(0, 1, 0)).is(BlockTags.LEAVES);
+            if (crown) break;
+        }
+        if (!crown) return;
+        level.addParticle(ModParticles.MOTE.get(), x + RANDOM.nextDouble(), p.getY() + RANDOM.nextDouble(), z + RANDOM.nextDouble(), 0, 0, 0);
+        motes++;
     }
 
     private static void steam(ClientLevel level, LocalPlayer player, float wx, float wz) {
@@ -216,6 +249,29 @@ public final class AmbientLife {
         drift++;
     }
 
+    /**
+     * Snow lying on a crown shaken loose: a clump of it falling from the crown's underside, spreading as it falls and
+     * carried with the wind. Only from a crown with snow on it.
+     */
+    private static void snowClump(ClientLevel level, LocalPlayer player, float wx, float wz) {
+        int x = player.getBlockX() + RANDOM.nextInt(25) - 12, z = player.getBlockZ() + RANDOM.nextInt(25) - 12;
+        int top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1;
+        if (Math.abs(top - player.getBlockY()) > 24) return;
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos(x, top, z);
+        if (!level.getBlockState(m).is(Blocks.SNOW) || !level.getBlockState(m.move(0, -1, 0)).is(BlockTags.LEAVES)) return;
+        int depth = 0;
+        while (depth < 10 && level.getBlockState(m.move(0, -1, 0)).is(BlockTags.LEAVES)) depth++;
+        if (!level.getBlockState(m).isAir()) return;
+        double cx = x + 0.2 + RANDOM.nextDouble() * 0.6, cy = m.getY() + 0.9, cz = z + 0.2 + RANDOM.nextDouble() * 0.6;
+        int n = 8 + RANDOM.nextInt(8);
+        for (int i = 0; i < n; i++) {
+            level.addParticle(ParticleTypes.SNOWFLAKE, cx + (RANDOM.nextDouble() - 0.5) * 0.4, cy + RANDOM.nextDouble() * 0.3,
+                    cz + (RANDOM.nextDouble() - 0.5) * 0.4, wx * 0.02 + (RANDOM.nextDouble() - 0.5) * 0.03,
+                    -0.05 - RANDOM.nextDouble() * 0.08, wz * 0.02 + (RANDOM.nextDouble() - 0.5) * 0.03);
+        }
+        clumps++;
+    }
+
     private static boolean needles(BlockState s) {
         String p = BuiltInRegistries.BLOCK.getKey(s.getBlock()).getPath();
         return p.contains("spruce") || p.contains("pine") || p.contains("fir") || p.contains("hemlock")
@@ -233,8 +289,8 @@ public final class AmbientLife {
 
     public static String countsAndReset() {
         String s = "fireflies:" + fireflies + ",pollen:" + pollen + ",leaves:" + leaves + ",drift:" + drift + ",steam:" + steam
-                + ",season:" + season;
-        fireflies = pollen = leaves = drift = steam = 0;
+                + ",motes:" + motes + ",clumps:" + clumps + ",season:" + season;
+        fireflies = pollen = leaves = drift = steam = motes = clumps = 0;
         return s;
     }
 }
