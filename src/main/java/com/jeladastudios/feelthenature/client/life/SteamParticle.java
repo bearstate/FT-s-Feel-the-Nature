@@ -10,7 +10,7 @@ import net.minecraft.core.particles.SimpleParticleType;
 
 /**
  * A wisp of mist off still water on a cold morning: faint, wide, rising slowly and spreading as it thins, leaning
- * with what air moves. Drawn with the game's own soft smoke sprites, whitened and nearly clear.
+ * with what air moves. Drawn with soft white puffs of its own, mostly clear.
  */
 public class SteamParticle extends TextureSheetParticle {
 
@@ -20,7 +20,7 @@ public class SteamParticle extends TextureSheetParticle {
     SteamParticle(ClientLevel level, double x, double y, double z, double windX, double windZ, SpriteSet sprites) {
         super(level, x, y, z);
         pickSprite(sprites);
-        size = 0.45f + random.nextFloat() * 0.45f;
+        size = 1.1f + random.nextFloat() * 1.0f;
         quadSize = size;
         lifetime = 70 + random.nextInt(60);
         gravity = 0f;
@@ -29,7 +29,7 @@ public class SteamParticle extends TextureSheetParticle {
         gCol = 0.95f;
         bCol = 1.0f;
         alpha = 0f;
-        peak = 0.18f + random.nextFloat() * 0.12f;
+        peak = 0.16f + random.nextFloat() * 0.14f;
         roll = oRoll = random.nextFloat() * (float) (Math.PI * 2);
         this.windX = windX * 0.006;
         this.windZ = windZ * 0.006;

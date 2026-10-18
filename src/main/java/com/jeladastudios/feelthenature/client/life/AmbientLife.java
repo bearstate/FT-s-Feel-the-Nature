@@ -121,12 +121,12 @@ public final class AmbientLife {
         float temperature = com.jeladastudios.feelthenature.client.sound.Fauna.temperature(biome.getBaseTemperature(), player.getY());
         float mist = Steam.strength(time, temperature, wind, rain, GeologyBridge.fog(), season);
         if (mist > 0.01f) {
-            for (int i = 0; i < 10; i++) if (RANDOM.nextFloat() < 0.7f * mist * (float) density) steam(level, player, wx, wz);
+            for (int i = 0; i < 24; i++) if (RANDOM.nextFloat() < 0.8f * mist * (float) density) steam(level, player, wx, wz);
         }
     }
 
     private static void steam(ClientLevel level, LocalPlayer player, float wx, float wz) {
-        BlockPos top = column(level, player, 24, Heightmap.Types.MOTION_BLOCKING);
+        BlockPos top = column(level, player, 28, Heightmap.Types.MOTION_BLOCKING);
         if (top == null) return;
         // Still, open water: a lake's or a pond's surface, or a river's, under the sky -- not a waterfall's curtain.
         var water = level.getFluidState(top.below());
