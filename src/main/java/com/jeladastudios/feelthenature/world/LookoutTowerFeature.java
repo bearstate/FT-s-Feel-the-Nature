@@ -38,10 +38,12 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  */
 public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
-    /** The walkway's floor, in blocks over the ground; the cab stands on it. */
-    static final int FLOOR = 15;
+    /** The walkway's floor, in blocks over the ground; the cab stands on it. A landing every three blocks reaches it. */
+    static final int FLOOR = 20;
     /** How far out the legs stand at the foot, the middle and the top, and from which height each holds. */
-    private static final int[][] LEG = {{0, 5}, {5, 4}, {10, 3}};
+    private static final int[][] LEG = {{0, 5}, {7, 4}, {14, 3}};
+    /** The heights of the girts round the frame: at each step in of the legs, and under the walkway. */
+    private static final int[] GIRTS = {6, 13, FLOOR - 1};
 
     public LookoutTowerFeature(Codec<NoneFeatureConfiguration> codec) {
         super(codec);
@@ -315,8 +317,8 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         Builder b = new Builder(level, foot, rotation);
         b.clearGrowth(6, FLOOR + 10);
         // The stair's well, and the way in to its foot from the west.
-        b.carve(-2, 2, -1, 1, 0, FLOOR - 1);
-        b.carve(-6, -3, -1, 1, 0, 2);
+        b.carve(-2, 2, LANE_NORTH, LANE_SOUTH, 0, FLOOR - 1);
+        b.carve(-6, -3, LANE_NORTH, LANE_SOUTH, 0, 2);
         legs(b);
         stair(b);
         cab(b);
@@ -383,7 +385,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
         // Girts round the frame at each step and under the walkway, a knee brace under each where it meets a leg.
-        for (int y : new int[]{4, 9, FLOOR - 1}) {
+        for (int y : GIRTS) {
             int r = legAt(y);
             girts(b, y, r);
             knees(b, y - 1, r);
@@ -427,8 +429,10 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     /**
-     * The switchback stair up the middle: flights of three steps along x, one lane each way, landings across both lanes
-     * at the ends; from a landing at the foot to the cab's floor. A rail of fence posts between the lanes.
+     * The switchback stair up the middle: flights of three steps along x, eastward in the north lane and westward in the
+     * one south of it, a landing across both lanes at each end. Each landing stands level with the flight's last step, so
+     * the stair is walked from the ground to the cab without a jump; the last flight comes up through the cab's floor
+     * along its north wall. A rail of fence posts between the lanes.
      */
     private static void stair(Builder b) {
         BlockState plank = Blocks.SPRUCE_PLANKS.defaultBlockState();
@@ -438,25 +442,27 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         boolean eastward = true;
         while (landing < FLOOR) {
             int lx = eastward ? -2 : 2;
-            for (int z = -1; z <= 1; z++) b.set(lx, landing, z, plank);
-            if (landing == -1) for (int z = -1; z <= 1; z++) b.fillDown(lx, landing - 1, z, Blocks.COBBLESTONE.defaultBlockState());
-            int lane = eastward ? -1 : 1;
-            for (int s = 1; s <= 3; s++) {
-                int x = eastward ? lx + s : lx - s;
-                b.set(x, landing + s, lane, eastward ? east : west);
+            for (int z = LANE_NORTH; z <= LANE_SOUTH; z++) b.set(lx, landing, z, plank);
+            if (landing == -1) {
+                for (int z = LANE_NORTH; z <= LANE_SOUTH; z++) b.fillDown(lx, landing - 1, z, Blocks.COBBLESTONE.defaultBlockState());
             }
-            landing += 4;
+            int lane = eastward ? LANE_NORTH : LANE_SOUTH;
+            for (int s = 1; s <= 3; s++) b.set(eastward ? lx + s : lx - s, landing + s, lane, eastward ? east : west);
+            landing += 3;
             eastward = !eastward;
         }
-        for (int y = 0; y < FLOOR; y++) b.setIfAir(0, y, 0, Blocks.SPRUCE_FENCE.defaultBlockState());
+        for (int y = 0; y < FLOOR; y++) b.setIfAir(0, y, LANE_NORTH + 1, Blocks.SPRUCE_FENCE.defaultBlockState());
     }
+
+    /** The stair's two lanes, north and south; the landings span from the one to the other. */
+    private static final int LANE_NORTH = -2, LANE_SOUTH = 0;
 
     private static void cab(Builder b) {
         BlockState plank = Blocks.SPRUCE_PLANKS.defaultBlockState();
-        // The walkway's floor, the cab's in it; a hole where the last flight comes up through it.
+        // The walkway's floor, the cab's in it; open over the last flight, which comes up along the north wall.
         for (int x = -5; x <= 5; x++) {
             for (int z = -5; z <= 5; z++) {
-                if (z == 1 && (x == -1 || x == 0)) continue;
+                if (z == LANE_NORTH && x >= -1 && x <= 1) continue;
                 b.set(x, FLOOR, z, plank);
             }
         }
@@ -487,7 +493,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         for (int x = -3; x <= 3; x++) for (int z = -3; z <= 3; z++) b.set(x, FLOOR + 4, z, plank);
     }
 
-    /** A hipped roof over the cab and the walkway, in dark oak, stepping in a block a course. */
+    /** A hipped roof over the cab and the walkway, in dark oak, stepping in a block a course, a block at its peak. */
     private static void roof(Builder b) {
         BlockState plank = Blocks.DARK_OAK_PLANKS.defaultBlockState();
         for (int c = 0; c <= 3; c++) {
@@ -515,37 +521,69 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
                 }
             }
         }
-        b.set(0, FLOOR + 8, 0, Blocks.DARK_OAK_SLAB.defaultBlockState());
+        // A whole block at the peak, for the anemometer to stand on.
+        b.set(0, FLOOR + 8, 0, plank);
     }
 
-    /** What the cab is kept with: the station's instruments, the bed, the stove and its chimney, the fire finder. */
+    /**
+     * What the cab is kept with, laid out as a lookout's is: the station's terminal at a desk along the west wall with
+     * its barometer and hygrometer either side and a chair before it, the fire finder in the middle, the stove in the
+     * south-west corner with its chimney up through the roof, the bed along the east wall, the log on a lectern, barrels
+     * of stores. The north wall is the stair's, and the way from it to the door is kept clear. Out on the walkway: the
+     * rain gauge and the thermometer, under a little hood, on two corners, a lightning rod and a lantern on the others,
+     * a chair looking out; the anemometer on the roof's peak.
+     */
     private static void fit(Builder b, RandomSource random) {
         int f = FLOOR + 1;
-        // The stove in the north-west corner, its chimney up through the roof, smoke from its top.
-        b.set(-2, f, -2, Blocks.FURNACE.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
-        for (int y = f + 1; y <= FLOOR + 7; y++) b.set(-2, y, -2, Blocks.BRICKS.defaultBlockState());
-        b.set(-2, FLOOR + 8, -2, Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, true)
-                .setValue(CampfireBlock.SIGNAL_FIRE, false));
-        // The bed along the east wall, its head to the north.
-        BlockState bed = Blocks.WHITE_BED.defaultBlockState().setValue(BedBlock.FACING, Direction.NORTH);
-        b.set(2, f, -2, bed.setValue(BedBlock.PART, BedPart.HEAD));
-        b.set(2, f, -1, bed.setValue(BedBlock.PART, BedPart.FOOT));
-        // The fire finder on its stand in the middle, a lantern over it.
+        // The desk: the terminal and the indoor instruments facing into the room, a chair before the terminal.
+        b.geology(-2, f, 0, "weather_terminal", Direction.EAST);
+        b.geology(-2, f, -1, "hygrometer", Direction.EAST);
+        b.geology(-2, f, 1, "barometer", Direction.EAST);
+        b.set(-1, f, 0, Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(StairBlock.FACING, Direction.EAST));
+        // The fire finder in the middle, a lantern over it.
         b.set(0, f, 0, Blocks.CARTOGRAPHY_TABLE.defaultBlockState());
         b.set(0, FLOOR + 3, 0, Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true));
-        b.set(2, f, 2, Blocks.BARREL.defaultBlockState());
-        // The station: its terminal and the indoor instruments on the north wall, the rest in the open.
-        b.geology(0, f, -2, "weather_terminal", Direction.SOUTH);
-        b.geology(-1, f, -2, "barometer", Direction.SOUTH);
-        b.geology(1, f, -2, "hygrometer", Direction.SOUTH);
-        b.geology(5, FLOOR + 2, -5, "rain_gauge", Direction.SOUTH);
-        b.geology(-5, FLOOR + 2, 5, "thermometer", Direction.NORTH);
+        // The stove and its chimney.
+        b.set(-2, f, 2, Blocks.FURNACE.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.EAST));
+        chimney(b, -2, f + 1, 2, FLOOR + 7);
+        // The bed along the east wall, its head to the south; the way in from the door kept clear.
+        BlockState bed = Blocks.WHITE_BED.defaultBlockState().setValue(BedBlock.FACING, Direction.SOUTH);
+        b.set(2, f, 2, bed.setValue(BedBlock.PART, BedPart.HEAD));
+        b.set(2, f, 1, bed.setValue(BedBlock.PART, BedPart.FOOT));
+        // Stores beside the stove and in the corner by the stair; the log on its lectern.
+        b.barrel(-1, f, 2, LOOT, random);
+        b.barrel(-2, f, -2, REGISTER, random);
+        b.lectern(0, f, 2, Direction.NORTH, Logbook.lookout(random));
+        if (random.nextBoolean()) b.set(1, f, 2, Blocks.POTTED_FERN.defaultBlockState());
+        // The walkway: the rain gauge open to the sky on one corner, the thermometer under a hood on the opposite one.
+        b.geology(5, f, -5, "rain_gauge", Direction.SOUTH);
+        b.geology(-5, f, 5, "thermometer", Direction.NORTH);
+        b.set(-5, f + 1, 5, Blocks.BIRCH_SLAB.defaultBlockState());
+        b.set(5, f + 1, 5, Blocks.LIGHTNING_ROD.defaultBlockState());
+        b.set(-5, f + 1, -5, Blocks.LANTERN.defaultBlockState());
+        b.set(-4, f, 1, Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(StairBlock.FACING, Direction.EAST));
         b.geology(0, FLOOR + 9, 0, "anemometer", Direction.SOUTH);
-        // Lanterns on the other two corner posts.
-        b.set(-5, FLOOR + 2, -5, Blocks.LANTERN.defaultBlockState());
-        b.set(5, FLOOR + 2, 5, Blocks.LANTERN.defaultBlockState());
-        // A pot of something green on the sill by the door.
-        if (random.nextBoolean()) b.set(2, f, 1, Blocks.POTTED_FERN.defaultBlockState());
+    }
+
+    /** The loot the lookout's barrels are filled from, and the visitors' book with a little of it. */
+    static final net.minecraft.resources.ResourceLocation LOOT =
+            new net.minecraft.resources.ResourceLocation(com.jeladastudios.feelthenature.FeelTheNature.MODID, "chests/lookout_tower");
+    static final net.minecraft.resources.ResourceLocation REGISTER =
+            new net.minecraft.resources.ResourceLocation(com.jeladastudios.feelthenature.FeelTheNature.MODID, "chests/lookout_register");
+
+    /**
+     * A stove's chimney from a height up to another: Advanced Chimneys' own where it is installed; else brick, with a
+     * campfire smoking on top -- but not where Pollution of the Realms is, for whom a fire is a source of pollution.
+     */
+    static void chimney(Builder b, int x, int y0, int z, int y1) {
+        Block flue = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(
+                new net.minecraft.resources.ResourceLocation("adchimneys", "small_brick_chimney"));
+        boolean chimneys = net.minecraftforge.fml.ModList.get().isLoaded("adchimneys") && flue != null && flue != Blocks.AIR;
+        for (int y = y0; y <= y1; y++) b.set(x, y, z, chimneys ? flue.defaultBlockState() : Blocks.BRICKS.defaultBlockState());
+        if (!chimneys && !net.minecraftforge.fml.ModList.get().isLoaded("adpother")) {
+            b.set(x, y1 + 1, z, Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, true)
+                    .setValue(CampfireBlock.SIGNAL_FIRE, false));
+        }
     }
 
     private static BlockState log(Direction.Axis axis) {

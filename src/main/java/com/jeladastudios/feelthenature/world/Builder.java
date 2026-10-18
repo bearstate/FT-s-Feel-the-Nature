@@ -138,6 +138,22 @@ final class Builder {
         }
     }
 
+    /** A barrel standing up, to be filled from a loot table when first opened. */
+    void barrel(int x, int y, int z, ResourceLocation loot, net.minecraft.util.RandomSource random) {
+        set(x, y, z, Blocks.BARREL.defaultBlockState().setValue(net.minecraft.world.level.block.BarrelBlock.FACING, Direction.UP));
+        net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity.setLootTable(level, random, at(x, y, z), loot);
+    }
+
+    /** A lectern facing a way with a book open on it. */
+    void lectern(int x, int y, int z, Direction facing, net.minecraft.world.item.ItemStack book) {
+        set(x, y, z, Blocks.LECTERN.defaultBlockState().setValue(net.minecraft.world.level.block.LecternBlock.FACING, facing)
+                .setValue(net.minecraft.world.level.block.LecternBlock.HAS_BOOK, true));
+        // Its book set straight on its block entity, which in a chunk being generated has no level to tell.
+        if (level.getBlockEntity(at(x, y, z)) instanceof net.minecraft.world.level.block.entity.LecternBlockEntity lectern) {
+            lectern.setBook(book);
+        }
+    }
+
     /** One of FT's Geology's blocks by its name, facing a way; nothing where the mod has no such block. */
     void geology(int x, int y, int z, String name, Direction facing) {
         Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("fts_geology", name));
