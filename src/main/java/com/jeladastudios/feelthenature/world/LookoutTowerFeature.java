@@ -50,7 +50,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     /** The country is cut into cells this many chunks across; each has at most one tower, on its most prominent summit. */
-    public static final int CELL = 32;
+    public static final int CELL = 44;
     /** How much higher than the country round it a summit must stand, in blocks, measured on a ring this far out. */
     static final int PROMINENCE = 16, RING = 128;
     /** How uneven the summit's top may be under the tower, in blocks. */
@@ -97,6 +97,26 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         // Its foot at the ground as the world built it in its middle, where the stair comes down.
         int fy = world.applyAsInt(foot[0], foot[1]);
         return build(level, new BlockPos(foot[0], fy, foot[1]), context.random(), nearestLandmark(server, foot[0], foot[1]));
+    }
+
+    /**
+     * Whether a lookout stands, or will stand, within a distance of a point: by the summit of the cell the point is in
+     * and of the cells beside it, worked out the same way the tower is placed. The smaller buildings keep their
+     * distance by it, so a tower built after them never comes down on them.
+     */
+    public static boolean nearTower(WorldGenLevel level, int x, int z, int distance) {
+        int cx = Math.floorDiv(x >> 4, CELL), cz = Math.floorDiv(z >> 4, CELL);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                int ox = (cx + dx) * CELL * 16, oz = (cz + dz) * CELL * 16;
+                // A cell too far for its tower to come within the distance is not worked out at all.
+                int nx = Math.max(ox, Math.min(x, ox + CELL * 16 - 1)), nz = Math.max(oz, Math.min(z, oz + CELL * 16 - 1));
+                if (Math.hypot(nx - x, nz - z) > distance + SHIFT) continue;
+                BlockPos site = site(level, new net.minecraft.world.level.ChunkPos((cx + dx) * CELL, (cz + dz) * CELL));
+                if (site != null && Math.hypot(site.getX() - x, site.getZ() - z) <= distance + SHIFT) return true;
+            }
+        }
+        return false;
     }
 
     /** Whether FT's Geology gives its ground model at a point. */
@@ -315,6 +335,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
                                 com.jeladastudios.feelthenature.GeologyBridge.Landmark view) {
         Rotation rotation = view == null ? Rotation.getRandom(random) : toward(view.x() - foot.getX(), view.z() - foot.getZ());
         Builder b = new Builder(level, foot, rotation);
+        Builder.built("lookout", foot);
         b.clearGrowth(6, FLOOR + 10);
         // The stair's well, and the way in to its foot from the west.
         b.carve(-2, 2, LANE_NORTH, LANE_SOUTH, 0, FLOOR - 1);

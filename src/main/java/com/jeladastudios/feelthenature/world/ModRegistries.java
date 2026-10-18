@@ -40,6 +40,8 @@ public final class ModRegistries {
             FEATURES.register("bird_hide", () -> new BirdHideFeature(net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration.CODEC));
     public static final RegistryObject<FlagTreeFeature> FLAG_TREE =
             FEATURES.register("flag_tree", () -> new FlagTreeFeature(net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration.CODEC));
+    public static final RegistryObject<RescueSignFeature> RESCUE_SIGN =
+            FEATURES.register("rescue_sign", () -> new RescueSignFeature(net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration.CODEC));
     public static final RegistryObject<SnowPatchFeature> SNOW_PATCH =
             FEATURES.register("snow_patch", () -> new SnowPatchFeature(net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration.CODEC));
     public static final RegistryObject<BasaltColumnsFeature> BASALT_COLUMNS =

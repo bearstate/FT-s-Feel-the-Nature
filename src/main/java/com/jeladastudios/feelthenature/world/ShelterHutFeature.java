@@ -45,9 +45,23 @@ public class ShelterHutFeature extends Feature<NoneFeatureConfiguration> {
     public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
         WorldGenLevel level = context.level();
         RandomSource random = context.random();
-        BlockPos origin = context.origin();
+        // One chunk of a cell may have one; there, a few spots of it are tried for level ground.
+        net.minecraft.world.level.ChunkPos chunk = new net.minecraft.world.level.ChunkPos(context.origin());
+        if (!Builder.chosen(level, chunk, CELL, 0x5E17E2L)) return false;
+        for (int tries = 0; tries < 8; tries++) {
+            BlockPos at = new BlockPos(chunk.getMinBlockX() + 4 + random.nextInt(8), 0, chunk.getMinBlockZ() + 4 + random.nextInt(8));
+            if (tryAt(level, random, at)) return true;
+        }
+        return false;
+    }
+
+    /** How many chunks square the country is cut into for shelters, at most one to each. */
+    static final int CELL = 24;
+
+    private static boolean tryAt(WorldGenLevel level, RandomSource random, BlockPos origin) {
         int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, origin.getX(), origin.getZ());
         if (!level.getBiome(new BlockPos(origin.getX(), y, origin.getZ())).is(COUNTRY)) return false;
+        if (LookoutTowerFeature.nearTower(level, origin.getX(), origin.getZ(), CLEAR)) return false;
         // Near enough level and open over the hut's footprint and a block round it: what stands higher is cut away,
         // what lies lower built up.
         for (int dx = -4; dx <= 4; dx++) {
@@ -62,7 +76,9 @@ public class ShelterHutFeature extends Feature<NoneFeatureConfiguration> {
         BlockState rock = BoulderFeature.rockUnder(level, foot);
         if (rock == null || rock.is(Blocks.STONE)) rock = Blocks.COBBLESTONE.defaultBlockState();
         else if (rock.is(Blocks.DEEPSLATE)) rock = Blocks.COBBLED_DEEPSLATE.defaultBlockState();
+        BlockState corner = polished(rock);
         Builder b = new Builder(level, foot, Rotation.getRandom(random));
+        Builder.built("shelter", foot);
         b.clear(-4, 4, -4, 4, 8);
         // The floor, and the ground under the walls made good.
         for (int x = -3; x <= 3; x++) {
@@ -77,7 +93,8 @@ public class ShelterHutFeature extends Feature<NoneFeatureConfiguration> {
             for (int x = -3; x <= 3; x++) {
                 for (int z = -2; z <= 2; z++) {
                     if (Math.abs(x) != 3 && Math.abs(z) != 2) continue;
-                    b.set(x, yy, z, random.nextFloat() < 0.15f ? Blocks.MOSSY_COBBLESTONE.defaultBlockState() : rock);
+                    boolean quoin = Math.abs(x) == 3 && Math.abs(z) == 2;
+                    b.set(x, yy, z, quoin ? corner : rubble(rock, random));
                 }
             }
         }
@@ -89,8 +106,8 @@ public class ShelterHutFeature extends Feature<NoneFeatureConfiguration> {
         b.set(3, 1, 0, Blocks.GLASS_PANE.defaultBlockState());
         // The long walls one course higher, under the roof's second course.
         for (int x = -3; x <= 3; x++) {
-            b.set(x, 3, -2, rock);
-            b.set(x, 3, 2, rock);
+            b.set(x, 3, -2, rubble(rock, random));
+            b.set(x, 3, 2, rubble(rock, random));
         }
         // The gable ends in boards, the roof pitched over them from eave to ridge.
         for (int c = 0; c <= 2; c++) {
@@ -107,18 +124,56 @@ public class ShelterHutFeature extends Feature<NoneFeatureConfiguration> {
             }
             b.set(x, 6, 0, Blocks.DARK_OAK_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM));
         }
-        // Inside: the stove in the north-west corner and its chimney up through the roof, smoke from it.
+        // Inside: the stove in the north-west corner and its chimney up through the roof.
         b.set(-2, 0, -1, Blocks.FURNACE.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
-        for (int yy = 1; yy <= 6; yy++) b.set(-2, yy, -1, Blocks.BRICKS.defaultBlockState());
-        b.set(-2, 7, -1, Blocks.CAMPFIRE.defaultBlockState().setValue(CampfireBlock.LIT, true).setValue(CampfireBlock.SIGNAL_FIRE, false));
+        LookoutTowerFeature.chimney(b, -2, 1, -1, 6);
         // The bunk along the east end, its head to the north.
         BlockState bed = Blocks.BROWN_BED.defaultBlockState().setValue(BedBlock.FACING, Direction.NORTH);
         b.set(2, 0, -1, bed.setValue(BedBlock.PART, BedPart.HEAD));
         b.set(2, 0, 0, bed.setValue(BedBlock.PART, BedPart.FOOT));
         b.set(-2, 0, 1, Blocks.CRAFTING_TABLE.defaultBlockState());
-        b.set(-1, 0, -1, Blocks.BARREL.defaultBlockState());
+        b.barrel(-1, 0, -1, LOOT, random);
         b.set(0, 5, 0, Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true));
+        // Outside: a stack of firewood along the west end under the eaves, a rain butt by the door catching the roof's run-off.
+        BlockState logs = Blocks.SPRUCE_LOG.defaultBlockState().setValue(net.minecraft.world.level.block.RotatedPillarBlock.AXIS, Direction.Axis.Z);
+        for (int z = -1; z <= 1; z++) {
+            if (b.get(-4, 0, z).isAir() && b.get(-4, -1, z).isSolidRender(level, b.m)) {
+                b.set(-4, 0, z, logs);
+                if (z != 1 && random.nextBoolean()) b.set(-4, 1, z, logs);
+            }
+        }
+        if (b.get(1, 0, 3).isAir() && b.get(1, -1, 3).isSolidRender(level, b.m)) {
+            b.set(1, 0, 3, Blocks.WATER_CAULDRON.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.LayeredCauldronBlock.LEVEL, 1 + random.nextInt(3)));
+        }
         b.join();
         return true;
+    }
+
+    /** How far from a lookout a shelter keeps, in blocks: out of the tower's way, and a walk from it. */
+    static final int CLEAR = 24;
+
+    /** The loot a shelter's barrel is filled from. */
+    static final net.minecraft.resources.ResourceLocation LOOT =
+            new net.minecraft.resources.ResourceLocation(com.jeladastudios.feelthenature.FeelTheNature.MODID, "chests/shelter");
+
+    /** A stone of a dry-stone wall: rubble, a lichened one now and then, a stone of the rock under it here and there. */
+    static BlockState rubble(BlockState rock, RandomSource random) {
+        float r = random.nextFloat();
+        if (r < 0.15f) return Blocks.MOSSY_COBBLESTONE.defaultBlockState();
+        if (r < 0.30f) return rock;
+        return rock.is(Blocks.COBBLED_DEEPSLATE) ? rock : Blocks.COBBLESTONE.defaultBlockState();
+    }
+
+    /** The dressed stone for a wall's corners: the rock's polished form where it has one, else stone bricks. */
+    static BlockState polished(BlockState rock) {
+        if (rock.is(Blocks.COBBLED_DEEPSLATE)) return Blocks.POLISHED_DEEPSLATE.defaultBlockState();
+        var key = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(rock.getBlock());
+        if (key != null && !rock.is(Blocks.COBBLESTONE)) {
+            var block = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(
+                    new net.minecraft.resources.ResourceLocation(key.getNamespace(), "polished_" + key.getPath()));
+            if (block != null && block != Blocks.AIR) return block.defaultBlockState();
+        }
+        return Blocks.STONE_BRICKS.defaultBlockState();
     }
 }

@@ -1,8 +1,4 @@
 {
   "feature": "fts_feelthenature:shelter_hut",
-  "placement": [
-    { "type": "minecraft:rarity_filter", "chance": 48 },
-    { "type": "minecraft:in_square" },
-    { "type": "minecraft:heightmap", "heightmap": "MOTION_BLOCKING_NO_LEAVES" }
-  ]
+  "placement": []
 }

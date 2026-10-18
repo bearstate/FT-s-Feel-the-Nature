@@ -41,10 +41,13 @@ public class ViewBenchFeature extends Feature<NoneFeatureConfiguration> {
         WorldGenLevel level = context.level();
         RandomSource random = context.random();
         int x0 = context.origin().getX() & ~15, z0 = context.origin().getZ() & ~15;
+        // One chunk of a cell twelve chunks square may have a bench.
+        if (!Builder.chosen(level, new net.minecraft.world.level.ChunkPos(context.origin()), 12, 0xBE4C4L)) return false;
         for (int tries = 0; tries < 24; tries++) {
             int x = x0 + 2 + random.nextInt(12), z = z0 + 2 + random.nextInt(12);
             int y = height(level, x, z);
             if (!level.getBiome(new BlockPos(x, y, z)).is(COUNTRY)) continue;
+            if (LookoutTowerFeature.nearTower(level, x, z, ShelterHutFeature.CLEAR)) continue;
             for (Direction view : Direction.Plane.HORIZONTAL) {
                 Direction along = view.getClockWise();
                 // Level for the two seats; in front of them the same or a step down, before the ground drops away.
@@ -63,6 +66,7 @@ public class ViewBenchFeature extends Feature<NoneFeatureConfiguration> {
                 BlockPos a = new BlockPos(x, y, z), b = a.relative(along);
                 if (!open(level, a) || !open(level, b)) continue;
                 BlockState seat = Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(StairBlock.FACING, view.getOpposite());
+                Builder.built("bench", a);
                 level.setBlock(a, seat, 2);
                 level.setBlock(b, seat, 2);
                 BlockState arm = Blocks.SPRUCE_WALL_SIGN.defaultBlockState();

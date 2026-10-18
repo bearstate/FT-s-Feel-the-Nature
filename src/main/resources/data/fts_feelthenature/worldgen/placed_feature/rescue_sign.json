@@ -1,0 +1,6 @@
+{
+  "feature": "fts_feelthenature:rescue_sign",
+  "placement": [
+    { "type": "minecraft:rarity_filter", "chance": 150 }
+  ]
+}

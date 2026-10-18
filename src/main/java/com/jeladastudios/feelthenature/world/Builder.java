@@ -29,6 +29,28 @@ final class Builder {
         this.rotation = rotation;
     }
 
+    /**
+     * Whether a chunk is the one chunk of its cell -- {@code cell} chunks square -- that a kind of building may stand in:
+     * one picked from the world's seed and the cell, the same whichever chunk asks. So a kind is never thicker than one
+     * to a cell, however much of the country suits it.
+     */
+    static boolean chosen(WorldGenLevel level, net.minecraft.world.level.ChunkPos chunk, int cell, long salt) {
+        int cx = Math.floorDiv(chunk.x, cell), cz = Math.floorDiv(chunk.z, cell);
+        long h = level.getSeed() ^ salt ^ (cx * 341873128712L) ^ (cz * 132897987541L);
+        h ^= h >>> 33;
+        h *= 0xff51afd7ed558ccdL;
+        h ^= h >>> 33;
+        int px = (int) Math.floorMod(h, (long) cell), pz = (int) Math.floorMod(h >>> 20, (long) cell);
+        return chunk.x == cx * cell + px && chunk.z == cz * cell + pz;
+    }
+
+    /** For the automated test and the frequency counts: a building put up, logged where the test switch is on. */
+    static void built(String what, BlockPos at) {
+        if (com.jeladastudios.feelthenature.dev.TestCommands.ON) {
+            com.jeladastudios.feelthenature.FeelTheNature.LOGGER.info("BUILT {} at {} {} {}", what, at.getX(), at.getY(), at.getZ());
+        }
+    }
+
     /** The world position of a point drawn relative to the foot. */
     BlockPos at(int x, int y, int z) {
         int rx, rz;
@@ -102,11 +124,21 @@ final class Builder {
                 for (int y = 0; y <= height; y++) {
                     BlockState s = level.getBlockState(at(x, y, z));
                     if (s.isAir()) continue;
-                    boolean ground = s.isSolidRender(level, m) && !s.is(BlockTags.LOGS) && !s.is(BlockTags.LEAVES);
-                    if (!ground && s.getFluidState().isEmpty()) level.setBlock(m, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+                    if (growth(s)) level.setBlock(m, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
                 }
             }
         }
+    }
+
+    /**
+     * What grows, and nothing built: trees and their leaves, plants, loose snow. A neighbour's stair, door, fence or roof
+     * is not growth, and is left standing.
+     */
+    static boolean growth(BlockState s) {
+        if (!s.getFluidState().isEmpty()) return false;
+        return s.is(BlockTags.LOGS) || s.is(BlockTags.LEAVES) || s.is(BlockTags.REPLACEABLE_BY_TREES) || s.is(BlockTags.FLOWERS)
+                || s.is(BlockTags.SAPLINGS) || s.is(Blocks.SNOW) || s.is(Blocks.BROWN_MUSHROOM) || s.is(Blocks.RED_MUSHROOM)
+                || s.is(Blocks.SWEET_BERRY_BUSH) || s.is(Blocks.MOSS_CARPET) || s.is(Blocks.VINE) || s.canBeReplaced();
     }
 
     /** The ground cut away in a box, from y0 to y1, where a way through it is wanted. */

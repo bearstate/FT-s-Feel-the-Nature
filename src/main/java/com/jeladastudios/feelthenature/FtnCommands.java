@@ -22,8 +22,8 @@ public final class FtnCommands {
 
     private FtnCommands() {}
 
-    /** How many of the lookouts' cells out the search goes: 8 cells of 512 blocks, about four thousand blocks. */
-    private static final int CELLS = 8;
+    /** How many of the lookouts' cells out the search goes: 6 cells of 704 blocks, about four thousand blocks. */
+    private static final int CELLS = 6;
 
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {

@@ -49,6 +49,7 @@ public class BirdHideFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static boolean tryAt(WorldGenLevel level, BlockPos origin, RandomSource random) {
+        if (LookoutTowerFeature.nearTower(level, origin.getX(), origin.getZ(), ShelterHutFeature.CLEAR)) return false;
         // Not in a lake itself, but with one a few blocks off: the network knows a lake by the columns in it.
         GeologyBridge.River here = GeologyBridge.river(origin.getX(), origin.getZ(), 1);
         if (here != null && here.lake()) return false;
@@ -81,6 +82,7 @@ public class BirdHideFeature extends Feature<NoneFeatureConfiguration> {
             default -> Rotation.NONE;
         };
         Builder b = new Builder(level, new BlockPos(origin.getX(), y, origin.getZ()), rotation);
+        Builder.built("bird_hide", origin);
         build(b, random);
         b.join();
         return true;
