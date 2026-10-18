@@ -1,0 +1,6 @@
+{
+  "feature": "fts_feelthenature:cairn",
+  "placement": [
+    { "type": "minecraft:rarity_filter", "chance": 3 }
+  ]
+}

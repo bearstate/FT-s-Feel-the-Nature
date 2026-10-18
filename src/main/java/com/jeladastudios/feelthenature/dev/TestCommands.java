@@ -112,6 +112,8 @@ public final class TestCommands {
                 .then(Commands.literal("snowpatch")
                         .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
                                 .executes(c -> snowPatch(c, IntegerArgumentType.getInteger(c, "radius")))))
+                .then(Commands.literal("cairn").then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
+                        .executes(c -> cairn(c, IntegerArgumentType.getInteger(c, "radius")))))
                 .then(Commands.literal("tower").executes(TestCommands::tower))
                 .then(Commands.literal("towersite").executes(TestCommands::towerSite))
                 .then(Commands.literal("towersites").then(Commands.argument("radius", IntegerArgumentType.integer(0, 6))
@@ -424,6 +426,35 @@ public final class TestCommands {
         c.getSource().sendSuccess(() -> Component.literal("FTN_TEST towersites found=" + f + " of=" + o + " nearest="
                 + (n == null ? "none" : n.getX() + " " + n.getY() + " " + n.getZ())), false);
         return 1;
+    }
+
+    /**
+     * Takes the player beside the nearest cairn in the country loaded round them: a wall or a slab crowning a column.
+     * Answers {@code FTN_TEST cairn x y z biome} or {@code FTN_TEST cairn none}.
+     */
+    private static int cairn(CommandContext<CommandSourceStack> c, int radius) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        int px = player.getBlockX(), pz = player.getBlockZ();
+        for (int r = 0; r <= radius; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int x = px + dx, z = pz + dz;
+                    if (!level.hasChunk(x >> 4, z >> 4)) continue;
+                    int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
+                    var crown = level.getBlockState(new BlockPos(x, y, z)).getBlock();
+                    if (!(crown instanceof net.minecraft.world.level.block.WallBlock || crown instanceof net.minecraft.world.level.block.SlabBlock)) continue;
+                    String biome = level.getBiome(new BlockPos(x, y, z)).unwrapKey().map(k -> k.location().toString()).orElse("?");
+                    player.teleportTo(level, x + 4.5, y + 1, z + 4.5, 135f, 15f);
+                    c.getSource().sendSuccess(() -> Component.literal("FTN_TEST cairn " + x + " " + y + " " + z + " " + biome), false);
+                    return 1;
+                }
+            }
+        }
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST cairn none"), false);
+        return 0;
     }
 
     private static boolean falling(ServerLevel level, BlockPos at) {
