@@ -13,17 +13,29 @@ The country's small details, and its mornings.
   autumn; not in a wind, in rain, in the heat, or where FT's Geology's own fog already lies.
 - **Motes in the sun**: dust glinting in the shafts of light through a wood's crowns on a still, dry day.
 - **Snow off the crowns**: a gust shakes the snow off the trees that hold it.
-- **Fire lookouts** on prominent summits of hill and mountain country, one in a stretch of country at most: a glazed
-  cab on four splayed timber legs, girts and knee braces at each step, a switchback stair up the middle, a walkway
-  under the eaves carried on brackets. Kept as a weather station with FT's Geology's instruments (the terminal,
-  barometer and hygrometer inside, the rain gauge and thermometer on the walkway's posts, the anemometer on the roof),
-  and lived in: a bed, a stove and its smoking chimney, lanterns, the fire finder on its stand in the middle of the
-  floor. The legs stand into the ground or on stone footings, the ground left as it lies. Within sight of Everest, K2
-  or the Matterhorn a lookout faces it, with a board by the door naming it.
+- **Fire lookouts** on prominent summits of hill and mountain country, one in about seven hundred blocks at most, as
+  the real ones are built: a glazed cab twenty blocks up on four splayed timber legs braced in X, a switchback stair
+  up the middle walked without a jump, a walkway carried on brackets, a hipped roof with a little glazed lantern-room
+  rising out of it. Kept as a weather station with FT's Geology's instruments -- the terminal at a desk with the
+  barometer and hygrometer, the rain gauge and the thermometer, under its hood, out on the walkway, the anemometer on
+  the lantern-room's peak, a lightning rod -- and lived in: a bed, a stove and its chimney, lanterns, the fire finder
+  in the middle of the floor, barrels of stores and a visitors' book, the keeper's log open on a lectern (in the
+  reader's own language, the rescue frequency on its first page). The legs stand into the ground or on stone footings,
+  mossy with the years; in a wet country, vines up them. Within sight of Everest, K2 or the Matterhorn a lookout faces
+  it, with a board by the door naming it. `/ftn locate lookout` finds the nearest.
+- **A trail** down from each lookout's stair, winding to keep a walker's slope, to the river or the valley's floor; a
+  board at its foot pointing up to the lookout. On a few trees along it, a rescue board: the rescue frequency, and
+  which way and how far the lookout lies.
+- **With Simple Radio**: each lookout a radio station too, on the rescue frequency, 145.500 MHz -- a station in the cab
+  linked to an antenna on a mast in an enclosure of iron bars beside the tower, its battery charged when the tower was
+  found but running down within minutes, as an abandoned station's would; room in the enclosure to put power in.
+- **With Advanced Chimneys**, the stoves' chimneys are its own; **with Pollution of the Realms**, no fire is left
+  burning on them.
 - **Flag trees** at the tree line and on the high pastures: lone spruces with their branches streaming to leeward and
   their tops bent over, every one on a mountainside pointing the way FT's Geology's prevailing wind blows.
 - **Cairns** on the bare tops of the alpine meadows and the scree, of the rock under them.
-- **Mountain shelters** on the high pastures: a dry-stone hut with a pitched roof, a stove and a bunk.
+- **Mountain shelters** here and there on the high pastures: a dry-stone hut with a pitched roof, a stove and a bunk,
+  stores in a barrel, firewood stacked under the eaves and a rain butt by the door.
 - **Benches** where the ground falls away before a view.
 - **Bird hides** on the shores of FT's Geology's lakes, a slit to watch the water through.
 - **With Naturalist**: deer, bears, boars, finches, butterflies and sparrows in FT's Geology's own forests and meadows,
