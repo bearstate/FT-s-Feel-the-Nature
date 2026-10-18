@@ -21,6 +21,8 @@ The country's small details, and its mornings.
 - **Mountain shelters** on the high pastures: a dry-stone hut with a pitched roof, a stove and a bunk.
 - **Benches** where the ground falls away before a view.
 - **Bird hides** on the shores of FT's Geology's lakes, a slit to watch the water through.
+- **With Naturalist**: deer, bears, boars, finches, butterflies and sparrows in FT's Geology's own forests and meadows,
+  which Naturalist did not know for forest.
 
 ---
 

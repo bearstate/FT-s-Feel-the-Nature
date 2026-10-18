@@ -65,6 +65,17 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
     private static final java.util.Map<Long, java.util.Optional<BlockPos>> SITES = new java.util.concurrent.ConcurrentHashMap<>();
 
+    /** The summits found are the world's: forgotten when it closes, so another world of the same seed finds its own. */
+    @net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = com.jeladastudios.feelthenature.FeelTheNature.MODID)
+    public static final class Forget {
+        private Forget() {}
+
+        @net.minecraftforge.eventbus.api.SubscribeEvent
+        public static void onStopped(net.minecraftforge.event.server.ServerStoppedEvent event) {
+            SITES.clear();
+        }
+    }
+
     @Override
     public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
         WorldGenLevel level = context.level();
