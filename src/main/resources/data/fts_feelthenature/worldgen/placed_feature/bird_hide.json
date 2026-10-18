@@ -1,0 +1,6 @@
+{
+  "feature": "fts_feelthenature:bird_hide",
+  "placement": [
+    { "type": "minecraft:rarity_filter", "chance": 8 }
+  ]
+}

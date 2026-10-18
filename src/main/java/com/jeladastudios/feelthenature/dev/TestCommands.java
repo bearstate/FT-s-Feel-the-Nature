@@ -114,6 +114,12 @@ public final class TestCommands {
                                 .executes(c -> snowPatch(c, IntegerArgumentType.getInteger(c, "radius")))))
                 .then(Commands.literal("cairn").then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
                         .executes(c -> cairn(c, IntegerArgumentType.getInteger(c, "radius")))))
+                .then(Commands.literal("lakeshore").then(Commands.argument("radius", IntegerArgumentType.integer(8, 2000))
+                        .executes(c -> lakeShore(c, IntegerArgumentType.getInteger(c, "radius")))))
+                .then(Commands.literal("find").then(Commands.argument("block", com.mojang.brigadier.arguments.StringArgumentType.string())
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(8, 200))
+                                .executes(c -> find(c, com.mojang.brigadier.arguments.StringArgumentType.getString(c, "block"),
+                                        IntegerArgumentType.getInteger(c, "radius"))))))
                 .then(Commands.literal("tower").executes(TestCommands::tower))
                 .then(Commands.literal("towersite").executes(TestCommands::towerSite))
                 .then(Commands.literal("towersites").then(Commands.argument("radius", IntegerArgumentType.integer(0, 6))
@@ -454,6 +460,75 @@ public final class TestCommands {
             }
         }
         c.getSource().sendSuccess(() -> Component.literal("FTN_TEST cairn none"), false);
+        return 0;
+    }
+
+    /**
+     * Takes the player to the nearest shore of one of FT's Geology's lakes, by its river network: from the nearest column in a
+     * lake out toward the player, four blocks past its edge. Answers {@code FTN_TEST lakeshore x z} or {@code ... none}.
+     */
+    private static int lakeShore(CommandContext<CommandSourceStack> c, int radius) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        int px = player.getBlockX(), pz = player.getBlockZ();
+        for (int r = 0; r <= radius; r += 2) {
+            for (int dx = -r; dx <= r; dx += 2) {
+                for (int dz = -r; dz <= r; dz += 2) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int x = px + dx, z = pz + dz;
+                    var lake = com.jeladastudios.feelthenature.GeologyBridge.river(x, z, 1);
+                    if (lake == null || !lake.lake()) continue;
+                    // Out of the lake toward the player, to four blocks past its edge.
+                    Direction out = Math.abs(dx) >= Math.abs(dz) ? (dx > 0 ? Direction.WEST : Direction.EAST) : (dz > 0 ? Direction.NORTH : Direction.SOUTH);
+                    int sx = x, sz = z;
+                    for (int i = 0; i < 128; i++) {
+                        var w = com.jeladastudios.feelthenature.GeologyBridge.river(sx, sz, 1);
+                        if (w == null || !w.lake()) break;
+                        sx += out.getStepX();
+                        sz += out.getStepZ();
+                    }
+                    int lx = sx + out.getStepX() * 4, lz = sz + out.getStepZ() * 4;
+                    player.teleportTo(level, lx + 0.5, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, lx, lz) + 1, lz + 0.5,
+                            player.getYRot(), 20f);
+                    c.getSource().sendSuccess(() -> Component.literal("FTN_TEST lakeshore " + lx + " " + lz), false);
+                    return 1;
+                }
+            }
+        }
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST lakeshore none"), false);
+        return 0;
+    }
+
+    /**
+     * Takes the player to the nearest block of a kind at or a few blocks under the surface in the country loaded round
+     * them. Answers {@code FTN_TEST find x y z} or {@code FTN_TEST find none}.
+     */
+    private static int find(CommandContext<CommandSourceStack> c, String id, int radius) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        var block = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(new net.minecraft.resources.ResourceLocation(id));
+        int px = player.getBlockX(), pz = player.getBlockZ();
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        for (int r = 0; r <= radius; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    int x = px + dx, z = pz + dz;
+                    if (!level.hasChunk(x >> 4, z >> 4)) continue;
+                    int top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
+                    for (int y = top; y > top - 8; y--) {
+                        if (!level.getBlockState(m.set(x, y, z)).is(block)) continue;
+                        int fy = y;
+                        player.teleportTo(level, x + 5.5, top + 4, z + 5.5, 135f, 30f);
+                        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST find " + x + " " + fy + " " + z), false);
+                        return 1;
+                    }
+                }
+            }
+        }
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST find none"), false);
         return 0;
     }
 
