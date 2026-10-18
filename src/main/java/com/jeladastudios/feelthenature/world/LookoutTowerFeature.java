@@ -83,16 +83,44 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         net.minecraft.world.level.ChunkPos chunk = new net.minecraft.world.level.ChunkPos(context.origin());
         BlockPos site = site(level, chunk);
         if (site == null || site.getX() >> 4 != chunk.x || site.getZ() >> 4 != chunk.z) return false;
-        // The tower stands on the summit as the world built it: the most level spot within a few blocks of the summit
-        // found, the higher where two are as level, if any is level enough; its foot at the ground in its middle, where the
-        // stair comes down.
+        var server = level.getLevel();
+        java.util.function.IntBinaryOperator world = (x, z) ->
+                level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        int[] foot = foot(server, site, model(server, site) ? ground(server) : world);
+        if (com.jeladastudios.feelthenature.dev.TestCommands.ON) {
+            com.jeladastudios.feelthenature.FeelTheNature.LOGGER.info("LOOKOUT_TOWER {} near {} {}", foot == null ? "not built" : "built",
+                    site.getX(), site.getZ());
+        }
+        if (foot == null) return false;
+        // Its foot at the ground as the world built it in its middle, where the stair comes down.
+        int fy = world.applyAsInt(foot[0], foot[1]);
+        return build(level, new BlockPos(foot[0], fy, foot[1]), context.random(), nearestLandmark(server, foot[0], foot[1]));
+    }
+
+    /** Whether FT's Geology gives its ground model at a point. */
+    static boolean model(net.minecraft.server.level.ServerLevel level, BlockPos at) {
+        return !Double.isNaN(com.jeladastudios.feelthenature.GeologyBridge.groundHeight(level, at.getX(), at.getZ()));
+    }
+
+    /** FT's Geology's ground model as heights. */
+    static java.util.function.IntBinaryOperator ground(net.minecraft.server.level.ServerLevel level) {
+        return (x, z) -> (int) Math.round(com.jeladastudios.feelthenature.GeologyBridge.groundHeight(level, x, z));
+    }
+
+    /**
+     * Where the tower stands by a summit, {x, z, y}, or null where no spot near it is level enough: the most level spot
+     * within {@link #SHIFT} blocks, the higher where two are as level. By FT's Geology's ground model where it gives
+     * it, so the answer is the same before the ground is generated as after -- {@code /ftn locate lookout} and the
+     * world agree -- else by the world's own heightmap.
+     */
+    static int[] foot(net.minecraft.server.level.ServerLevel level, BlockPos site, java.util.function.IntBinaryOperator height) {
         int fx = 0, fz = 0, fy = 0, rough = Integer.MAX_VALUE;
         for (int ox = -SHIFT; ox <= SHIFT; ox += 4) {
             for (int oz = -SHIFT; oz <= SHIFT; oz += 4) {
                 int x = site.getX() + ox, z = site.getZ() + oz, lo = Integer.MAX_VALUE, hi = Integer.MIN_VALUE, mid = 0;
                 for (int dx = -5; dx <= 5; dx += 5) {
                     for (int dz = -5; dz <= 5; dz += 5) {
-                        int h = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x + dx, z + dz);
+                        int h = height.applyAsInt(x + dx, z + dz);
                         lo = Math.min(lo, h);
                         hi = Math.max(hi, h);
                         if (dx == 0 && dz == 0) mid = h;
@@ -106,12 +134,42 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
                 }
             }
         }
-        if (com.jeladastudios.feelthenature.dev.TestCommands.ON) {
-            com.jeladastudios.feelthenature.FeelTheNature.LOGGER.info("LOOKOUT_TOWER {} at {} {} {} (rough {})",
-                    rough > ROUGH ? "not built" : "built", fx, fy, fz, rough);
+        return rough > ROUGH ? null : new int[]{fx, fz, fy};
+    }
+
+    /** A lookout found: where its foot stands, the mountain it looks to if any, and whether it is known for certain. */
+    public record Found(BlockPos foot, com.jeladastudios.feelthenature.GeologyBridge.Landmark view, boolean certain) {}
+
+    /**
+     * The nearest lookout to a point within {@code cells} cells of it, generated or yet to be: the cells round it in
+     * rings outward, the nearest found in the first ring that has one and the next (a nearer one can lie a ring out).
+     * Without FT's Geology's ground model a summit's levelness cannot be known before its ground is generated; the
+     * summit is given, not certain.
+     */
+    public static Found locate(net.minecraft.server.level.ServerLevel level, BlockPos from, int cells) {
+        int cx = Math.floorDiv(from.getX() >> 4, CELL), cz = Math.floorDiv(from.getZ() >> 4, CELL);
+        Found best = null;
+        double nearest = Double.MAX_VALUE;
+        int stopAfter = Integer.MAX_VALUE;
+        for (int r = 0; r <= cells && r <= stopAfter; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    BlockPos site = site(level, new net.minecraft.world.level.ChunkPos((cx + dx) * CELL, (cz + dz) * CELL));
+                    if (site == null) continue;
+                    boolean model = model(level, site);
+                    int[] foot = model ? foot(level, site, ground(level)) : new int[]{site.getX(), site.getZ(), site.getY()};
+                    if (foot == null) continue;
+                    double d = Math.hypot(foot[0] - from.getX(), foot[1] - from.getZ());
+                    if (d < nearest) {
+                        nearest = d;
+                        best = new Found(new BlockPos(foot[0], foot[2], foot[1]), nearestLandmark(level, foot[0], foot[1]), model);
+                        stopAfter = Math.min(stopAfter, r + 1);
+                    }
+                }
+            }
         }
-        if (rough > ROUGH) return false;
-        return build(level, new BlockPos(fx, fy, fz), context.random(), nearestLandmark(level.getLevel(), fx, fz));
+        return best;
     }
 
     /**
@@ -265,6 +323,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         roof(b);
         fit(b, random);
         if (view != null) nameBoard(b, view);
+        b.join();
         return true;
     }
 
@@ -288,8 +347,13 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
             var text = new net.minecraft.world.level.block.entity.SignText()
                     .setMessage(1, net.minecraft.network.chat.Component.literal(name))
                     .setColor(net.minecraft.world.item.DyeColor.BLACK);
-            sign.setText(text, true);
-            sign.setWaxed(true);
+            // Through its saved form: in a chunk being generated the sign has no level yet, and setting its text the
+            // ordinary way tells a level that is not there, which brings the generation down.
+            var tag = sign.saveWithoutMetadata();
+            net.minecraft.world.level.block.entity.SignText.DIRECT_CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, text)
+                    .result().ifPresent(t -> tag.put("front_text", t));
+            tag.putBoolean("is_waxed", true);
+            sign.load(tag);
         }
     }
 

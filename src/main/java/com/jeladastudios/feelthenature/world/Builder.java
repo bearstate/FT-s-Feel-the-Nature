@@ -45,8 +45,32 @@ final class Builder {
         return level.getBlockState(at(x, y, z));
     }
 
+    /** Where fences, panes and walls were set, to be joined to what stands beside them once the building is done. */
+    private final java.util.List<BlockPos> joints = new java.util.ArrayList<>();
+
     void set(int x, int y, int z, BlockState s) {
-        level.setBlock(at(x, y, z), s.rotate(level, m, rotation), Block.UPDATE_CLIENTS);
+        BlockState turned = s.rotate(level, at(x, y, z), rotation);
+        level.setBlock(m, turned, Block.UPDATE_CLIENTS);
+        if (turned.getBlock() instanceof net.minecraft.world.level.block.CrossCollisionBlock
+                || turned.getBlock() instanceof net.minecraft.world.level.block.WallBlock) joints.add(m.immutable());
+    }
+
+    /**
+     * The fences, panes and walls set joined to their neighbours, as the game joins them when a player places one: in a
+     * chunk being generated nothing is told of what was set beside it, and each stood alone as a bare post.
+     */
+    void join() {
+        for (BlockPos p : joints) {
+            BlockState s = level.getBlockState(p);
+            if (!(s.getBlock() instanceof net.minecraft.world.level.block.CrossCollisionBlock
+                    || s.getBlock() instanceof net.minecraft.world.level.block.WallBlock)) continue;
+            for (Direction d : Direction.Plane.HORIZONTAL) {
+                BlockPos n = p.relative(d);
+                s = s.updateShape(d, level.getBlockState(n), level, p, n);
+            }
+            level.setBlock(p, s, Block.UPDATE_CLIENTS);
+        }
+        joints.clear();
     }
 
     void setIfAir(int x, int y, int z, BlockState s) {

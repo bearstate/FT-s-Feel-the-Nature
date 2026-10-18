@@ -20,5 +20,9 @@
   "item.fts_feelthenature.umbrella_brown": "Kahverengi Şemsiye",
   "item.fts_feelthenature.umbrella_green": "Yeşil Şemsiye",
   "item.fts_feelthenature.umbrella_red": "Kırmızı Şemsiye",
-  "item.fts_feelthenature.umbrella_black": "Siyah Şemsiye"
+  "item.fts_feelthenature.umbrella_black": "Siyah Şemsiye",
+  "command.fts_feelthenature.locate.lookout": "En yakın yangın gözetleme kulesi %s konumunda (%s blok uzakta).",
+  "command.fts_feelthenature.locate.lookout.view": "%s dağına bakıyor.",
+  "command.fts_feelthenature.locate.lookout.uncertain": "(Zirvesi; bu FT's Geology sürümüyle yeterince düz olup olmadığı ancak zemini üretilince bilinir.)",
+  "command.fts_feelthenature.locate.lookout.none": "Yaklaşık 4000 blok içinde yangın gözetleme kulesi yok."
 }

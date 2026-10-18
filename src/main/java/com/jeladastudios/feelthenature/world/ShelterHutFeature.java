@@ -118,6 +118,7 @@ public class ShelterHutFeature extends Feature<NoneFeatureConfiguration> {
         b.set(-2, 0, 1, Blocks.CRAFTING_TABLE.defaultBlockState());
         b.set(-1, 0, -1, Blocks.BARREL.defaultBlockState());
         b.set(0, 5, 0, Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true));
+        b.join();
         return true;
     }
 }

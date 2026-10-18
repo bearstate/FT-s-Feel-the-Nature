@@ -82,6 +82,7 @@ public class BirdHideFeature extends Feature<NoneFeatureConfiguration> {
         };
         Builder b = new Builder(level, new BlockPos(origin.getX(), y, origin.getZ()), rotation);
         build(b, random);
+        b.join();
         return true;
     }
 

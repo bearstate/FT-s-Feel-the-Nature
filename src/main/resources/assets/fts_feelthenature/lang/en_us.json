@@ -20,5 +20,9 @@
   "item.fts_feelthenature.umbrella_brown": "Brown Umbrella",
   "item.fts_feelthenature.umbrella_green": "Green Umbrella",
   "item.fts_feelthenature.umbrella_red": "Red Umbrella",
-  "item.fts_feelthenature.umbrella_black": "Black Umbrella"
+  "item.fts_feelthenature.umbrella_black": "Black Umbrella",
+  "command.fts_feelthenature.locate.lookout": "The nearest fire lookout is at %s (%s blocks away).",
+  "command.fts_feelthenature.locate.lookout.view": "It looks to %s.",
+  "command.fts_feelthenature.locate.lookout.uncertain": "(Its summit; with this FT's Geology whether it is level enough is known only once its ground is generated.)",
+  "command.fts_feelthenature.locate.lookout.none": "No fire lookout within about 4000 blocks."
 }
