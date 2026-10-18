@@ -112,6 +112,10 @@ public final class TestCommands {
                 .then(Commands.literal("snowpatch")
                         .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
                                 .executes(c -> snowPatch(c, IntegerArgumentType.getInteger(c, "radius")))))
+                .then(Commands.literal("tower").executes(TestCommands::tower))
+                .then(Commands.literal("towersite").executes(TestCommands::towerSite))
+                .then(Commands.literal("towersites").then(Commands.argument("radius", IntegerArgumentType.integer(0, 6))
+                        .executes(c -> towerSites(c, IntegerArgumentType.getInteger(c, "radius")))))
                 .then(Commands.literal("waterfall")
                         .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
                                 .executes(c -> waterfall(c, IntegerArgumentType.getInteger(c, "radius"), false))
@@ -364,6 +368,62 @@ public final class TestCommands {
         if (firm) return false;
         return level.getBlockState(new BlockPos(x, y, z)).is(net.minecraft.world.level.block.Blocks.SNOW)
                 || top.is(net.minecraft.world.level.block.Blocks.SNOW);
+    }
+
+    /** Builds a lookout tower with its foot where the player stands. Answers {@code FTN_TEST tower x y z}. */
+    private static int tower(CommandContext<CommandSourceStack> c) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        BlockPos foot = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, player.blockPosition());
+        com.jeladastudios.feelthenature.world.LookoutTowerFeature.build(level, foot, level.random);
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST tower " + foot.getX() + " " + foot.getY() + " " + foot.getZ()), false);
+        return 1;
+    }
+
+    /**
+     * The summit the lookout tower of the player's cell stands on, by the generator's ground, and how long finding it
+     * took. Answers {@code FTN_TEST towersite x y z ms=N} or {@code FTN_TEST towersite none ms=N}.
+     */
+    private static int towerSite(CommandContext<CommandSourceStack> c) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        long t0 = System.nanoTime();
+        BlockPos site = com.jeladastudios.feelthenature.world.LookoutTowerFeature.site(level, new net.minecraft.world.level.ChunkPos(player.blockPosition()));
+        long ms = (System.nanoTime() - t0) / 1_000_000;
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST towersite "
+                + (site == null ? "none" : site.getX() + " " + site.getY() + " " + site.getZ()) + " ms=" + ms), false);
+        return 1;
+    }
+
+    /**
+     * The lookout summits of the cells round the player's, out to a radius in cells, and the nearest of them. Answers
+     * {@code FTN_TEST towersites found=N of=M nearest=x y z} (or {@code nearest=none}).
+     */
+    private static int towerSites(CommandContext<CommandSourceStack> c, int radius) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        int cell = com.jeladastudios.feelthenature.world.LookoutTowerFeature.CELL;
+        int pcx = Math.floorDiv(player.chunkPosition().x, cell), pcz = Math.floorDiv(player.chunkPosition().z, cell);
+        int found = 0, of = 0;
+        BlockPos nearest = null;
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                of++;
+                BlockPos s = com.jeladastudios.feelthenature.world.LookoutTowerFeature.site(level,
+                        new net.minecraft.world.level.ChunkPos((pcx + dx) * cell, (pcz + dz) * cell));
+                if (s == null) continue;
+                found++;
+                if (nearest == null || s.distSqr(player.blockPosition()) < nearest.distSqr(player.blockPosition())) nearest = s;
+            }
+        }
+        BlockPos n = nearest;
+        int f = found, o = of;
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST towersites found=" + f + " of=" + o + " nearest="
+                + (n == null ? "none" : n.getX() + " " + n.getY() + " " + n.getZ())), false);
+        return 1;
     }
 
     private static boolean falling(ServerLevel level, BlockPos at) {

@@ -1,0 +1,20 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "fts_geology:alpine_meadow", "required": false },
+    { "id": "fts_geology:treeline", "required": false },
+    { "id": "fts_geology:subalpine_forest", "required": false },
+    { "id": "fts_geology:montane_forest", "required": false },
+    { "id": "fts_geology:orogenic_highland", "required": false },
+    "minecraft:meadow",
+    "minecraft:windswept_hills",
+    "minecraft:windswept_forest",
+    "minecraft:taiga",
+    "minecraft:old_growth_spruce_taiga",
+    "minecraft:old_growth_pine_taiga",
+    "minecraft:forest",
+    "minecraft:birch_forest",
+    "minecraft:dark_forest",
+    "minecraft:plains"
+  ]
+}
