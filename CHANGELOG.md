@@ -13,6 +13,8 @@ The country's small details, and its mornings.
   autumn; not in a wind, in rain, in the heat, or where FT's Geology's own fog already lies.
 - **Motes in the sun**: dust glinting in the shafts of light through a wood's crowns on a still, dry day.
 - **Snow off the crowns**: a gust shakes the snow off the trees that hold it.
+- **Rain on the windows**: indoors in the rain, drops running down the glass, clinging and sliding, more the harder it
+  rains.
 - **Fire lookouts** on prominent summits of hill and mountain country, one in about seven hundred blocks at most, as
   the real ones are built: a glazed cab twenty blocks up on four splayed timber legs braced in X, a switchback stair
   up the middle walked without a jump, a walkway carried on brackets, a hipped roof with a little glazed lantern-room

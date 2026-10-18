@@ -25,6 +25,7 @@ public final class ModParticles {
     public static final RegistryObject<SimpleParticleType> POLLEN = PARTICLES.register("pollen", () -> new SimpleParticleType(false));
     public static final RegistryObject<SimpleParticleType> STEAM = PARTICLES.register("steam", () -> new SimpleParticleType(false));
     public static final RegistryObject<SimpleParticleType> MOTE = PARTICLES.register("mote", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> PANE_DROP = PARTICLES.register("pane_drop", () -> new SimpleParticleType(false));
 
     /** A leaf of a given block, falling: drawn with that block's texture and tinted as the block is. */
     @SuppressWarnings("deprecation")

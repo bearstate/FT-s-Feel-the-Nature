@@ -49,7 +49,7 @@ public final class AmbientLife {
     private static final int REACH = 16;
 
     /** Counts since the last trace line, for the automated game test. */
-    static int fireflies, pollen, leaves, drift, steam, motes, clumps;
+    static int fireflies, pollen, leaves, drift, steam, motes, clumps, drops;
     /** Serene Seasons' sub-season the last tick, or -1. */
     private static int season = -1;
     private static long costNanos, costMax;
@@ -86,6 +86,7 @@ public final class AmbientLife {
             event.registerSpriteSet(ModParticles.POLLEN.get(), PollenParticle.Provider::new);
             event.registerSpriteSet(ModParticles.STEAM.get(), SteamParticle.Provider::new);
             event.registerSpriteSet(ModParticles.MOTE.get(), MoteParticle.Provider::new);
+            event.registerSpriteSet(ModParticles.PANE_DROP.get(), PaneDropParticle.Provider::new);
             event.registerSpecial(ModParticles.FALLING_LEAF.get(), new FallingLeafParticle.Provider());
         }
     }
@@ -134,6 +135,11 @@ public final class AmbientLife {
             float chance = (0.35f + 0.45f * low) * (float) density;
             for (int i = 0; i < 4; i++) if (RANDOM.nextFloat() < chance) mote(level, player);
         }
+        // Rain running down the windows round a player indoors: more the harder it rains.
+        if (rain > 0.05f) {
+            float chance = Math.min(1f, rain * 1.6f) * (float) density;
+            for (int i = 0; i < 40; i++) if (RANDOM.nextFloat() < chance) paneDrop(level, player);
+        }
         if (mist > 0.01f) {
             for (int i = 0; i < 24; i++) if (RANDOM.nextFloat() < 0.8f * mist * (float) density) steam(level, player, wx, wz);
         }
@@ -156,6 +162,35 @@ public final class AmbientLife {
         if (!crown) return;
         level.addParticle(ModParticles.MOTE.get(), x + RANDOM.nextDouble(), p.getY() + RANDOM.nextDouble(), z + RANDOM.nextDouble(), 0, 0, 0);
         motes++;
+    }
+
+    /**
+     * A raindrop on the inside face of a pane near the player, where the rain beats on its outside: a pane or a glass
+     * block with the open sky over its other side, read from the player's side. The drop is set a hair in from the glass,
+     * so it is seen through it running down.
+     */
+    private static void paneDrop(ClientLevel level, LocalPlayer player) {
+        int x = player.getBlockX() + RANDOM.nextInt(11) - 5, y = player.getBlockY() + RANDOM.nextInt(4) - 1;
+        int z = player.getBlockZ() + RANDOM.nextInt(11) - 5;
+        BlockPos p = new BlockPos(x, y, z);
+        BlockState s = level.getBlockState(p);
+        if (!s.is(net.minecraftforge.common.Tags.Blocks.GLASS_PANES)
+                && !s.is(net.minecraftforge.common.Tags.Blocks.GLASS)) return;
+        // The side of it the player is on, and the open, rained-on side opposite.
+        for (net.minecraft.core.Direction d : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+            BlockPos inside = p.relative(d), outside = p.relative(d.getOpposite());
+            // Open to the rain outside, or under eaves the wind drives it in under: the sky within two blocks out.
+            boolean open = level.canSeeSky(outside) || level.canSeeSky(outside.relative(d.getOpposite()))
+                    || level.canSeeSky(outside.relative(d.getOpposite(), 2));
+            if (!level.getBlockState(inside).isAir() || level.canSeeSky(inside) || !level.getBlockState(outside).isAir() || !open) continue;
+            double inset = s.is(net.minecraftforge.common.Tags.Blocks.GLASS) ? 0.52 : 0.08;
+            double px = p.getX() + 0.5 + d.getStepX() * inset + (d.getStepZ() != 0 ? RANDOM.nextDouble() - 0.5 : 0) * 0.9;
+            double pz = p.getZ() + 0.5 + d.getStepZ() * inset + (d.getStepX() != 0 ? RANDOM.nextDouble() - 0.5 : 0) * 0.9;
+            level.addParticle(ModParticles.PANE_DROP.get(), px, p.getY() + 0.3 + RANDOM.nextDouble() * 0.65, pz,
+                    d.getStepX(), 0, d.getStepZ());
+            drops++;
+            return;
+        }
     }
 
     private static void steam(ClientLevel level, LocalPlayer player, float wx, float wz) {
@@ -289,8 +324,8 @@ public final class AmbientLife {
 
     public static String countsAndReset() {
         String s = "fireflies:" + fireflies + ",pollen:" + pollen + ",leaves:" + leaves + ",drift:" + drift + ",steam:" + steam
-                + ",motes:" + motes + ",clumps:" + clumps + ",season:" + season;
-        fireflies = pollen = leaves = drift = steam = motes = clumps = 0;
+                + ",motes:" + motes + ",clumps:" + clumps + ",drops:" + drops + ",season:" + season;
+        fireflies = pollen = leaves = drift = steam = motes = clumps = drops = 0;
         return s;
     }
 }
