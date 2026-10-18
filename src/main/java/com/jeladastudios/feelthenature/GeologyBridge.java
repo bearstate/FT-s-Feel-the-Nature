@@ -275,6 +275,84 @@ public final class GeologyBridge {
         }
     }
 
+    // FT's Geology's API 3 and 4: the ground, the landmarks, the rock and the falls. Missing from an older core, where
+    // each answers as if it did not know (NaN, nothing, plain stone) and the addon goes the old way.
+    private static volatile boolean groundLinks = true, rockLinks = true, fallsLinks = true;
+
+    /** The ground the terrain lays at a column, before any river is cut into it; NaN where it is not known. Safe in a feature. */
+    public static double groundHeight(net.minecraft.server.level.ServerLevel level, int x, int z) {
+        if (!groundLinks) return Double.NaN;
+        try {
+            return FtsGeologyApi.groundHeight(level, x, z);
+        } catch (LinkageError e) {
+            groundLinks = lost("its ground", e);
+            return Double.NaN;
+        }
+    }
+
+    /** How far a column's ground stands over the ground {@code reach} blocks round it; NaN where it is not known. */
+    public static double prominence(net.minecraft.server.level.ServerLevel level, int x, int z, int reach) {
+        if (!groundLinks) return Double.NaN;
+        try {
+            return FtsGeologyApi.prominence(level, x, z, reach);
+        } catch (LinkageError e) {
+            groundLinks = lost("its ground", e);
+            return Double.NaN;
+        }
+    }
+
+    /** The world's prevailing wind, a unit vector across the ground; zero where it is not known. */
+    public static net.minecraft.world.phys.Vec3 prevailingWind(net.minecraft.server.level.ServerLevel level) {
+        if (!groundLinks) return net.minecraft.world.phys.Vec3.ZERO;
+        try {
+            return FtsGeologyApi.prevailingWind(level);
+        } catch (LinkageError e) {
+            groundLinks = lost("its prevailing wind", e);
+            return net.minecraft.world.phys.Vec3.ZERO;
+        }
+    }
+
+    /** A named mountain: its name, where its crop's middle stands, and which way its long axis runs. */
+    public record Landmark(String name, int x, int z, double bearing) {}
+
+    /** The named mountains of the world; empty where there are none or they are not known. Asked once and kept. */
+    public static java.util.List<Landmark> landmarks(net.minecraft.server.level.ServerLevel level) {
+        if (!groundLinks) return java.util.List.of();
+        try {
+            return FtsGeologyApi.landmarks(level).stream().map(l -> new Landmark(l.name(), l.x(), l.z(), l.bearing())).toList();
+        } catch (LinkageError e) {
+            groundLinks = lost("its landmarks", e);
+            return java.util.List.of();
+        }
+    }
+
+    /** The rock the lithology puts at a point, read through a feature's own region; null where it cannot say. */
+    public static net.minecraft.world.level.block.state.BlockState surfaceRock(net.minecraft.world.level.WorldGenLevel region,
+                                                                                int x, int y, int z) {
+        if (!rockLinks) return null;
+        try {
+            return FtsGeologyApi.surfaceRock(region, x, y, z);
+        } catch (LinkageError e) {
+            rockLinks = lost("its rock", e);
+            return null;
+        }
+    }
+
+    /** Where a river falls: the foot of the fall, and the water's level over it and under it. */
+    public record Fall(int x, int z, double top, double bottom) {}
+
+    /** The falls starting within a radius whose water drops at least {@code minDrop}; empty where none are known. */
+    public static java.util.List<Fall> falls(net.minecraft.server.level.ServerLevel level, int x, int z, int radius, double minDrop) {
+        if (!fallsLinks) return java.util.List.of();
+        try {
+            return FtsGeologyApi.falls(level, x, z, radius, minDrop).stream()
+                    .map(f -> new Fall(f.x(), f.z(), f.top(), f.bottom())).toList();
+        } catch (LinkageError e) {
+            fallsLinks = lost("its falls", e);
+            return java.util.List.of();
+        }
+    }
+
     /** A river or lake near a column: how far from its channel's middle, how wide it is, and whether it is a lake. */
     public record River(double distance, double halfWidth, boolean lake) {
         /** Blocks out from the edge of the water: negative in the water, zero at its edge. */

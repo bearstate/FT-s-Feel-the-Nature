@@ -38,6 +38,8 @@ public class RiparianFeature extends Feature<NoneFeatureConfiguration> {
     private static final java.util.concurrent.atomic.AtomicLong COST_MAX = new java.util.concurrent.atomic.AtomicLong();
     private static final java.util.concurrent.atomic.AtomicInteger COST_CHUNKS = new java.util.concurrent.atomic.AtomicInteger();
     private static final java.util.concurrent.atomic.AtomicInteger CURTAINS = new java.util.concurrent.atomic.AtomicInteger();
+    private static final java.util.concurrent.atomic.AtomicInteger FALLS = new java.util.concurrent.atomic.AtomicInteger();
+    private static final java.util.concurrent.atomic.AtomicInteger FALLS_SEEN = new java.util.concurrent.atomic.AtomicInteger();
 
     @Override
     public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
@@ -49,8 +51,8 @@ public class RiparianFeature extends Feature<NoneFeatureConfiguration> {
         COST_MAX.accumulateAndGet(spent, Math::max);
         int n = COST_CHUNKS.incrementAndGet();
         if (n % 256 == 0) {
-            com.jeladastudios.feelthenature.FeelTheNature.LOGGER.info("RIPARIAN_COST chunks={} avg_us={} max_us={} curtains={}",
-                    n, COST_NANOS.sum() / n / 1000, COST_MAX.get() / 1000, CURTAINS.get());
+            com.jeladastudios.feelthenature.FeelTheNature.LOGGER.info("RIPARIAN_COST chunks={} avg_us={} max_us={} curtains={} falls={}/{}",
+                    n, COST_NANOS.sum() / n / 1000, COST_MAX.get() / 1000, CURTAINS.get(), FALLS.get(), FALLS_SEEN.get());
         }
         return placed;
     }
@@ -78,8 +80,13 @@ public class RiparianFeature extends Feature<NoneFeatureConfiguration> {
                     // A waterfall's curtain: the rock round its foot wet with spray, once for each of its cells.
                     boolean curtain = falling(level, m.below());
                     if (curtain && com.jeladastudios.feelthenature.dev.TestCommands.ON) CURTAINS.incrementAndGet();
-                    if (curtain && sprayed.add(((dx >> 2) << 2) | (dz >> 2))) {
-                        placed |= spray(level, m.below(), random);
+                    int cell = ((dx >> 2) << 2) | (dz >> 2);
+                    if (curtain && !sprayed.contains(cell)) {
+                        // Marked done only where it was wet: a curtain of a block or two leaves the cell to a fall.
+                        if (spray(level, m.below(), random)) {
+                            sprayed.add(cell);
+                            placed = true;
+                        }
                     } else if (bank > -1.5 && random.nextFloat() < (river.lake() ? 0.015f : 0.035f)) {
                         // Stones at a river's edge, of the rock it runs over; fewer round a lake, whose still water buries them.
                         placed |= riverStone(level, m, random);
@@ -88,6 +95,18 @@ public class RiparianFeature extends Feature<NoneFeatureConfiguration> {
                 }
                 placed |= bankPlant(level, m, random, bank);
             }
+        }
+        // The falls the river network knows of whose foot is in this chunk, curtain seen or not.
+        var falls = GeologyBridge.falls(level.getLevel(), x0 + 8, z0 + 8, 48, 3);
+        if (com.jeladastudios.feelthenature.dev.TestCommands.ON) {
+            FALLS_SEEN.addAndGet(falls.size());
+        }
+        for (GeologyBridge.Fall f : falls) {
+            int dx = f.x() - x0, dz = f.z() - z0;
+            if (dx < 0 || dz < 0 || dx > 15 || dz > 15) continue;
+            if (!sprayed.add(((dx >> 2) << 2) | (dz >> 2))) continue;
+            if (com.jeladastudios.feelthenature.dev.TestCommands.ON) FALLS.incrementAndGet();
+            placed |= wet(level, new BlockPos(f.x(), (int) Math.floor(f.bottom()), f.z()), (int) Math.round(f.top() - f.bottom()), random);
         }
         return placed;
     }
@@ -110,17 +129,29 @@ public class RiparianFeature extends Feature<NoneFeatureConfiguration> {
         while (drop < 40 && falling(level, m.move(0, -1, 0))) drop++;
         if (drop < 3) return false;
         BlockPos foot = m.immutable();
+        return wet(level, foot, drop, random);
+    }
+
+    /** The rock and soil round the foot of a fall made wet with its spray: mossy rock, moss, ferns; wider under a higher fall. */
+    static boolean wet(WorldGenLevel level, BlockPos foot, int drop, RandomSource random) {
+        // Out to the banks either side of the river, and a little over them.
+        GeologyBridge.River river = GeologyBridge.river(foot.getX(), foot.getZ(), 4);
+        int r = Math.min(9, (int) Math.ceil(river == null ? 3 : river.halfWidth()) + (drop >= 10 ? 4 : 3));
         boolean placed = false;
-        for (BlockPos p : BlockPos.betweenClosed(foot.offset(-3, -1, -3), foot.offset(3, 3, 3))) {
-            if (p.distSqr(foot) > 12 || random.nextFloat() > 0.5f) continue;
+        for (BlockPos p : BlockPos.betweenClosed(foot.offset(-r, -1, -r), foot.offset(r, 4, r))) {
+            int hx = p.getX() - foot.getX(), hz = p.getZ() - foot.getZ();
+            if (hx * hx + hz * hz > r * r + 2 || random.nextFloat() > 0.55f) continue;
             BlockState s = level.getBlockState(p);
             if (!exposed(level, p)) continue;
             if (s.is(BlockTags.BASE_STONE_OVERWORLD) || s.is(Blocks.COBBLESTONE) || s.is(Blocks.GRAVEL)) {
                 level.setBlock(p, Blocks.MOSSY_COBBLESTONE.defaultBlockState(), 2);
                 placed = true;
-            } else if (s.is(BlockTags.DIRT) && level.getBlockState(p.above()).isAir()) {
+            } else if (s.is(BlockTags.DIRT) && (level.getBlockState(p.above()).isAir() || level.getBlockState(p.above()).canBeReplaced()
+                    && level.getBlockState(p.above()).getFluidState().isEmpty())) {
                 level.setBlock(p, Blocks.MOSS_BLOCK.defaultBlockState(), 2);
+                // The spray keeps it wet: no snow lies on it.
                 if (random.nextFloat() < 0.35f) level.setBlock(p.above(), Blocks.FERN.defaultBlockState(), 2);
+                else if (level.getBlockState(p.above()).is(Blocks.SNOW)) level.setBlock(p.above(), Blocks.AIR.defaultBlockState(), 2);
                 placed = true;
             }
         }
@@ -149,11 +180,15 @@ public class RiparianFeature extends Feature<NoneFeatureConfiguration> {
         BlockPos top = m.below();
         if (!level.getFluidState(top).is(FluidTags.WATER) || !level.getBlockState(m).isAir()) return false;
         if (level.getFluidState(top.below(2)).is(FluidTags.WATER) || !nearShore(level, top)) return false;
-        // The rock under the bed's gravel and silt (not FT's Geology's model of it: asked from a feature, that waits on
-        // the server thread, and world generation hangs).
+        // The rock FT's Geology's lithology puts there, asked through the feature's own region; else the rock found
+        // under the bed's gravel and silt.
         BlockPos bottom = top;
         while (level.getFluidState(bottom.below()).is(FluidTags.WATER)) bottom = bottom.below();
-        BlockState rock = BoulderFeature.rockUnder(level, bottom);
+        BlockState rock = GeologyBridge.surfaceRock(level, top.getX(), bottom.getY() - 1, top.getZ());
+        if (rock == null || rock.is(Blocks.STONE)) {
+            BlockState under = BoulderFeature.rockUnder(level, bottom);
+            if (under != null) rock = under;
+        }
         if (rock == null || !rock.isSolidRender(level, top)) rock = Blocks.STONE.defaultBlockState();
         BlockState stone = random.nextFloat() < 0.35f ? Blocks.MOSSY_COBBLESTONE.defaultBlockState() : rock;
         level.setBlock(top, stone, 2);

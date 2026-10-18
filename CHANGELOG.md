@@ -3,11 +3,12 @@
 The country's small details, and its mornings.
 
 - **Stones at the water's edge**: in the shallows of FT's Geology's rivers, a block or two from the bank, of the rock
-  under the bed; some mossy, some with their backs out of the water. Fewer round a lake.
+  FT's Geology lays there; some mossy, some with their backs out of the water. Fewer round a lake.
 - **Old snow on the north slopes**: patches lying on into the summer on the shaded slopes of the alpine meadows, the
   tree line and the scree, deepest under a step in the slope.
 - **Beside a fallen log** in a mossy wood, the ground rotting to podzol, and mushrooms in it.
-- **The spray at a waterfall's foot**: mossy rock, moss and ferns round where one of FT's Geology's falls lands.
+- **The spray at a waterfall's foot**: mossy rock, moss and ferns, and no snow, round where each of FT's Geology's falls
+  lands, out over its banks.
 - **Morning mist**: on a calm, clear, cool morning, mist rising off still water, thickest just after sunrise and in
   autumn; not in a wind, in rain, in the heat, or where FT's Geology's own fog already lies.
 - **Motes in the sun**: dust glinting in the shafts of light through a wood's crowns on a still, dry day.
@@ -17,13 +18,19 @@ The country's small details, and its mornings.
   under the eaves carried on brackets. Kept as a weather station with FT's Geology's instruments (the terminal,
   barometer and hygrometer inside, the rain gauge and thermometer on the walkway's posts, the anemometer on the roof),
   and lived in: a bed, a stove and its smoking chimney, lanterns, the fire finder on its stand in the middle of the
-  floor. The legs stand into the ground or on stone footings, the ground left as it lies.
+  floor. The legs stand into the ground or on stone footings, the ground left as it lies. Within sight of Everest, K2
+  or the Matterhorn a lookout faces it, with a board by the door naming it.
+- **Flag trees** at the tree line and on the high pastures: lone spruces with their branches streaming to leeward and
+  their tops bent over, every one on a mountainside pointing the way FT's Geology's prevailing wind blows.
 - **Cairns** on the bare tops of the alpine meadows and the scree, of the rock under them.
 - **Mountain shelters** on the high pastures: a dry-stone hut with a pitched roof, a stove and a bunk.
 - **Benches** where the ground falls away before a view.
 - **Bird hides** on the shores of FT's Geology's lakes, a slit to watch the water through.
 - **With Naturalist**: deer, bears, boars, finches, butterflies and sparrows in FT's Geology's own forests and meadows,
   which Naturalist did not know for forest.
+
+The stones' rock, the falls, the flag trees, the lookouts' faster siting and their named mountains want FT's Geology
+0.11.4 or newer (its API 4); with an older one the addon goes the old way, and grows no flag trees.
 
 ---
 

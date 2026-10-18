@@ -73,6 +73,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         @net.minecraftforge.eventbus.api.SubscribeEvent
         public static void onStopped(net.minecraftforge.event.server.ServerStoppedEvent event) {
             SITES.clear();
+            landmarks = null;
         }
     }
 
@@ -110,7 +111,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
                     rough > ROUGH ? "not built" : "built", fx, fy, fz, rough);
         }
         if (rough > ROUGH) return false;
-        return build(level, new BlockPos(fx, fy, fz), context.random());
+        return build(level, new BlockPos(fx, fy, fz), context.random(), nearestLandmark(level.getLevel(), fx, fz));
     }
 
     /**
@@ -129,28 +130,36 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         var source = level.getLevel().getChunkSource();
         var generator = source.getGenerator();
         var random = source.randomState();
-        java.util.function.IntBinaryOperator ground = (x, z) -> generator.getBaseHeight(x, z,
-                net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, level, random);
-        int x0 = cx * CELL * 16, z0 = cz * CELL * 16, n = CELL * 16 / GRID;
+        // FT's Geology's own model of its ground where it gives it, cheap and the same loaded or not; else the generator's.
+        var server = level.getLevel();
+        boolean model = !Double.isNaN(com.jeladastudios.feelthenature.GeologyBridge.groundHeight(server, cx * CELL * 16, cz * CELL * 16));
+        java.util.function.IntBinaryOperator ground = model
+                ? (x, z) -> (int) Math.round(com.jeladastudios.feelthenature.GeologyBridge.groundHeight(server, x, z))
+                : (x, z) -> generator.getBaseHeight(x, z, net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE_WG, level, random);
+        // The model is cheap enough to read twice as finely, and to weigh twice as many candidates.
+        int grid = model ? GRID / 2 : GRID, candidates = model ? CANDIDATES * 2 : CANDIDATES;
+        int x0 = cx * CELL * 16, z0 = cz * CELL * 16, n = CELL * 16 / grid;
+        // Within sight of one of the named mountains a lesser top will do: a lookout is put where the view is.
+        double need = nearestLandmark(server, x0 + CELL * 8, z0 + CELL * 8) != null ? PROMINENCE * 0.5 : PROMINENCE;
         // The cell's ground on a coarse grid, kept off its edge so the ring and the tower are the cell's own.
         int[][] g = new int[n][n];
-        for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) g[i][j] = ground.applyAsInt(x0 + GRID / 2 + i * GRID, z0 + GRID / 2 + j * GRID);
+        for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) g[i][j] = ground.applyAsInt(x0 + grid / 2 + i * grid, z0 + grid / 2 + j * grid);
         // The highest of the grid's points in lookout country -- a summit or a high shoulder under the bare rock -- and of
         // those, the one standing furthest over the ring round it.
         var biomes = generator.getBiomeSource();
         java.util.List<int[]> country = new java.util.ArrayList<>();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                int x = x0 + GRID / 2 + i * GRID, z = z0 + GRID / 2 + j * GRID, h = g[i][j];
-                if (h <= level.getSeaLevel() + PROMINENCE || !country(biomes, random, x, h, z)) continue;
+                int x = x0 + grid / 2 + i * grid, z = z0 + grid / 2 + j * grid, h = g[i][j];
+                if (h <= level.getSeaLevel() + need || !country(biomes, random, x, h, z)) continue;
                 country.add(new int[]{x, h, z});
             }
         }
         country.sort((a, b) -> b[1] - a[1]);
         int bx = 0, bz = 0, by = 0;
-        double most = PROMINENCE;
+        double most = need;
         StringBuilder seen = new StringBuilder();
-        for (int[] p : country.subList(0, Math.min(CANDIDATES, country.size()))) {
+        for (int[] p : country.subList(0, Math.min(candidates, country.size()))) {
             double over = p[1] - ring(ground, p[0], p[2]);
             seen.append(p[1]).append("/").append((int) over).append(" ");
             if (over > most) {
@@ -184,6 +193,34 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         return new BlockPos(bx, by, bz);
     }
 
+    /** How far off a named mountain a lookout looks to it, in blocks. */
+    static final int VIEW = 2000;
+    private static volatile java.util.List<com.jeladastudios.feelthenature.GeologyBridge.Landmark> landmarks;
+
+    /**
+     * The named mountain nearest a point within {@link #VIEW}, or null. The mountains are asked of FT's Geology once a
+     * world -- the first time takes it a few seconds -- and kept.
+     */
+    public static com.jeladastudios.feelthenature.GeologyBridge.Landmark nearestLandmark(net.minecraft.server.level.ServerLevel level, int x, int z) {
+        var known = landmarks;
+        if (known == null) {
+            synchronized (LookoutTowerFeature.class) {
+                if (landmarks == null) landmarks = com.jeladastudios.feelthenature.GeologyBridge.landmarks(level);
+                known = landmarks;
+            }
+        }
+        com.jeladastudios.feelthenature.GeologyBridge.Landmark best = null;
+        double nearest = (double) VIEW * VIEW;
+        for (var l : known) {
+            double d = (double) (l.x() - x) * (l.x() - x) + (double) (l.z() - z) * (l.z() - z);
+            if (d < nearest) {
+                nearest = d;
+                best = l;
+            }
+        }
+        return best;
+    }
+
     /** Whether a point is in lookout country, by the generator's own biomes. */
     private static boolean country(net.minecraft.world.level.biome.BiomeSource biomes, net.minecraft.world.level.levelgen.RandomState random,
                                    int x, int y, int z) {
@@ -207,7 +244,17 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
      * is higher and on stone footings taken down to it where it is lower.
      */
     public static boolean build(WorldGenLevel level, BlockPos foot, RandomSource random) {
-        Builder b = new Builder(level, foot, Rotation.getRandom(random));
+        return build(level, foot, random, null);
+    }
+
+    /**
+     * The tower built facing a named mountain, if one is given: its door towards it, a board on the post beside the
+     * door naming it.
+     */
+    public static boolean build(WorldGenLevel level, BlockPos foot, RandomSource random,
+                                com.jeladastudios.feelthenature.GeologyBridge.Landmark view) {
+        Rotation rotation = view == null ? Rotation.getRandom(random) : toward(view.x() - foot.getX(), view.z() - foot.getZ());
+        Builder b = new Builder(level, foot, rotation);
         b.clearGrowth(6, FLOOR + 10);
         // The stair's well, and the way in to its foot from the west.
         b.carve(-2, 2, -1, 1, 0, FLOOR - 1);
@@ -217,7 +264,33 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         cab(b);
         roof(b);
         fit(b, random);
+        if (view != null) nameBoard(b, view);
         return true;
+    }
+
+    /** The turn that brings the tower's east side, its door's, round to face a way across the ground. */
+    static Rotation toward(int dx, int dz) {
+        if (Math.abs(dx) >= Math.abs(dz)) return dx >= 0 ? Rotation.NONE : Rotation.CLOCKWISE_180;
+        return dz >= 0 ? Rotation.CLOCKWISE_90 : Rotation.COUNTERCLOCKWISE_90;
+    }
+
+    /** A board on the corner post beside the door, at eye height on the walkway, naming the mountain it looks to. */
+    private static void nameBoard(Builder b, com.jeladastudios.feelthenature.GeologyBridge.Landmark view) {
+        b.set(4, FLOOR + 2, -3, Blocks.SPRUCE_WALL_SIGN.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.WallSignBlock.FACING, Direction.EAST));
+        if (b.level.getBlockEntity(b.m) instanceof net.minecraft.world.level.block.entity.SignBlockEntity sign) {
+            String name = switch (view.name()) {
+                case "k2" -> "K2";
+                case "everest" -> "Everest";
+                case "matterhorn" -> "Matterhorn";
+                default -> view.name();
+            };
+            var text = new net.minecraft.world.level.block.entity.SignText()
+                    .setMessage(1, net.minecraft.network.chat.Component.literal(name))
+                    .setColor(net.minecraft.world.item.DyeColor.BLACK);
+            sign.setText(text, true);
+            sign.setWaxed(true);
+        }
     }
 
     /** How far out a leg stands at a height. */

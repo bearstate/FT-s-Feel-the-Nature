@@ -120,6 +120,10 @@ public final class TestCommands {
                         .then(Commands.argument("radius", IntegerArgumentType.integer(8, 200))
                                 .executes(c -> find(c, com.mojang.brigadier.arguments.StringArgumentType.getString(c, "block"),
                                         IntegerArgumentType.getInteger(c, "radius"))))))
+                .then(Commands.literal("falls").then(Commands.argument("radius", IntegerArgumentType.integer(8, 2000))
+                        .then(Commands.argument("drop", com.mojang.brigadier.arguments.DoubleArgumentType.doubleArg(0, 100))
+                                .executes(c -> fallsHere(c, IntegerArgumentType.getInteger(c, "radius"),
+                                        com.mojang.brigadier.arguments.DoubleArgumentType.getDouble(c, "drop"))))))
                 .then(Commands.literal("tower").executes(TestCommands::tower))
                 .then(Commands.literal("towersite").executes(TestCommands::towerSite))
                 .then(Commands.literal("towersites").then(Commands.argument("radius", IntegerArgumentType.integer(0, 6))
@@ -384,8 +388,10 @@ public final class TestCommands {
         if (player == null) return 0;
         ServerLevel level = player.serverLevel();
         BlockPos foot = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, player.blockPosition());
-        com.jeladastudios.feelthenature.world.LookoutTowerFeature.build(level, foot, level.random);
-        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST tower " + foot.getX() + " " + foot.getY() + " " + foot.getZ()), false);
+        var view = com.jeladastudios.feelthenature.world.LookoutTowerFeature.nearestLandmark(level, foot.getX(), foot.getZ());
+        com.jeladastudios.feelthenature.world.LookoutTowerFeature.build(level, foot, level.random, view);
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST tower " + foot.getX() + " " + foot.getY() + " " + foot.getZ()
+                + " view=" + (view == null ? "none" : view.name() + "@" + view.x() + "," + view.z())), false);
         return 1;
     }
 
@@ -530,6 +536,25 @@ public final class TestCommands {
         }
         c.getSource().sendSuccess(() -> Component.literal("FTN_TEST find none"), false);
         return 0;
+    }
+
+    /** FT's Geology's falls round the player and its prevailing wind. Answers {@code FTN_TEST falls n=N ... wind=x,z}. */
+    private static int fallsHere(CommandContext<CommandSourceStack> c, int radius, double minDrop) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        var falls = com.jeladastudios.feelthenature.GeologyBridge.falls(level, player.getBlockX(), player.getBlockZ(), radius, minDrop);
+        var w = com.jeladastudios.feelthenature.GeologyBridge.prevailingWind(level);
+        StringBuilder s = new StringBuilder("FTN_TEST falls n=" + falls.size());
+        for (int i = 0; i < Math.min(6, falls.size()); i++) {
+            var f = falls.get(i);
+            s.append(String.format(java.util.Locale.ROOT, " %d,%d:%.1f>%.1f", f.x(), f.z(), f.top(), f.bottom()));
+        }
+        s.append(String.format(java.util.Locale.ROOT, " wind=%.2f,%.2f ground=%.1f", w.x, w.z,
+                com.jeladastudios.feelthenature.GeologyBridge.groundHeight(level, player.getBlockX(), player.getBlockZ())));
+        String out = s.toString();
+        c.getSource().sendSuccess(() -> Component.literal(out), false);
+        return 1;
     }
 
     private static boolean falling(ServerLevel level, BlockPos at) {

@@ -1,6 +1,6 @@
 {
   "type": "forge:add_features",
   "biomes": "#fts_feelthenature:treeline",
-  "features": ["fts_feelthenature:treeline_krummholz","fts_feelthenature:treeline_boulder","fts_feelthenature:treeline_snow_patch"],
+  "features": ["fts_feelthenature:treeline_krummholz","fts_feelthenature:treeline_boulder","fts_feelthenature:treeline_snow_patch","fts_feelthenature:treeline_flag_tree"],
   "step": "vegetal_decoration"
 }
