@@ -1,6 +1,6 @@
 {
   "type": "forge:add_features",
   "biomes": "#fts_feelthenature:subalpine_forest",
-  "features": ["fts_feelthenature:subalpine_fallen_log","fts_feelthenature:subalpine_moss","fts_feelthenature:subalpine_boulder"],
+  "features": ["fts_feelthenature:subalpine_fallen_log","fts_feelthenature:subalpine_moss","fts_feelthenature:subalpine_boulder","fts_feelthenature:subalpine_bench"],
   "step": "vegetal_decoration"
 }

@@ -24,7 +24,6 @@ import net.minecraft.world.level.block.state.properties.StairsShape;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
-import net.minecraftforge.registries.ForgeRegistries;
 
 /**
  * A fire lookout on a summit: a glazed cab on four splayed timber legs, braced in X between girts, a switchback stair
@@ -191,8 +190,8 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
     /** The tower built with its foot at a point, turned one of four ways. */
     public static boolean build(WorldGenLevel level, BlockPos foot, RandomSource random) {
-        Build b = new Build(level, foot, Rotation.getRandom(random));
-        b.clear();
+        Builder b = new Builder(level, foot, Rotation.getRandom(random));
+        b.clear(5, FLOOR + 10);
         legs(b);
         stair(b);
         cab(b);
@@ -208,7 +207,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         return r;
     }
 
-    private static void legs(Build b) {
+    private static void legs(Builder b) {
         BlockState post = Blocks.STRIPPED_SPRUCE_LOG.defaultBlockState();
         for (int sx = -1; sx <= 1; sx += 2) {
             for (int sz = -1; sz <= 1; sz += 2) {
@@ -222,7 +221,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
                         b.set(sx * r, y, sz * o, post);
                     }
                 }
-                b.pier(sx * legAt(0), sz * legAt(0));
+                b.pier(sx * legAt(0), sz * legAt(0), Blocks.STONE_BRICKS.defaultBlockState());
             }
         }
         // Girts round the frame at each step, and under the walkway.
@@ -233,7 +232,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         brace(b, 10, FLOOR - 1, legAt(10));
     }
 
-    private static void girts(Build b, int y, int r) {
+    private static void girts(Builder b, int y, int r) {
         for (int i = -r + 1; i < r; i++) {
             b.set(i, y, -r, log(Direction.Axis.X));
             b.set(i, y, r, log(Direction.Axis.X));
@@ -243,7 +242,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     /** A pair of diagonals of fence posts across each face, from girt to girt. */
-    private static void brace(Build b, int y0, int y1, int r) {
+    private static void brace(Builder b, int y0, int y1, int r) {
         BlockState fence = Blocks.SPRUCE_FENCE.defaultBlockState();
         int span = 2 * r - 2;
         if (span <= 0 || y1 - y0 < 2) return;
@@ -263,7 +262,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
      * The switchback stair up the middle: flights of three steps along x, one lane each way, landings across both lanes
      * at the ends; from a landing at the foot to the cab's floor. A rail of fence posts between the lanes.
      */
-    private static void stair(Build b) {
+    private static void stair(Builder b) {
         BlockState plank = Blocks.SPRUCE_PLANKS.defaultBlockState();
         BlockState east = Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(StairBlock.FACING, Direction.EAST);
         BlockState west = Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(StairBlock.FACING, Direction.WEST);
@@ -272,7 +271,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         while (landing < FLOOR) {
             int lx = eastward ? -2 : 2;
             for (int z = -1; z <= 1; z++) b.set(lx, landing, z, plank);
-            if (landing == -1) for (int z = -1; z <= 1; z++) b.fillDown(lx, landing - 1, z);
+            if (landing == -1) for (int z = -1; z <= 1; z++) b.fillDown(lx, landing - 1, z, Blocks.COBBLESTONE.defaultBlockState());
             int lane = eastward ? -1 : 1;
             for (int s = 1; s <= 3; s++) {
                 int x = eastward ? lx + s : lx - s;
@@ -284,7 +283,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         for (int y = 0; y < FLOOR; y++) b.setIfAir(0, y, 0, Blocks.SPRUCE_FENCE.defaultBlockState());
     }
 
-    private static void cab(Build b) {
+    private static void cab(Builder b) {
         BlockState plank = Blocks.SPRUCE_PLANKS.defaultBlockState();
         // The walkway's floor, the cab's in it; a hole where the last flight comes up through it.
         for (int x = -5; x <= 5; x++) {
@@ -321,7 +320,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     /** A hipped roof over the cab and the walkway, in dark oak, stepping in a block a course. */
-    private static void roof(Build b) {
+    private static void roof(Builder b) {
         BlockState plank = Blocks.DARK_OAK_PLANKS.defaultBlockState();
         for (int c = 0; c <= 3; c++) {
             int y = FLOOR + 4 + c, r = 4 - c;
@@ -352,7 +351,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     /** What the cab is kept with: the station's instruments, the bed, the stove and its chimney, the fire finder. */
-    private static void fit(Build b, RandomSource random) {
+    private static void fit(Builder b, RandomSource random) {
         int f = FLOOR + 1;
         // The stove in the north-west corner, its chimney up through the roof, smoke from its top.
         b.set(-2, f, -2, Blocks.FURNACE.defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH));
@@ -368,90 +367,17 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         b.set(0, FLOOR + 3, 0, Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true));
         b.set(2, f, 2, Blocks.BARREL.defaultBlockState());
         // The station: its terminal and the indoor instruments on the north wall, the rest in the open.
-        b.instrument(0, f, -2, "weather_terminal", Direction.SOUTH);
-        b.instrument(-1, f, -2, "barometer", Direction.SOUTH);
-        b.instrument(1, f, -2, "hygrometer", Direction.SOUTH);
-        b.instrument(5, FLOOR + 2, -5, "rain_gauge", Direction.SOUTH);
-        b.instrument(-5, FLOOR + 2, 5, "thermometer", Direction.NORTH);
-        b.instrument(0, FLOOR + 9, 0, "anemometer", Direction.SOUTH);
+        b.geology(0, f, -2, "weather_terminal", Direction.SOUTH);
+        b.geology(-1, f, -2, "barometer", Direction.SOUTH);
+        b.geology(1, f, -2, "hygrometer", Direction.SOUTH);
+        b.geology(5, FLOOR + 2, -5, "rain_gauge", Direction.SOUTH);
+        b.geology(-5, FLOOR + 2, 5, "thermometer", Direction.NORTH);
+        b.geology(0, FLOOR + 9, 0, "anemometer", Direction.SOUTH);
         // A pot of something green on the sill by the door.
         if (random.nextBoolean()) b.set(2, f, 1, Blocks.POTTED_FERN.defaultBlockState());
     }
 
     private static BlockState log(Direction.Axis axis) {
         return Blocks.STRIPPED_SPRUCE_LOG.defaultBlockState().setValue(RotatedPillarBlock.AXIS, axis);
-    }
-
-    /** The tower's blocks set relative to its foot and turned with it. */
-    private static final class Build {
-        final WorldGenLevel level;
-        final BlockPos origin;
-        final Rotation rotation;
-        final BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
-
-        Build(WorldGenLevel level, BlockPos origin, Rotation rotation) {
-            this.level = level;
-            this.origin = origin;
-            this.rotation = rotation;
-        }
-
-        BlockPos at(int x, int y, int z) {
-            int rx, rz;
-            switch (rotation) {
-                case CLOCKWISE_90 -> { rx = -z; rz = x; }
-                case CLOCKWISE_180 -> { rx = -x; rz = -z; }
-                case COUNTERCLOCKWISE_90 -> { rx = z; rz = -x; }
-                default -> { rx = x; rz = z; }
-            }
-            return m.set(origin.getX() + rx, origin.getY() + y, origin.getZ() + rz);
-        }
-
-        void set(int x, int y, int z, BlockState s) {
-            level.setBlock(at(x, y, z), s.rotate(level, m, rotation), Block.UPDATE_CLIENTS);
-        }
-
-        void setIfAir(int x, int y, int z, BlockState s) {
-            if (level.getBlockState(at(x, y, z)).isAir()) set(x, y, z, s);
-        }
-
-        /** The tower's whole box cleared of ground, trees and plants over its foot. */
-        void clear() {
-            for (int x = -5; x <= 5; x++) {
-                for (int z = -5; z <= 5; z++) {
-                    for (int y = 0; y <= FLOOR + 10; y++) {
-                        if (!level.getBlockState(at(x, y, z)).isAir()) level.setBlock(m, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
-                    }
-                }
-            }
-        }
-
-        /** A stone pier under a leg, down to firm ground. */
-        void pier(int x, int z) {
-            for (int y = -1; y >= -12; y--) {
-                BlockState s = level.getBlockState(at(x, y, z));
-                if (s.isSolidRender(level, m) && !s.is(net.minecraft.tags.BlockTags.LEAVES)) {
-                    break;
-                }
-                level.setBlock(m, Blocks.STONE_BRICKS.defaultBlockState(), Block.UPDATE_CLIENTS);
-            }
-        }
-
-        /** Ground filled in under a block down to firm ground. */
-        void fillDown(int x, int y0, int z) {
-            for (int y = y0; y >= y0 - 12; y--) {
-                BlockState s = level.getBlockState(at(x, y, z));
-                if (s.isSolidRender(level, m)) break;
-                level.setBlock(m, Blocks.COBBLESTONE.defaultBlockState(), Block.UPDATE_CLIENTS);
-            }
-        }
-
-        /** One of FT's Geology's instruments by its name, facing a way; nothing where the mod has no such block. */
-        void instrument(int x, int y, int z, String name, Direction facing) {
-            Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("fts_geology", name));
-            if (block == null || block == Blocks.AIR) return;
-            BlockState s = block.defaultBlockState();
-            if (s.hasProperty(HorizontalDirectionalBlock.FACING)) s = s.setValue(HorizontalDirectionalBlock.FACING, facing);
-            set(x, y, z, s);
-        }
     }
 }
