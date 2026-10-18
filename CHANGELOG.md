@@ -1,3 +1,20 @@
+# FT's Geology: Feel the Nature 1.2.0 (in progress)
+
+The country's small details, and its mornings.
+
+- **Stones at the water's edge**: in the shallows of FT's Geology's rivers, a block or two from the bank, of the rock
+  under the bed; some mossy, some with their backs out of the water. Fewer round a lake.
+- **Old snow on the north slopes**: patches lying on into the summer on the shaded slopes of the alpine meadows, the
+  tree line and the scree, deepest under a step in the slope.
+- **Beside a fallen log** in a mossy wood, the ground rotting to podzol, and mushrooms in it.
+- **The spray at a waterfall's foot**: mossy rock, moss and ferns round where one of FT's Geology's falls lands.
+- **Morning mist**: on a calm, clear, cool morning, mist rising off still water, thickest just after sunrise and in
+  autumn; not in a wind, in rain, in the heat, or where FT's Geology's own fog already lies.
+- **Motes in the sun**: dust glinting in the shafts of light through a wood's crowns on a still, dry day.
+- **Snow off the crowns**: a gust shakes the snow off the trees that hold it.
+
+---
+
 # FT's Geology: Feel the Nature 1.1.0
 
 The country's creatures, heard where they would be.

@@ -80,8 +80,8 @@ public class RiparianFeature extends Feature<NoneFeatureConfiguration> {
                     if (curtain && com.jeladastudios.feelthenature.dev.TestCommands.ON) CURTAINS.incrementAndGet();
                     if (curtain && sprayed.add(((dx >> 2) << 2) | (dz >> 2))) {
                         placed |= spray(level, m.below(), random);
-                    } else if (!river.lake() && bank > -1.5 && random.nextFloat() < 0.035f) {
-                        // Stones at a running river's edge, of the rock it runs over.
+                    } else if (bank > -1.5 && random.nextFloat() < (river.lake() ? 0.015f : 0.035f)) {
+                        // Stones at a river's edge, of the rock it runs over; fewer round a lake, whose still water buries them.
                         placed |= riverStone(level, m, random);
                     }
                     continue;
