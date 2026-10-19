@@ -50,7 +50,7 @@ public enum Layer {
     DAWN_BROADLEAF("dawn_broadleaf", Group.FAUNA, 0.4f, true),
     DAWN_CONIFER("dawn_conifer", Group.FAUNA, 0.4f, true),
     CRICKETS("crickets_night", Group.FAUNA, 0.3f, true),
-    FROGS("frogs_pond", Group.FAUNA, 0.35f, true),
+    FROGS("frogs_pond", Group.FAUNA, 0.245f, true),
     BEES("bees_meadow", Group.FAUNA, 0.25f, true);
 
     public enum Group { RAIN, SURFACE, WIND, DRIP, FAUNA }
