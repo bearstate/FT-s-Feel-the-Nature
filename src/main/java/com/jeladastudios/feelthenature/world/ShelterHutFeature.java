@@ -134,6 +134,14 @@ public class ShelterHutFeature extends Feature<NoneFeatureConfiguration> {
         b.set(-2, 0, 1, Blocks.CRAFTING_TABLE.defaultBlockState());
         b.barrel(-1, 0, -1, LOOT, random);
         b.set(0, 5, 0, Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true));
+        // A map pinned to the north wall, the nearest fire lookout marked on it, where there is one within a few cells.
+        var lookout = LookoutTowerFeature.locate(level.getLevel(), foot, MAP_CELLS);
+        if (lookout != null) {
+            var frame = new net.minecraft.world.entity.decoration.ItemFrame(level.getLevel(), b.at(0, 1, -1).immutable(),
+                    b.rotation.rotate(Direction.SOUTH));
+            frame.setItem(LookoutMapItem.to(lookout.foot().getX(), lookout.foot().getZ()), false);
+            level.addFreshEntity(frame);
+        }
         // Outside: a stack of firewood along the west end under the eaves, a rain butt by the door catching the roof's run-off.
         BlockState logs = Blocks.SPRUCE_LOG.defaultBlockState().setValue(net.minecraft.world.level.block.RotatedPillarBlock.AXIS, Direction.Axis.Z);
         for (int z = -1; z <= 1; z++) {
@@ -149,6 +157,9 @@ public class ShelterHutFeature extends Feature<NoneFeatureConfiguration> {
         b.join();
         return true;
     }
+
+    /** How many lookout cells round a shelter its map looks for a lookout in: two, some two kilometres. */
+    static final int MAP_CELLS = 2;
 
     /** How far from a lookout a shelter keeps, in blocks: out of the tower's way, and a walk from it. */
     static final int CLEAR = 24;

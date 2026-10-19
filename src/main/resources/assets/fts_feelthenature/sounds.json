@@ -29,6 +29,7 @@
   "rain_on_umbrella_light": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_on_umbrella_light", "stream": false } ] },
   "rain_on_umbrella_heavy": { "category": "weather", "sounds": [ { "name": "fts_feelthenature:rain_on_umbrella_heavy", "stream": false } ] },
   "umbrella_open": { "category": "player", "subtitle": "subtitles.fts_feelthenature.umbrella_open", "sounds": [ { "name": "fts_feelthenature:umbrella_open" } ] },
+  "umbrella_close": { "category": "player", "subtitle": "subtitles.fts_feelthenature.umbrella_close", "sounds": [ { "name": "fts_feelthenature:umbrella_close" } ] },
   "umbrella_invert": { "category": "player", "subtitle": "subtitles.fts_feelthenature.umbrella_invert", "sounds": [ { "name": "fts_feelthenature:umbrella_open", "pitch": 0.75 } ] },
   "umbrella_snap": { "category": "player", "sounds": [ { "name": "fts_feelthenature:umbrella_snap" } ] },
   "birds_forest": { "category": "ambient", "sounds": [ { "name": "fts_feelthenature:birds_forest_1", "stream": false }, { "name": "fts_feelthenature:birds_forest_2", "stream": false } ] },

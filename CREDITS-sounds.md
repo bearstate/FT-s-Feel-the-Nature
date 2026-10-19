@@ -26,6 +26,7 @@ licence asks. The recordists are credited here with thanks. Each file was cut, l
 | `rain_on_umbrella_light` | [tiny raindrops under an umbrella](https://freesound.org/people/launemax/sounds/274765/) | launemax | CC0 | 2:05 to 2:55 |
 | `rain_on_umbrella_heavy` | [heavy rain on a small tent hq](https://freesound.org/people/Petrosilia/sounds/592996/) | Petrosilia | CC0 | |
 | `umbrella_open` | [Umbrella Opening](https://freesound.org/people/Sheyvan/sounds/369322/) | Sheyvan | CC0 | the first second; also played a quarter lower as the umbrella blowing inside out |
+| `umbrella_close` | [umbrella_close.wav](https://freesound.org/people/ekfink/sounds/235491/) | ekfink | CC0 | |
 | `umbrella_snap` | [Canvas Dropcloth Snap 1](https://freesound.org/people/zembacraftworks/sounds/428337/) | zembacraftworks | CC0 | played over the umbrella blowing inside out |
 | `wind_breeze` | [a gentle breeze, wind 3](https://freesound.org/people/mario1298/sounds/181252/) | mario1298 | CC0 | |
 | `wind_strong` | [Strong wind blowing in the plain in Anatolia (Turkey)](https://freesound.org/people/felix.blume/sounds/167684/) | felix.blume | CC0 | a 60 Hz high-pass |

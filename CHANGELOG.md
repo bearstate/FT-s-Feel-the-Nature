@@ -1,6 +1,6 @@
-# FT's Geology: Feel the Nature 1.2.0 (in progress)
+# FT's Geology: Feel the Nature 1.2.0
 
-The country's small details, and its mornings.
+The country's small details, its mornings, and the fire lookouts on its summits.
 
 - **Stones at the water's edge**: in the shallows of FT's Geology's rivers, a block or two from the bank, of the rock
   FT's Geology lays there; some mossy, some with their backs out of the water. Fewer round a lake.
@@ -16,7 +16,8 @@ The country's small details, and its mornings.
 - **Rain on the windows**: indoors in the rain, drops running down the glass, clinging and sliding, more the harder it
   rains.
 - **New rain recordings**: a softer light rain on a tree canopy, a mountain rain for the steady one, and three
-  downpours' beginnings to come by turns; the umbrella's canvas snaps as it blows inside out. Frogs a little quieter.
+  downpours' beginnings to come by turns; the umbrella closes with a sound of its own, and its canvas snaps as it
+  blows inside out. Frogs a little quieter.
 - **Fire lookouts** on prominent summits of hill and mountain country, no two nearer than 660 blocks, as
   the real ones are built: a glazed cab twenty blocks up on four splayed timber legs braced in X, a switchback stair
   up the middle walked without a jump, a walkway carried on brackets, a hipped roof with a little glazed lantern-room
@@ -41,7 +42,9 @@ The country's small details, and its mornings.
   their tops bent over, every one on a mountainside pointing the way FT's Geology's prevailing wind blows.
 - **Cairns** on the bare tops of the alpine meadows and the scree, of the rock under them.
 - **Mountain shelters** here and there on the high pastures: a dry-stone hut with a pitched roof, a stove and a bunk,
-  stores in a barrel, firewood stacked under the eaves and a rain butt by the door.
+  stores in a barrel, firewood stacked under the eaves and a rain butt by the door. On its wall, where a fire lookout
+  stands within a couple of kilometres, a map to it: used, it unfolds into a map of the country round the lookout,
+  the lookout marked.
 - **Benches** where the ground falls away before a view.
 - **Bird hides** on the shores of FT's Geology's lakes, a slit to watch the water through.
 - **With Naturalist**: deer, bears, boars, finches, butterflies and sparrows in FT's Geology's own forests and meadows,

@@ -146,6 +146,16 @@ public final class TestCommands {
                                         .then(Commands.argument("z", IntegerArgumentType.integer())
                                                 .executes(c -> volcano(c, IntegerArgumentType.getInteger(c, "x"),
                                                         IntegerArgumentType.getInteger(c, "z")))))))
+                .then(Commands.literal("usehand").executes(c -> {
+                    // The item in the main hand used, as a right-click would: for items whose use the test cannot click.
+                    ServerPlayer p = c.getSource().getPlayer();
+                    if (p == null) return 0;
+                    var result = p.getMainHandItem().use(p.serverLevel(), p, net.minecraft.world.InteractionHand.MAIN_HAND);
+                    p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, result.getObject());
+                    c.getSource().sendSuccess(() -> Component.literal("FTN_TEST usehand " + result.getResult() + " "
+                            + net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(result.getObject().getItem())), false);
+                    return 1;
+                }))
                 .then(Commands.literal("role").executes(c -> {
                     ServerPlayer p = c.getSource().getPlayer();
                     if (p == null) return 0;

@@ -60,10 +60,9 @@ public class UmbrellaItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         boolean open = !isOpen(stack);
         setOpen(stack, open);
-        if (open) {
-            level.playSound(player, player.getX(), player.getEyeY(), player.getZ(), ModSounds.UMBRELLA_OPEN.get(),
-                    SoundSource.PLAYERS, 0.6f, 0.95f + 0.1f * level.random.nextFloat());
-        }
+        level.playSound(player, player.getX(), player.getEyeY(), player.getZ(),
+                (open ? ModSounds.UMBRELLA_OPEN : ModSounds.UMBRELLA_CLOSE).get(),
+                SoundSource.PLAYERS, 0.6f, 0.95f + 0.1f * level.random.nextFloat());
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
 

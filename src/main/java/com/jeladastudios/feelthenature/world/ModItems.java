@@ -16,7 +16,7 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.EnumMap;
 import java.util.Map;
 
-/** The addon's items: an umbrella in each of the sixteen dye colours, {@code umbrella_red} and so on. */
+/** The addon's items: an umbrella in each of the sixteen dye colours, {@code umbrella_red} and so on; a shelter's map. */
 @Mod.EventBusSubscriber(modid = FeelTheNature.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public final class ModItems {
 
@@ -31,6 +31,10 @@ public final class ModItems {
 
     /** Wear: a dozen or so times turned inside out by the wind before it is past mending. */
     private static final int UMBRELLA_WEAR = 96;
+
+    /** A shelter's map to the nearest fire lookout, found pinned to its wall. */
+    public static final RegistryObject<LookoutMapItem> LOOKOUT_MAP =
+            ITEMS.register("lookout_map", () -> new LookoutMapItem(new Item.Properties().stacksTo(1)));
 
     public static final Map<DyeColor, RegistryObject<UmbrellaItem>> UMBRELLAS = new EnumMap<>(DyeColor.class);
 
