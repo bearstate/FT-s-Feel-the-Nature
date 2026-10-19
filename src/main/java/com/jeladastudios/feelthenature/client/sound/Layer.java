@@ -11,7 +11,7 @@ import net.minecraft.sounds.SoundSource;
  */
 public enum Layer {
     // The rain itself, by how hard it falls.
-    RAIN_LIGHT("rain_bed_light", Group.RAIN, 0.55f, true),
+    RAIN_LIGHT("rain_bed_light", Group.RAIN, 0.45f, true),
     RAIN_MEDIUM("rain_bed_medium", Group.RAIN, 0.75f, true),
     RAIN_HEAVY("rain_bed_heavy", Group.RAIN, 1.0f, true),
     // A rain's beginning after a dry while, played once.

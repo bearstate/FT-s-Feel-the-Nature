@@ -1,15 +1,18 @@
 # Sound credits
 
-Every recording in this addon comes from [Freesound](https://freesound.org). All but one are released under
-**Creative Commons 0** (public domain dedication); the loon's calls are under **CC BY 4.0** and credited below as that licence asks. The recordists are credited here
-with thanks. Each file was cut, looped and level-matched for the game; no other changes unless noted.
+Every recording in this addon comes from [Freesound](https://freesound.org). Most are released under
+**Creative Commons 0** (public domain dedication); three are under **CC BY 4.0** and credited at the end as that
+licence asks. The recordists are credited here with thanks. Each file was cut, looped and level-matched for the game; no other changes unless noted.
 
 | In the addon | Original recording | Recordist | Licence | Edits |
 |---|---|---|---|---|
-| `rain_bed_light` | [Rain light 2 (rural)](https://freesound.org/people/jmbphilmes/sounds/200273/) | jmbphilmes | CC0 | |
-| `rain_bed_medium` | [Rain, builds light to heavy, dispersed bright wash](https://freesound.org/people/TRP/sounds/572418/) | TRP | CC0 | 1:00 to 2:10, a 40 Hz high-pass |
+| `rain_bed_light` | [Summer Rain Shower on Tree Canopy](https://freesound.org/people/iainmccurdy/sounds/695558/) | iainmccurdy | **CC BY 4.0** | 0:05 to 1:25, resampled to 48 kHz |
+| `rain_bed_medium` | [Rain and storm in the Vercors moutain](https://freesound.org/people/Sacha.Julien/sounds/753897/) | Sacha.Julien | CC0 | 1:51 to 2:51, a 40 Hz high-pass, resampled to 48 kHz |
 | `rain_bed_heavy` | [Rain heavy 2 (rural)](https://freesound.org/people/jmbphilmes/sounds/200272/) | jmbphilmes | CC0 | |
-| `rain_start_light`, `rain_start_heavy` | [Rain, builds light to heavy, dispersed bright wash](https://freesound.org/people/TRP/sounds/572418/) | TRP | CC0 | `rain_start_heavy` 1:50 to 2:35 |
+| `rain_start_light` | [Rain, builds light to heavy, dispersed bright wash](https://freesound.org/people/TRP/sounds/572418/) | TRP | CC0 | the first 40 s |
+| `rain_start_heavy_1` | [Summer rain & distant thunder](https://freesound.org/people/eardeer/sounds/856406/) | eardeer | CC0 | 0:03 to 0:48 |
+| `rain_start_heavy_2` | [Birdsong, thunder, start of rain](https://freesound.org/people/juskiddink/sounds/73208/) | juskiddink | **CC BY 4.0** | 3:20 to 3:55 |
+| `rain_start_heavy_3` | [Storm, rain and wind in the mountain (Vercors, France)](https://freesound.org/people/Sacha.Julien/sounds/751619/) | Sacha.Julien | CC0 | 3:15 to 4:00, resampled to 48 kHz |
 | `rain_end` | [2017 september - rain - the end of a rainstorm](https://freesound.org/people/Anthousai/sounds/405630/) | Anthousai | CC0 | 1:20 to 2:35, the last 10 s faded |
 | `drips_loop` | [Post-rain dripping](https://freesound.org/people/bushtobazaar/sounds/524566/) | bushtobazaar | CC0 | |
 | `rain_on_leaves` | [Rain, modulating light drips on leaves](https://freesound.org/people/TRP/sounds/572267/) | TRP | CC0 | |
@@ -23,6 +26,7 @@ with thanks. Each file was cut, looped and level-matched for the game; no other 
 | `rain_on_umbrella_light` | [tiny raindrops under an umbrella](https://freesound.org/people/launemax/sounds/274765/) | launemax | CC0 | 2:05 to 2:55 |
 | `rain_on_umbrella_heavy` | [heavy rain on a small tent hq](https://freesound.org/people/Petrosilia/sounds/592996/) | Petrosilia | CC0 | |
 | `umbrella_open` | [Umbrella Opening](https://freesound.org/people/Sheyvan/sounds/369322/) | Sheyvan | CC0 | the first second; also played a quarter lower as the umbrella blowing inside out |
+| `umbrella_snap` | [Canvas Dropcloth Snap 1](https://freesound.org/people/zembacraftworks/sounds/428337/) | zembacraftworks | CC0 | played over the umbrella blowing inside out |
 | `wind_breeze` | [a gentle breeze, wind 3](https://freesound.org/people/mario1298/sounds/181252/) | mario1298 | CC0 | |
 | `wind_strong` | [Strong wind blowing in the plain in Anatolia (Turkey)](https://freesound.org/people/felix.blume/sounds/167684/) | felix.blume | CC0 | a 60 Hz high-pass |
 | `wind_storm` | [Howling winter storm ambient sounds](https://freesound.org/people/DBlover/sounds/505999/) | DBlover | CC0 | |
@@ -47,5 +51,11 @@ with thanks. Each file was cut, looped and level-matched for the game; no other 
 | `frogs_pond` | [grenouilles.WAV](https://freesound.org/people/nicotep/sounds/547899/) | nicotep | CC0 | 0:35 to 1:50 |
 | `loon_1` to `loon_3` | [Loon / Diver call 1](https://freesound.org/people/nicStage/sounds/432605/) | nicStage | **CC BY 4.0** | three calls cut out |
 
-The loon's calls are by **nicStage**, under [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/):
-"Loon / Diver call 1" (https://freesound.org/people/nicStage/sounds/432605/), cut into three calls and level-matched.
+These three are under [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/), each cut and
+level-matched for the game:
+- The light rain, `rain_bed_light`: "Summer Rain Shower on Tree Canopy" by **iainmccurdy**
+  (https://freesound.org/people/iainmccurdy/sounds/695558/).
+- One of the downpours' beginnings, `rain_start_heavy_2`: "Birdsong, thunder, start of rain" by **juskiddink**
+  (https://freesound.org/people/juskiddink/sounds/73208/).
+- The loon's calls, `loon_1` to `loon_3`: "Loon / Diver call 1" by **nicStage**
+  (https://freesound.org/people/nicStage/sounds/432605/).

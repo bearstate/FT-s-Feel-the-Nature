@@ -15,6 +15,8 @@ The country's small details, and its mornings.
 - **Snow off the crowns**: a gust shakes the snow off the trees that hold it.
 - **Rain on the windows**: indoors in the rain, drops running down the glass, clinging and sliding, more the harder it
   rains.
+- **New rain recordings**: a softer light rain on a tree canopy, a mountain rain for the steady one, and three
+  downpours' beginnings to come by turns; the umbrella's canvas snaps as it blows inside out. Frogs a little quieter.
 - **Fire lookouts** on prominent summits of hill and mountain country, no two nearer than 660 blocks, as
   the real ones are built: a glazed cab twenty blocks up on four splayed timber legs braced in X, a switchback stair
   up the middle walked without a jump, a walkway carried on brackets, a hipped roof with a little glazed lantern-room

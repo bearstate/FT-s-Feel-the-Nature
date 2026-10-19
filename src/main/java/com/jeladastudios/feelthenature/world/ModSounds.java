@@ -18,8 +18,9 @@ public final class ModSounds {
     public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, FeelTheNature.MODID);
 
     public static final RegistryObject<SoundEvent> UMBRELLA_OPEN = register("umbrella_open");
-    /** For now the opening's own snap, played lower (sounds.json): no recording of an umbrella blowing out yet. */
+    /** The opening's own snap played lower (sounds.json), with the canvas snapping taut over it. */
     public static final RegistryObject<SoundEvent> UMBRELLA_INVERT = register("umbrella_invert");
+    public static final RegistryObject<SoundEvent> UMBRELLA_SNAP = register("umbrella_snap");
 
     private static RegistryObject<SoundEvent> register(String name) {
         return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(FeelTheNature.MODID, name)));
