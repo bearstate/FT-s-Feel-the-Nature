@@ -191,7 +191,32 @@ final class Builder {
         Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("fts_geology", name));
         if (block == null || block == Blocks.AIR) return;
         BlockState s = block.defaultBlockState();
-        if (s.hasProperty(HorizontalDirectionalBlock.FACING)) s = s.setValue(HorizontalDirectionalBlock.FACING, facing);
-        set(x, y, z, s);
+        // Turned here: the instruments do not turn themselves, and one hung on a wall must face out from it.
+        if (s.hasProperty(HorizontalDirectionalBlock.FACING)) s = s.setValue(HorizontalDirectionalBlock.FACING, rotation.rotate(facing));
+        level.setBlock(at(x, y, z), s, Block.UPDATE_CLIENTS);
+    }
+
+    /**
+     * Whether the square {@code r} blocks round a world position is all within what may be built in: in world
+     * generation the chunk being made and those beside it, since a block set further out is lost (and its ground read
+     * there is not the ground).
+     */
+    boolean writable(BlockPos c, int r) {
+        if (!(level instanceof net.minecraft.server.level.WorldGenRegion region)) return true;
+        net.minecraft.world.level.ChunkPos center = region.getCenter();
+        return Math.abs(((c.getX() - r) >> 4) - center.x) <= 1 && Math.abs(((c.getX() + r) >> 4) - center.x) <= 1
+                && Math.abs(((c.getZ() - r) >> 4) - center.z) <= 1 && Math.abs(((c.getZ() + r) >> 4) - center.z) <= 1;
+    }
+
+    /** Whether FT's Geology installed has a block of this name. */
+    static boolean has(String name) {
+        Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("fts_geology", name));
+        return block != null && block != Blocks.AIR;
+    }
+
+    /** Which way, as drawn, a building turned as this one is faces a way in the world. */
+    Direction drawn(Direction world) {
+        for (Direction d : Direction.Plane.HORIZONTAL) if (rotation.rotate(d) == world) return d;
+        return world;
     }
 }

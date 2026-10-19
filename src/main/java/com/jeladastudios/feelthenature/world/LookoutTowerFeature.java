@@ -15,11 +15,13 @@ import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.block.state.properties.StairsShape;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
@@ -29,7 +31,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  * A fire lookout on a summit: a glazed cab on four splayed timber legs, girts and knee braces at each step, a
  * switchback stair up the middle, a walkway round the cab under the eaves carried on brackets, a hipped roof. Kept as a
  * weather station as much as a lookout: FT's Geology's instruments -- the terminal and the barometer and hygrometer
- * inside, the rain gauge and thermometer on the walkway's corner posts in the open, the anemometer on the roof's peak --
+ * inside, the rain gauge on the walkway, the thermometer hung outside in the shade, the anemometer on the roof's peak --
  * and lived in: a bed, a stove and its chimney, lanterns, the fire finder on its stand in the middle of the floor.
  *
  * <p>Built in place from blocks, turned to one of four ways at random, the ground under it left as it lies: the legs
@@ -374,15 +376,8 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         if (!net.minecraftforge.fml.ModList.get().isLoaded("simpleradio")) return;
         Block station = radioBlock("station"), antenna = radioBlock("dual_band_antenna"), tuner = radioBlock("antenna_tuner");
         if (station == null || antenna == null || tuner == null) return;
-        // The enclosure, a few blocks out from the tower's south-east side as drawn, on the ground as it lies there.
-        BlockPos c = b.at(12, 0, 6).immutable();
-        int y = b.level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, c.getX(), c.getZ());
-        Builder k = new Builder(b.level, new BlockPos(c.getX(), y, c.getZ()), b.rotation);
-        for (int[] corner : new int[][]{{-3, -3}, {3, -3}, {-3, 3}, {3, 3}}) {
-            BlockPos p = k.at(corner[0], 0, corner[1]);
-            int h = b.level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ());
-            if (Math.abs(h - y) > 3 || !b.level.getFluidState(p.below()).isEmpty()) return;
-        }
+        Builder k = enclosure(b);
+        if (k == null) return;
         k.clearGrowth(4, 12);
         k.carve(-3, 3, -3, 3, 0, 4);
         for (int x = -3; x <= 3; x++) {
@@ -426,6 +421,33 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
             entity.load(tag);
         }
         Builder.built("radio_station", aerial);
+    }
+
+    /**
+     * Where the radio's enclosure goes: a few blocks out from the tower on its east side as drawn, or failing that its
+     * south or north, never the west where the stair and the trail come in -- on ground level enough across it, dry,
+     * and all of it within what the chunk being made may build in. Drawn so its way in faces the tower. Null where
+     * none of them will do.
+     */
+    private static Builder enclosure(Builder b) {
+        Rotation[] quarters = {Rotation.NONE, Rotation.CLOCKWISE_90, Rotation.COUNTERCLOCKWISE_90};
+        for (Rotation q : quarters) {
+            for (int side : new int[]{6, -6, 0}) {
+                Builder turned = new Builder(b.level, b.origin, b.rotation.getRotated(q));
+                BlockPos c = turned.at(12, 0, side).immutable();
+                if (!b.writable(c, 4)) continue;
+                int y = b.level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, c.getX(), c.getZ());
+                Builder k = new Builder(b.level, new BlockPos(c.getX(), y, c.getZ()), turned.rotation);
+                boolean fits = true;
+                for (int[] corner : new int[][]{{-3, -3}, {3, -3}, {-3, 3}, {3, 3}}) {
+                    BlockPos p = k.at(corner[0], 0, corner[1]);
+                    int h = b.level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ());
+                    if (Math.abs(h - y) > 3 || !b.level.getFluidState(p.below()).isEmpty()) fits = false;
+                }
+                if (fits) return k;
+            }
+        }
+        return null;
     }
 
     private static Block radioBlock(String name) {
@@ -735,18 +757,31 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
     /**
      * What the cab is kept with, laid out as a lookout's is: the station's terminal at a desk along the west wall with
-     * its barometer and hygrometer either side and a chair before it, the fire finder in the middle, the stove in the
-     * south-west corner with its chimney up through the roof, the bed along the east wall, the log on a lectern, barrels
-     * of stores. The north wall is the stair's, and the way from it to the door is kept clear. Out on the walkway: the
-     * rain gauge and the thermometer, under a little hood, on two corners, a lightning rod and a lantern on the others,
-     * a chair looking out; the anemometer on the roof's peak.
+     * its barometer and hygrometer hung on the wall over it either side of a window and a chair before it, the fire
+     * finder in the middle, the stove in the south-west corner with its chimney up through the roof, the bed along the
+     * east wall, the log on a lectern, barrels of stores. The north wall is the stair's, and the way from it to the door
+     * is kept clear. Out on the walkway: the rain gauge on a corner, the thermometer hung on the cab's corner post that
+     * faces the true north, a lightning rod and a lantern, a chair looking out; the anemometer on the roof's peak, within
+     * the terminal's reach (FT's Geology's terminal reads twelve blocks up).
      */
     private static void fit(Builder b, RandomSource random) {
         int f = FLOOR + 1;
-        // The desk: the terminal and the indoor instruments facing into the room, a chair before the terminal.
+        // The desk: the terminal facing into the room, a chair before it, the board either side of the window over it
+        // with the barometer and the hygrometer hung on it.
         b.geology(-2, f, 0, "weather_terminal", Direction.EAST);
-        b.geology(-2, f, -1, "hygrometer", Direction.EAST);
-        b.geology(-2, f, 1, "barometer", Direction.EAST);
+        if (Builder.has("wall_barometer")) {
+            BlockState desk = Blocks.SPRUCE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
+            b.set(-2, f, -1, desk);
+            b.set(-2, f, 1, desk);
+            b.set(-3, f + 1, -1, Blocks.SPRUCE_PLANKS.defaultBlockState());
+            b.set(-3, f + 1, 1, Blocks.SPRUCE_PLANKS.defaultBlockState());
+            b.geology(-2, f + 1, -1, "wall_hygrometer", Direction.EAST);
+            b.geology(-2, f + 1, 1, "wall_barometer", Direction.EAST);
+        } else {
+            // A version of FT's Geology before the instruments were hung: they stand on the desk.
+            b.geology(-2, f, -1, "hygrometer", Direction.EAST);
+            b.geology(-2, f, 1, "barometer", Direction.EAST);
+        }
         b.set(-1, f, 0, Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(StairBlock.FACING, Direction.EAST));
         // The fire finder in the middle, under the lantern-room.
         b.set(0, f, 0, Blocks.CARTOGRAPHY_TABLE.defaultBlockState());
@@ -763,10 +798,17 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         b.barrel(-2, f, -2, REGISTER, random);
         b.lectern(0, f, 2, Direction.NORTH, Logbook.lookout(random));
         if (random.nextBoolean()) b.set(1, f, 2, Blocks.POTTED_FERN.defaultBlockState());
-        // The walkway: the rain gauge open to the sky on one corner, the thermometer under a hood on the opposite one.
+        // The walkway: the rain gauge open to the sky on a corner; the thermometer hung at eye height on a corner post of
+        // the cab, on its face to the true north, out of the sun.
         b.geology(5, f, -5, "rain_gauge", Direction.SOUTH);
-        b.geology(-5, f, 5, "thermometer", Direction.NORTH);
-        b.set(-5, f + 1, 5, Blocks.BIRCH_SLAB.defaultBlockState());
+        if (Builder.has("wall_thermometer")) {
+            Direction north = b.drawn(Direction.NORTH), along = north.getClockWise();
+            int px = 3 * (north.getStepX() + along.getStepX()), pz = 3 * (north.getStepZ() + along.getStepZ());
+            b.geology(px + north.getStepX(), f + 1, pz + north.getStepZ(), "wall_thermometer", north);
+        } else {
+            b.geology(-5, f, 5, "thermometer", Direction.NORTH);
+            b.set(-5, f + 1, 5, Blocks.BIRCH_SLAB.defaultBlockState());
+        }
         b.set(5, f + 1, 5, Blocks.LIGHTNING_ROD.defaultBlockState());
         b.set(-5, f + 1, -5, Blocks.LANTERN.defaultBlockState());
         b.set(-4, f, 1, Blocks.SPRUCE_STAIRS.defaultBlockState().setValue(StairBlock.FACING, Direction.EAST));
