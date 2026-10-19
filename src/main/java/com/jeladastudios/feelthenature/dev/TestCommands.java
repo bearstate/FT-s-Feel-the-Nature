@@ -424,6 +424,7 @@ public final class TestCommands {
         int pcx = Math.floorDiv(player.chunkPosition().x, cell), pcz = Math.floorDiv(player.chunkPosition().z, cell);
         int found = 0, of = 0;
         BlockPos nearest = null;
+        java.util.List<BlockPos> sites = new java.util.ArrayList<>();
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
                 of++;
@@ -431,12 +432,21 @@ public final class TestCommands {
                         new net.minecraft.world.level.ChunkPos((pcx + dx) * cell, (pcz + dz) * cell));
                 if (s == null) continue;
                 found++;
+                sites.add(s);
                 if (nearest == null || s.distSqr(player.blockPosition()) < nearest.distSqr(player.blockPosition())) nearest = s;
             }
         }
+        // The closest two, to see the lookouts kept apart.
+        double closest = Double.MAX_VALUE;
+        for (int i = 0; i < sites.size(); i++) {
+            for (int j = i + 1; j < sites.size(); j++) {
+                closest = Math.min(closest, Math.hypot(sites.get(i).getX() - sites.get(j).getX(), sites.get(i).getZ() - sites.get(j).getZ()));
+            }
+        }
+        int apart = closest == Double.MAX_VALUE ? -1 : (int) closest;
         BlockPos n = nearest;
         int f = found, o = of;
-        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST towersites found=" + f + " of=" + o + " nearest="
+        c.getSource().sendSuccess(() -> Component.literal("FTN_TEST towersites found=" + f + " of=" + o + " closest=" + apart + " nearest="
                 + (n == null ? "none" : n.getX() + " " + n.getY() + " " + n.getZ())), false);
         return 1;
     }

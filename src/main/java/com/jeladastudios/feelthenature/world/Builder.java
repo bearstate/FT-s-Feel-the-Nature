@@ -197,15 +197,22 @@ final class Builder {
     }
 
     /**
-     * Whether the square {@code r} blocks round a world position is all within what may be built in: in world
-     * generation the chunk being made and those beside it, since a block set further out is lost (and its ground read
-     * there is not the ground).
+     * Whether the square {@code r} blocks round a world position is all on finished ground that may be built on: in
+     * world generation the chunk being made, or one beside it already decorated. A block set further out is lost, and
+     * the ground of a chunk beside not yet decorated may still change under what is set on it -- FT's Geology raises a
+     * large volcano's body in each chunk's own decoration.
      */
     boolean writable(BlockPos c, int r) {
         if (!(level instanceof net.minecraft.server.level.WorldGenRegion region)) return true;
         net.minecraft.world.level.ChunkPos center = region.getCenter();
-        return Math.abs(((c.getX() - r) >> 4) - center.x) <= 1 && Math.abs(((c.getX() + r) >> 4) - center.x) <= 1
-                && Math.abs(((c.getZ() - r) >> 4) - center.z) <= 1 && Math.abs(((c.getZ() + r) >> 4) - center.z) <= 1;
+        for (int cx = (c.getX() - r) >> 4; cx <= (c.getX() + r) >> 4; cx++) {
+            for (int cz = (c.getZ() - r) >> 4; cz <= (c.getZ() + r) >> 4; cz++) {
+                if (Math.abs(cx - center.x) > 1 || Math.abs(cz - center.z) > 1) return false;
+                if (cx == center.x && cz == center.z) continue;
+                if (!region.getChunk(cx, cz).getStatus().isOrAfter(net.minecraft.world.level.chunk.ChunkStatus.FEATURES)) return false;
+            }
+        }
+        return true;
     }
 
     /** Whether FT's Geology installed has a block of this name. */

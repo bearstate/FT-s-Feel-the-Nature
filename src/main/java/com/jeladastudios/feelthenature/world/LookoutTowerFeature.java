@@ -77,6 +77,8 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         @net.minecraftforge.eventbus.api.SubscribeEvent
         public static void onStopped(net.minecraftforge.event.server.ServerStoppedEvent event) {
             SITES.clear();
+            SUMMITS.clear();
+            PLANS.clear();
             landmarks = null;
         }
     }
@@ -85,22 +87,100 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
         WorldGenLevel level = context.level();
         net.minecraft.world.level.ChunkPos chunk = new net.minecraft.world.level.ChunkPos(context.origin());
-        BlockPos site = site(level, chunk);
-        if (site == null || site.getX() >> 4 != chunk.x || site.getZ() >> 4 != chunk.z) return false;
         var server = level.getLevel();
         java.util.function.IntBinaryOperator world = (x, z) ->
                 level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        int[] foot = foot(server, site, model(server, site) ? ground(server) : world);
+        boolean placed = false;
+        int cx = Math.floorDiv(chunk.x, CELL), cz = Math.floorDiv(chunk.z, CELL);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                BlockPos site = site(level, new net.minecraft.world.level.ChunkPos((cx + dx) * CELL, (cz + dz) * CELL));
+                if (site == null || Math.abs(site.getX() - chunk.getMiddleBlockX()) > 48 || Math.abs(site.getZ() - chunk.getMiddleBlockZ()) > 48) continue;
+                if (model(server, site)) {
+                    // By FT's Geology's ground model the tower's foot and its radio's enclosure are known before any
+                    // ground is: each is built when the chunk it stands in is decorated, on that chunk's finished ground.
+                    Plan plan = plan(server, site);
+                    if (plan == null) continue;
+                    if (plan.x() >> 4 == chunk.x && plan.z() >> 4 == chunk.z) {
+                        log(site, true);
+                        BlockPos at = new BlockPos(plan.x(), world.applyAsInt(plan.x(), plan.z()), plan.z());
+                        placed |= build(level, at, plan.rotation(), context.random(), plan.view(), plan.spot());
+                    }
+                    Spot spot = plan.spot();
+                    if (spot != null && spot.x() >> 4 == chunk.x && spot.z() >> 4 == chunk.z) {
+                        placed |= enclosure(level, spot, context.random(), station(level, plan));
+                    }
+                } else if (site.getX() >> 4 == chunk.x && site.getZ() >> 4 == chunk.z) {
+                    // Else by the world's own heightmap, from the summit's chunk, the enclosure where it can be built now.
+                    int[] foot = foot(server, site, world);
+                    log(site, foot != null);
+                    if (foot == null) continue;
+                    BlockPos at = new BlockPos(foot[0], world.applyAsInt(foot[0], foot[1]), foot[1]);
+                    var view = nearestLandmark(server, foot[0], foot[1]);
+                    placed |= build(level, at, rotation(level, at, view), context.random(), view, null);
+                }
+            }
+        }
+        return placed;
+    }
+
+    private static void log(BlockPos site, boolean built) {
         if (com.jeladastudios.feelthenature.dev.TestCommands.ON) {
-            com.jeladastudios.feelthenature.FeelTheNature.LOGGER.info("LOOKOUT_TOWER {} near {} {}", foot == null ? "not built" : "built",
+            com.jeladastudios.feelthenature.FeelTheNature.LOGGER.info("LOOKOUT_TOWER {} near {} {}", built ? "built" : "not built",
                     site.getX(), site.getZ());
         }
-        if (foot == null) return false;
-        // Its foot at the ground as the world built it in its middle, where the stair comes down.
-        int fy = world.applyAsInt(foot[0], foot[1]);
-        BlockPos at = new BlockPos(foot[0], fy, foot[1]);
-        var view = nearestLandmark(server, foot[0], foot[1]);
-        return build(level, at, rotation(level, at, view), context.random(), view);
+    }
+
+    /**
+     * A lookout as the ground model lays it out: its foot, its turn, the mountain it looks to, and where its radio's
+     * enclosure goes (null where nowhere near it will do).
+     */
+    record Plan(int x, int z, Rotation rotation, com.jeladastudios.feelthenature.GeologyBridge.Landmark view, Spot spot) {}
+
+    /** Where a radio's enclosure stands: its middle, and its turn, its way in towards the tower. */
+    record Spot(int x, int z, Rotation turn) {}
+
+    private static final java.util.Map<BlockPos, java.util.Optional<Plan>> PLANS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    static Plan plan(net.minecraft.server.level.ServerLevel level, BlockPos site) {
+        return PLANS.computeIfAbsent(site, s -> {
+            var ground = ground(level);
+            int[] foot = foot(level, s, ground);
+            if (foot == null) return java.util.Optional.empty();
+            var view = nearestLandmark(level, foot[0], foot[1]);
+            Rotation rotation = view != null ? toward(view.x() - foot[0], view.z() - foot[1]) : rotation(level.getSeed(), foot[0], foot[1]);
+            return java.util.Optional.of(new Plan(foot[0], foot[1], rotation, view, plannedSpot(ground, foot[0], foot[1], rotation)));
+        }).orElse(null);
+    }
+
+    /**
+     * The enclosure's place by the ground model: the first of the spots that lies wholly in one chunk, its square and
+     * the growth cleared round it, and where the ground across it is level enough.
+     */
+    private static Spot plannedSpot(java.util.function.IntBinaryOperator ground, int fx, int fz, Rotation rotation) {
+        for (Rotation q : QUARTERS) {
+            Rotation turn = rotation.getRotated(q);
+            for (int[] spot : SPOTS) {
+                int[] o = TrailFeature.turn(turn, spot[0], spot[1]);
+                int x = fx + o[0], z = fz + o[1];
+                if ((x & 15) < 4 || (x & 15) > 11 || (z & 15) < 4 || (z & 15) > 11) continue;
+                int y = ground.applyAsInt(x, z);
+                boolean level = true;
+                for (int[] corner : new int[][]{{-3, -3}, {3, -3}, {-3, 3}, {3, 3}}) {
+                    if (Math.abs(ground.applyAsInt(x + corner[0], z + corner[1]) - y) > 3) level = false;
+                }
+                if (level) return new Spot(x, z, turn);
+            }
+        }
+        return null;
+    }
+
+    private static final Rotation[] QUARTERS = {Rotation.NONE, Rotation.CLOCKWISE_90, Rotation.COUNTERCLOCKWISE_90};
+
+    /** Where a planned lookout's radio station stands, as a column (its height found by looking down it). */
+    private static int[] station(WorldGenLevel level, Plan plan) {
+        int[] o = TrailFeature.turn(plan.rotation(), 1, 2);
+        return new int[]{plan.x() + o[0], plan.z() + o[1]};
     }
 
     /**
@@ -206,11 +286,45 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
      */
     public static BlockPos site(WorldGenLevel level, net.minecraft.world.level.ChunkPos chunk) {
         int cx = Math.floorDiv(chunk.x, CELL), cz = Math.floorDiv(chunk.z, CELL);
-        long key = level.getSeed() * 31 + (((long) cx) << 32 ^ (cz & 0xFFFFFFFFL));
-        return SITES.computeIfAbsent(key, k -> java.util.Optional.ofNullable(summit(level, cx, cz))).orElse(null);
+        long key = key(level, cx, cz);
+        var known = SITES.get(key);
+        if (known != null) return known.orElse(null);
+        // A summit gives way to a better one within APART of it in a cell beside that has its lookout, so no two stand
+        // nearer than that: the better the one standing further over its ring. Asked of the better ones only, so the
+        // asking ends; the same answer whichever cell asks.
+        Summit own = summit(level, cx, cz);
+        BlockPos site = own == null ? null : own.at();
+        for (int dx = -1; dx <= 1 && site != null; dx++) {
+            for (int dz = -1; dz <= 1 && site != null; dz++) {
+                if (dx == 0 && dz == 0) continue;
+                Summit other = summit(level, cx + dx, cz + dz);
+                if (other == null) continue;
+                double d = Math.hypot(other.at().getX() - site.getX(), other.at().getZ() - site.getZ());
+                boolean better = other.over() > own.over() || (other.over() == own.over() && key(level, cx + dx, cz + dz) > key);
+                if (d < APART && better && site(level, new net.minecraft.world.level.ChunkPos((cx + dx) * CELL, (cz + dz) * CELL)) != null) site = null;
+            }
+        }
+        SITES.putIfAbsent(key, java.util.Optional.ofNullable(site));
+        return site;
     }
 
-    private static BlockPos summit(WorldGenLevel level, int cx, int cz) {
+    /** The least distance between two lookouts, in blocks. */
+    static final int APART = 660;
+
+    private static long key(WorldGenLevel level, int cx, int cz) {
+        return level.getSeed() * 31 + (((long) cx) << 32 ^ (cz & 0xFFFFFFFFL));
+    }
+
+    /** A cell's best summit, before its neighbours are weighed: where, and how far it stands over its ring. */
+    private record Summit(BlockPos at, double over) {}
+
+    private static final java.util.Map<Long, java.util.Optional<Summit>> SUMMITS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static Summit summit(WorldGenLevel level, int cx, int cz) {
+        return SUMMITS.computeIfAbsent(key(level, cx, cz), k -> java.util.Optional.ofNullable(findSummit(level, cx, cz))).orElse(null);
+    }
+
+    private static Summit findSummit(WorldGenLevel level, int cx, int cz) {
         var source = level.getLevel().getChunkSource();
         var generator = source.getGenerator();
         var random = source.randomState();
@@ -273,8 +387,10 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
                 }
             }
         }
-        if (!country(biomes, random, bx, by, bz)) return new BlockPos(sx, sy, sz);
-        return new BlockPos(bx, by, bz);
+        BlockPos top = country(biomes, random, bx, by, bz) ? new BlockPos(bx, by, bz) : new BlockPos(sx, sy, sz);
+        // A summit with no level spot by it has no tower, and keeps no other away.
+        if (model && foot(server, top, ground) == null) return null;
+        return new Summit(top, most);
     }
 
     /** How far off a named mountain a lookout looks to it, in blocks. */
@@ -338,12 +454,15 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     public static boolean build(WorldGenLevel level, BlockPos foot, RandomSource random,
                                 com.jeladastudios.feelthenature.GeologyBridge.Landmark view) {
         Rotation rotation = view == null ? Rotation.getRandom(random) : toward(view.x() - foot.getX(), view.z() - foot.getZ());
-        return build(level, foot, rotation, random, view);
+        return build(level, foot, rotation, random, view, null);
     }
 
-    /** The tower built turned a given way. */
+    /**
+     * The tower built turned a given way; its radio's enclosure, where Simple Radio is installed, at a spot planned for
+     * it and built with its own chunk, or (where none is given) found beside it and built now.
+     */
     static boolean build(WorldGenLevel level, BlockPos foot, Rotation rotation, RandomSource random,
-                         com.jeladastudios.feelthenature.GeologyBridge.Landmark view) {
+                         com.jeladastudios.feelthenature.GeologyBridge.Landmark view, Spot spot) {
         Builder b = new Builder(level, foot, rotation);
         Builder.built("lookout", foot);
         b.clearGrowth(6, FLOOR + 10);
@@ -356,7 +475,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         roof(b);
         fit(b, random);
         if (view != null) nameBoard(b, view);
-        radio(b, random);
+        radio(b, random, spot);
         weather(b, random);
         b.join();
         return true;
@@ -372,12 +491,63 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
      * since the radio draws strikes -- and room in the enclosure for whoever comes to put power in. Its charge does
      * not last: a station left alone runs down, as an abandoned one would.
      */
-    private static void radio(Builder b, RandomSource random) {
+    private static void radio(Builder b, RandomSource random, Spot planned) {
         if (!net.minecraftforge.fml.ModList.get().isLoaded("simpleradio")) return;
-        Block station = radioBlock("station"), antenna = radioBlock("dual_band_antenna"), tuner = radioBlock("antenna_tuner");
-        if (station == null || antenna == null || tuner == null) return;
-        Builder k = enclosure(b);
-        if (k == null) return;
+        Block station = radioBlock("station"), tuner = radioBlock("antenna_tuner");
+        if (station == null || tuner == null || radioBlock("dual_band_antenna") == null) return;
+        // The station on the cab's south wall, its tuner on it.
+        int f = FLOOR + 1;
+        BlockState s = station.defaultBlockState();
+        if (s.hasProperty(HorizontalDirectionalBlock.FACING)) s = s.setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH);
+        b.set(1, f, 2, s);
+        BlockPos at = b.at(1, f, 2).immutable();
+        b.set(1, f + 1, 2, tuner.defaultBlockState());
+        // Beside it a little desk with the desk microphone on it, to talk through the station from (within four blocks
+        // of it, as the microphone looks for its station).
+        Block microphone = radioBlock("desk_microphone");
+        if (microphone != null) {
+            b.set(0, f, 2, Blocks.SPRUCE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP));
+            BlockState mic = microphone.defaultBlockState();
+            if (mic.hasProperty(HorizontalDirectionalBlock.FACING)) mic = mic.setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH);
+            b.set(0, f + 1, 2, mic);
+        }
+        var entity = b.level.getBlockEntity(at);
+        if (entity != null) {
+            var tag = entity.saveWithoutMetadata();
+            tag.putString("frequency", RESCUE_FREQUENCY);
+            tag.putString("modulation", "FM");
+            tag.putInt("watts", 25);
+            tag.putDouble("energy", 10_000);
+            entity.load(tag);
+        }
+        if (planned != null) {
+            // The enclosure is built with its own chunk; if that came first, its antenna is there to link to.
+            BlockPos aerial = antenna(b.level, planned);
+            if (aerial != null) link(b.level, at, aerial);
+            return;
+        }
+        Spot spot = enclosureNow(b);
+        if (spot == null) {
+            Builder.built("radio_station_none", b.origin);
+            return;
+        }
+        enclosure(b.level, spot, random, new int[]{at.getX(), at.getZ()});
+    }
+
+    /**
+     * The radio's enclosure built at its spot, on the ground as the chunk it stands in has it now: iron bars round it two
+     * high, a way in towards the tower, gravel and coarse dirt underfoot, the mast with the antenna on it and a lightning
+     * rod's pole by it, room for whoever comes to put power in; then linked by coax to the station in the cab, where that
+     * is built. False where the ground there is under water.
+     */
+    private static boolean enclosure(WorldGenLevel level, Spot spot, RandomSource random, int[] station) {
+        Block antenna = radioBlock("dual_band_antenna");
+        if (antenna == null) return false;
+        int y = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, spot.x(), spot.z());
+        Builder k = new Builder(level, new BlockPos(spot.x(), y, spot.z()), spot.turn());
+        for (int[] corner : new int[][]{{0, 0}, {-3, -3}, {3, -3}, {-3, 3}, {3, 3}}) {
+            if (!level.getFluidState(k.at(corner[0], -1, corner[1])).isEmpty()) return false;
+        }
         k.clearGrowth(4, 12);
         k.carve(-3, 3, -3, 3, 0, 4);
         for (int x = -3; x <= 3; x++) {
@@ -398,57 +568,75 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         for (int h = 0; h <= 7; h++) k.set(1, h, -1, Blocks.IRON_BARS.defaultBlockState());
         k.set(1, 8, -1, Blocks.LIGHTNING_ROD.defaultBlockState());
         k.join();
-        // The station on the cab's south wall, its tuner on it.
-        int f = FLOOR + 1;
-        BlockState s = station.defaultBlockState();
-        if (s.hasProperty(HorizontalDirectionalBlock.FACING)) s = s.setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH);
-        b.set(1, f, 2, s);
-        BlockPos at = b.at(1, f, 2).immutable();
-        b.set(1, f + 1, 2, tuner.defaultBlockState());
         BlockPos aerial = k.at(1, 9, 1).immutable();
-        var entity = b.level.getBlockEntity(at);
-        if (entity != null) {
-            var tag = entity.saveWithoutMetadata();
-            tag.putString("frequency", RESCUE_FREQUENCY);
-            tag.putString("modulation", "FM");
-            tag.putInt("watts", 25);
-            tag.putDouble("energy", 10_000);
-            var coax = new net.minecraft.nbt.CompoundTag();
-            coax.put("antenna", net.minecraft.nbt.NbtUtils.writeBlockPos(aerial));
-            coax.putInt("items", 0);
-            coax.putDouble("length", Math.sqrt(at.distSqr(aerial)));
-            tag.put("coax", coax);
-            entity.load(tag);
-        }
         Builder.built("radio_station", aerial);
+        BlockPos at = find(level, station[0], station[1], radioBlock("station"));
+        if (at != null) link(level, at, aerial);
+        return true;
+    }
+
+    /** The antenna of a planned enclosure, where it is built yet. */
+    private static BlockPos antenna(WorldGenLevel level, Spot spot) {
+        int[] o = TrailFeature.turn(spot.turn(), 1, 1);
+        return find(level, spot.x() + o[0], spot.z() + o[1], radioBlock("dual_band_antenna"));
+    }
+
+    /** The highest block of a kind in a column, or null; only in a chunk that may be built in. */
+    private static BlockPos find(WorldGenLevel level, int x, int z, Block block) {
+        if (block == null) return null;
+        if (level instanceof net.minecraft.server.level.WorldGenRegion region) {
+            net.minecraft.world.level.ChunkPos center = region.getCenter();
+            if (Math.abs((x >> 4) - center.x) > 1 || Math.abs((z >> 4) - center.z) > 1) return null;
+        }
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos(x, level.getMaxBuildHeight() - 1, z);
+        for (; m.getY() > level.getMinBuildHeight(); m.move(Direction.DOWN)) {
+            if (level.getBlockState(m).is(block)) return m.immutable();
+        }
+        return null;
+    }
+
+    /** The station linked by coax to the antenna, as a cable run by hand would link it (the cable's items not kept). */
+    private static void link(WorldGenLevel level, BlockPos station, BlockPos aerial) {
+        var entity = level.getBlockEntity(station);
+        if (entity == null) return;
+        var tag = entity.saveWithoutMetadata();
+        var coax = new net.minecraft.nbt.CompoundTag();
+        coax.put("antenna", net.minecraft.nbt.NbtUtils.writeBlockPos(aerial));
+        coax.putInt("items", 0);
+        coax.putDouble("length", Math.sqrt(station.distSqr(aerial)));
+        tag.put("coax", coax);
+        entity.load(tag);
+        Builder.built("radio_link", station);
     }
 
     /**
-     * Where the radio's enclosure goes: a few blocks out from the tower on its east side as drawn, or failing that its
-     * south or north, never the west where the stair and the trail come in -- on ground level enough across it, dry,
-     * and all of it within what the chunk being made may build in. Drawn so its way in faces the tower. Null where
-     * none of them will do.
+     * Where the radio's enclosure goes when it is built with the tower: a few blocks out from the tower on its east side
+     * as drawn, or failing that its south or north, never the west where the stair and the trail come in -- on ground
+     * level enough across it, and all of it on ground that is done: the chunk being made, or one beside it already
+     * decorated. Null where none of them will do.
      */
-    private static Builder enclosure(Builder b) {
-        Rotation[] quarters = {Rotation.NONE, Rotation.CLOCKWISE_90, Rotation.COUNTERCLOCKWISE_90};
-        for (Rotation q : quarters) {
-            for (int side : new int[]{6, -6, 0}) {
-                Builder turned = new Builder(b.level, b.origin, b.rotation.getRotated(q));
-                BlockPos c = turned.at(12, 0, side).immutable();
+    private static Spot enclosureNow(Builder b) {
+        for (Rotation q : QUARTERS) {
+            for (int[] spot : SPOTS) {
+                Rotation turn = b.rotation.getRotated(q);
+                int[] o = TrailFeature.turn(turn, spot[0], spot[1]);
+                BlockPos c = new BlockPos(b.origin.getX() + o[0], 0, b.origin.getZ() + o[1]);
                 if (!b.writable(c, 4)) continue;
                 int y = b.level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, c.getX(), c.getZ());
-                Builder k = new Builder(b.level, new BlockPos(c.getX(), y, c.getZ()), turned.rotation);
                 boolean fits = true;
                 for (int[] corner : new int[][]{{-3, -3}, {3, -3}, {-3, 3}, {3, 3}}) {
-                    BlockPos p = k.at(corner[0], 0, corner[1]);
-                    int h = b.level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ());
-                    if (Math.abs(h - y) > 3 || !b.level.getFluidState(p.below()).isEmpty()) fits = false;
+                    int h = b.level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, c.getX() + corner[0], c.getZ() + corner[1]);
+                    if (Math.abs(h - y) > 3) fits = false;
                 }
-                if (fits) return k;
+                if (fits) return new Spot(c.getX(), c.getZ(), turn);
             }
         }
         return null;
     }
+
+    /** Where the enclosure's middle may go as drawn on the tower's east side, out from it and along it, best first. */
+    private static final int[][] SPOTS = {{12, 6}, {12, -6}, {12, 0}, {10, 3}, {10, -3}, {14, 4}, {14, -4}, {11, 8}, {11, -8},
+            {16, 0}, {16, 6}, {16, -6}, {13, 10}, {13, -10}, {18, 3}, {18, -3}};
 
     private static Block radioBlock(String name) {
         Block block = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(new net.minecraft.resources.ResourceLocation("simpleradio", name));
@@ -493,7 +681,11 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
      */
     static Rotation rotation(WorldGenLevel level, BlockPos foot, com.jeladastudios.feelthenature.GeologyBridge.Landmark view) {
         if (view != null) return toward(view.x() - foot.getX(), view.z() - foot.getZ());
-        long h = level.getSeed() ^ (foot.getX() * 73428767L) ^ (foot.getZ() * 912931L);
+        return rotation(level.getSeed(), foot.getX(), foot.getZ());
+    }
+
+    private static Rotation rotation(long seed, int x, int z) {
+        long h = seed ^ (x * 73428767L) ^ (z * 912931L);
         h ^= h >>> 29;
         return Rotation.values()[(int) Math.floorMod(h * 0x9E3779B97F4A7C15L >>> 33, 4L)];
     }
@@ -658,10 +850,11 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
     private static void cab(Builder b) {
         BlockState plank = Blocks.SPRUCE_PLANKS.defaultBlockState();
-        // The walkway's floor, the cab's in it; open over the last flight, which comes up along the north wall.
+        // The walkway's floor, the cab's in it; open over the last flight, which comes up along the north wall, and over
+        // the landing it starts from, so a head clears the floor as the flight is stepped onto.
         for (int x = -5; x <= 5; x++) {
             for (int z = -5; z <= 5; z++) {
-                if (z == LANE_NORTH && x >= -1 && x <= 1) continue;
+                if (z == LANE_NORTH && x >= -2 && x <= 1) continue;
                 b.set(x, FLOOR, z, plank);
             }
         }
@@ -759,8 +952,8 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
      * What the cab is kept with, laid out as a lookout's is: the station's terminal at a desk along the west wall with
      * its barometer and hygrometer hung on the wall over it either side of a window and a chair before it, the fire
      * finder in the middle, the stove in the south-west corner with its chimney up through the roof, the bed along the
-     * east wall, the log on a lectern, barrels of stores. The north wall is the stair's, and the way from it to the door
-     * is kept clear. Out on the walkway: the rain gauge on a corner, the thermometer hung on the cab's corner post that
+     * east wall, the log on a lectern at the head of the stair, barrels of stores. The north wall is the stair's, and
+     * the way from it to the door is kept clear. Out on the walkway: the rain gauge on a corner, the thermometer hung on the cab's corner post that
      * faces the true north, a lightning rod and a lantern, a chair looking out; the anemometer on the roof's peak, within
      * the terminal's reach (FT's Geology's terminal reads twelve blocks up).
      */
@@ -793,10 +986,10 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         BlockState bed = Blocks.WHITE_BED.defaultBlockState().setValue(BedBlock.FACING, Direction.SOUTH);
         b.set(2, f, 2, bed.setValue(BedBlock.PART, BedPart.HEAD));
         b.set(2, f, 1, bed.setValue(BedBlock.PART, BedPart.FOOT));
-        // Stores beside the stove and in the corner by the stair; the log on its lectern.
+        // Stores beside the stove and by the head of the stair; the log on its lectern there, open to whoever comes up.
         b.barrel(-1, f, 2, LOOT, random);
-        b.barrel(-2, f, -2, REGISTER, random);
-        b.lectern(0, f, 2, Direction.NORTH, Logbook.lookout(random));
+        b.barrel(-1, f, -1, REGISTER, random);
+        b.lectern(1, f, -1, Direction.EAST, Logbook.lookout(random));
         if (random.nextBoolean()) b.set(1, f, 2, Blocks.POTTED_FERN.defaultBlockState());
         // The walkway: the rain gauge open to the sky on a corner; the thermometer hung at eye height on a corner post of
         // the cab, on its face to the true north, out of the sun.
