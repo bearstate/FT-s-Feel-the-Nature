@@ -520,6 +520,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
             tag.putDouble("energy", 10_000);
             entity.load(tag);
         }
+        power(b);
         if (planned != null) {
             // The enclosure is built with its own chunk; if that came first, its antenna is there to link to.
             BlockPos aerial = antenna(b.level, planned);
@@ -637,6 +638,38 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     /** Where the enclosure's middle may go as drawn on the tower's east side, out from it and along it, best first. */
     private static final int[][] SPOTS = {{12, 6}, {12, -6}, {12, 0}, {10, 3}, {10, -3}, {14, 4}, {14, -4}, {11, 8}, {11, -8},
             {16, 0}, {16, 6}, {16, -6}, {13, 10}, {13, -10}, {18, 3}, {18, -3}};
+
+    /**
+     * The station's power, where the radio has its generator and wired blocks: a coal generator at the foot of the
+     * south-east leg as drawn, cold, waiting for coal; the wire laid up that leg's timbers and across the floor to under
+     * the station, out of sight but for the thin line along them.
+     */
+    private static void power(Builder b) {
+        Block generator = radioBlock("coal_generator"), log = radioBlock("wired_stripped_spruce_log"), planks = radioBlock("wired_spruce_planks");
+        if (generator == null || log == null || planks == null) return;
+        // Up the leg, its joints with it.
+        BlockState wiredLog = log.defaultBlockState();
+        for (int y = 0; y < FLOOR; y++) {
+            int r = legAt(y);
+            b.set(r, y, r, wiredLog);
+            if (y > 0 && legAt(y - 1) != r) {
+                int o = legAt(y - 1);
+                b.set(o, y, o, wiredLog);
+                b.set(r, y, o, wiredLog);
+                b.set(o, y, r, wiredLog);
+            }
+        }
+        // Across the floor from the leg's head to under the station.
+        int top = legAt(FLOOR - 1);
+        for (int[] p : new int[][]{{top, top}, {2, 3}, {2, 2}, {1, 2}}) b.set(p[0], FLOOR, p[1], planks.defaultBlockState());
+        // The generator beside the leg's foot, its firebox door outward, on firm ground.
+        int foot = legAt(0);
+        b.carve(foot + 1, foot + 1, foot, foot, 0, 2);
+        b.fillDown(foot + 1, -1, foot, Blocks.STONE_BRICKS.defaultBlockState());
+        BlockState g = generator.defaultBlockState();
+        if (g.hasProperty(HorizontalDirectionalBlock.FACING)) g = g.setValue(HorizontalDirectionalBlock.FACING, b.rotation.rotate(Direction.EAST));
+        b.set(foot + 1, 0, foot, g);
+    }
 
     private static Block radioBlock(String name) {
         Block block = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(new net.minecraft.resources.ResourceLocation("simpleradio", name));
