@@ -27,18 +27,34 @@ what grows round you, and the country is clothed the way its rock and its climat
 - **The Country Clothed**: FT's Geology's mountain belts get their flowers, dwarf spruce, mossy forests, fallen logs
   and scree; boulders are cut from the rock beneath them; river banks grow tall grass, ferns and reeds; volcanic bombs
   lie round the craters of large volcanoes; and Terralith's basalt cliffs become columns stepping down into the sea.
+- **The Country's Creatures**: birds by day in what grows round you, the dawn chorus, crickets on warm nights, frogs by
+  still water in the evening, bees over flowers; now and then a hawk, an owl, a loon far out on a lake. Rain and cold
+  quiet them, each in its season.
+- **Small Details and Mornings**: stones at the water's edge, old snow lying on the north slopes into summer, the spray
+  at a waterfall's foot, morning mist off still water, motes in the sun through the crowns, snow shaken off the trees
+  by a gust, rain running down the windows.
+- **Fire Lookouts** on prominent summits, built as the real ones are: a glazed cab twenty blocks up on splayed timber
+  legs, a switchback stair, a walkway, a lantern-room roof. A weather station with FT's Geology's instruments, lived
+  in, with the keeper's log on a lectern. A trail winds down to the valley, with rescue boards on its trees.
+  `/ftn locate lookout` finds the nearest.
+- **On the High Pastures**: flag trees bent the way the prevailing wind blows, cairns, dry-stone mountain shelters with
+  a map to the nearest lookout on the wall, benches where the ground falls away before a view, bird hides on the lakes.
 - **Music by the Land**: forest, meadow, peaks, snow, stony ground, taiga and the tree line.
 - **English and Turkish**: Full `en_us` and `tr_tr` translations.
 
 ## Requirements
 
 - Minecraft 1.20.1, Forge 47.2 or newer
-- **FT's Geology 0.11.0 or newer** (required)
+- **FT's Geology 0.11.0 or newer** (required); 0.11.4 or newer for the stones, the falls' spray, the flag trees and
+  the lookouts' named mountains
 
 ## Works With
 
-All optional: **Serene Seasons** (autumn leaves), **Tough As Nails** (the umbrella keeps you dry), **AmbientSounds**
-(its rain and wind stand down so they never play twice), **Terralith** (its basalt cliffs, re-done along the sea).
+All optional: **Serene Seasons** (autumn leaves, the creatures' seasons), **Tough As Nails** (the umbrella keeps you
+dry), **AmbientSounds** (its rain and wind stand down so they never play twice), **Terralith** (its basalt cliffs,
+re-done along the sea), **Naturalist** (its animals in FT's Geology's forests and meadows), **the Simple Radio ham
+fork** (each lookout a radio station on the rescue frequency, with a coal generator at its foot), **Advanced
+Chimneys** (the stoves' chimneys) and **Pollution of the Realms** (no fire left burning).
 Runs on dedicated servers; the sounds and particles are client-side only.
 
 ## Building
@@ -55,4 +71,5 @@ The jar is written to `build/libs/`.
 ## License
 
 Copyright (C) 2026 Jelada Studios. Feel the Nature is free software under the GNU General Public License v3.0 or
-later: see `LICENSE`. Every recording is CC0, from Freesound; the recordists are credited in `CREDITS-sounds.md`.
+later: see `LICENSE`. The recordings are from Freesound, all CC0 but the loon's (nicStage, CC BY 4.0); the
+recordists are credited in `CREDITS-sounds.md`.

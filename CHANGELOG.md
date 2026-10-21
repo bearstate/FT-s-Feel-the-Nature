@@ -32,10 +32,11 @@ The country's small details, its mornings, and the fire lookouts on its summits.
 - **A trail** down from each lookout's stair, winding to keep a walker's slope, to the river or the valley's floor; a
   board at its foot pointing up to the lookout. On a few trees along it, a rescue board: the rescue frequency, and
   which way and how far the lookout lies.
-- **With Simple Radio**: each lookout a radio station too, on the rescue frequency, 145.500 MHz -- a station in the cab with a desk
-  microphone beside it, linked to an antenna on a mast in an enclosure of iron bars beside the tower, its battery
-  charged when the tower was found but running down within minutes, as an abandoned station's would; room in the
-  enclosure to put power in.
+- **With the Simple Radio ham fork**: each lookout a radio station too, on the rescue frequency, 145.500 MHz -- a
+  station in the cab with a desk microphone beside it, linked to an antenna on a mast in an enclosure of iron bars
+  beside the tower, its battery charged when the tower was found but running down within minutes, as an abandoned
+  station's would. At the foot of a leg a coal generator stands cold, its wire laid up the leg and across the floor
+  to the station: a few coal, and the radio is lit again.
 - **With Advanced Chimneys**, the stoves' chimneys are its own; **with Pollution of the Realms**, no fire is left
   burning on them.
 - **Flag trees** at the tree line and on the high pastures: lone spruces with their branches streaming to leeward and
