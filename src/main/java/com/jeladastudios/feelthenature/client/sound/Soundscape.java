@@ -31,7 +31,7 @@ import java.util.Map;
  * The weather as it sounds where the player stands, from one place, so that its parts never fight.
  *
  * <p>The rain is a bed in three strengths that hand over as it grows, with a beginning played once after a dry while.
- * Over it lies what the rain falls on round the player -- leaves, needles, water, bare rock -- and what covers the sky
+ * Over it lies what the rain falls on round the player (leaves, needles, water, bare rock) and what covers the sky
  * over their head: a tree's crown, a wooden or a tin roof, glass, each in the share of the sky it covers. The wind is a
  * bed by how hard it blows, louder in the open and high up, with what it moves laid over it: leaves, needles, grass.
  * Water drips for a minute or two after the rain. All of it is heard only as far as the weather outside reaches the
@@ -401,7 +401,7 @@ public final class Soundscape {
                 t.target = v;
             }
         }
-        // Layers no longer asked for fade out, and are forgotten once silent -- or once it is clear the engine never
+        // Layers no longer asked for fade out, and are forgotten once silent, or once it is clear the engine never
         // started them, which would otherwise leave them on the list for good.
         TRACKS.entrySet().removeIf(e -> {
             Float v = TARGETS.get(e.getKey());
@@ -448,7 +448,7 @@ public final class Soundscape {
                 && (id.getPath().equals("weather.rain") || id.getPath().equals("weather.rain.above"))) {
             event.setSound(null);
         }
-        // For the game test: FT's Geology's other sounds -- a quake's rumble, its siren -- go on playing.
+        // For the game test: FT's Geology's other sounds (a quake's rumble, its siren) go on playing.
         if (TRACE && event.getSound() != null && id.getNamespace().equals("fts_geology") && GEOLOGY_HEARD.add(id.getPath())) {
             FeelTheNature.LOGGER.info("GEOLOGY_SOUND_PLAYED {}", id);
         }

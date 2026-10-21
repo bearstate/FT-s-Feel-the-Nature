@@ -8,7 +8,7 @@ import net.minecraft.world.level.Level;
  * whose names and meanings stay put from one version to the next; nothing else of FT's Geology is called.
  *
  * <p>A newer FT's Geology may still have moved something the addon calls. That would end the game with a linkage
- * error in the middle of a tick, so each part -- the regional weather, the server's wind, the rivers, the world type --
+ * error in the middle of a tick, so each part (the regional weather, the server's wind, the rivers, the world type)
  * is called behind a guard: the first time a call no longer links, the addon says so once in the log and that part
  * falls back to what vanilla offers, for the rest of the session. The rest goes on working.</p>
  */
@@ -164,8 +164,8 @@ public final class GeologyBridge {
     // === The server side: FT's Geology's own world, its wind and its rivers ==================================
 
     /**
-     * What FT's Geology's plates make of a column, by name -- {@code volcanic_highland}, {@code rift_valley},
-     * {@code geothermal_basin}, ... -- or {@code none}, outside its world too. Cached on its side; cheap enough to ask
+     * What FT's Geology's plates make of a column, by name: {@code volcanic_highland}, {@code rift_valley},
+     * {@code geothermal_basin}, ..., or {@code none}, outside its world too. Cached on its side; cheap enough to ask
      * once a chunk while the world generates.
      */
     public static String role(net.minecraft.server.level.ServerLevel level, int x, int z) {
@@ -261,7 +261,7 @@ public final class GeologyBridge {
     }
 
     /**
-     * Whether one of FT's Geology's large volcanoes -- strato, shield, caldera, fissure, volcanic island -- has its
+     * Whether one of FT's Geology's large volcanoes (strato, shield, caldera, fissure, volcanic island) has its
      * crater within {@code radius} blocks of a column, extinct ones too. It reads nothing loaded: safe, and the same,
      * while the world generates. Cached on its side; ask once a chunk.
      */

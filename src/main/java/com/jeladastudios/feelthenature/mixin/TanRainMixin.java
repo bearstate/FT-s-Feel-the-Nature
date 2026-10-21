@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Tough As Nails asks whether a block is out in the rain -- the block a player stands in, to keep them wet and chill
- * them -- and it asks the world's one rain flag. Two answers change:
+ * Tough As Nails asks whether a block is out in the rain (the block a player stands in, to keep them wet and chill
+ * them) and it asks the world's one rain flag. Two answers change:
  *
  * <ul>
  *   <li>FT's Geology's rain is regional, and it keeps the world's flag up while any storm is out anywhere, so Tough As

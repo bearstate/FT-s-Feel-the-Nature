@@ -12,7 +12,7 @@ import net.minecraft.world.level.levelgen.placement.PlacementModifierType;
 import java.util.List;
 
 /**
- * Lets a placement through only where FT's Geology's plates give the ground one of the named roles --
+ * Lets a placement through only where FT's Geology's plates give the ground one of the named roles:
  * {@code volcanic_highland}, {@code rift_valley}, ... ({@code FtsGeologyApi.role}). What grows on a volcano goes by the
  * volcano, not by the biome the climate laid over it: a belted volcano's flanks are montane forest and meadow, its
  * ground is still a volcano's. Nothing passes outside FT's Geology's own world.

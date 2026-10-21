@@ -30,9 +30,9 @@ import net.minecraftforge.fml.common.Mod;
  * The small life in the air round the player, where and when it would be:
  *
  * <ul>
- *   <li>fireflies on a warm, dry night, low over grass and by water -- never in the cold or the rain;</li>
+ *   <li>fireflies on a warm, dry night, low over grass and by water: never in the cold or the rain;</li>
  *   <li>pollen over flowers on a dry day;</li>
- *   <li>leaves coming down from broadleaf crowns, more in a wind, carried with it -- needles hardly fall;</li>
+ *   <li>leaves coming down from broadleaf crowns, more in a wind, carried with it: needles hardly fall;</li>
  *   <li>snow blown off the surface by a strong wind, and shaken off the crowns that hold it by a gust;</li>
  *   <li>mist rising off still water on a calm, cold morning ({@link Steam});</li>
  *   <li>motes of dust glinting in the shafts of sun through a wood's crowns on a still, dry day.</li>
@@ -147,7 +147,7 @@ public final class AmbientLife {
 
     /**
      * A mote in a shaft of sun: a point of air that sees the sky straight up, with a crown of leaves a couple of blocks
-     * to one side of it -- a gap in a wood's canopy, where the light comes down through the dust.
+     * to one side of it: a gap in a wood's canopy, where the light comes down through the dust.
      */
     private static void mote(ClientLevel level, LocalPlayer player) {
         int x = player.getBlockX() + RANDOM.nextInt(17) - 8, z = player.getBlockZ() + RANDOM.nextInt(17) - 8;
@@ -196,7 +196,7 @@ public final class AmbientLife {
     private static void steam(ClientLevel level, LocalPlayer player, float wx, float wz) {
         BlockPos top = column(level, player, 28, Heightmap.Types.MOTION_BLOCKING);
         if (top == null) return;
-        // Still, open water: a lake's or a pond's surface, or a river's, under the sky -- not a waterfall's curtain.
+        // Still, open water: a lake's or a pond's surface, or a river's, under the sky, not a waterfall's curtain.
         var water = level.getFluidState(top.below());
         if (!water.is(FluidTags.WATER) || !water.isSource() || !level.getBlockState(top).isAir() || !level.canSeeSky(top)) return;
         level.addParticle(ModParticles.STEAM.get(), top.getX() + RANDOM.nextDouble(), top.getY() - 0.05 + RANDOM.nextDouble() * 0.25,

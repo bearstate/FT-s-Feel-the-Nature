@@ -24,7 +24,7 @@ import java.util.function.Consumer;
  * on its cloth over the head ({@code client.sound.Soundscape}).
  *
  * <p>A strong wind turns an open umbrella inside out, as it does ({@link UmbrellaWind}). It folds shut and a rib or two
- * bends, which costs it some of its wear; iron nuggets mend it. Put away -- out of both hands -- it is folded first.</p>
+ * bends, which costs it some of its wear; iron nuggets mend it. Put away (out of both hands), it is folded first.</p>
  */
 public class UmbrellaItem extends Item {
 

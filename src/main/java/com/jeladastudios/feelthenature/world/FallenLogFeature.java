@@ -20,7 +20,7 @@ import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvi
  * A trunk lying on the forest floor where a tree came down: a few logs end to end along the ground, moss and now and
  * then a mushroom growing on it. Old forest is full of dead wood, and a forest without any reads as a plantation.
  *
- * <p>Laid only where the whole length rests on ground -- soil, moss or rock -- and nothing but plants stands in its way,
+ * <p>Laid only where the whole length rests on ground (soil, moss or rock) and nothing but plants stands in its way,
  * so a log never hangs over a slope or cuts through a tree.</p>
  */
 public class FallenLogFeature extends Feature<FallenLogFeature.Config> {

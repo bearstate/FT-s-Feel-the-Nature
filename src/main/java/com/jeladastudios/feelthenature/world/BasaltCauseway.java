@@ -5,8 +5,8 @@ import java.util.ArrayDeque;
 /**
  * Where the columns of a basalt coast stand, and how high, apart from the game so it can be tested on its own.
  *
- * <p>Columnar basalt is a thick lava flow cooled slowly into prisms. Where the sea has cut into it -- the Giant's
- * Causeway, Staffa, Reynisfjara -- the columns stand upright in the cliff's face, as a broken staircase at its foot,
+ * <p>Columnar basalt is a thick lava flow cooled slowly into prisms. Where the sea has cut into it (the Giant's
+ * Causeway, Staffa, Reynisfjara) the columns stand upright in the cliff's face, as a broken staircase at its foot,
  * and step down into the sea, the outer ones under water. Behind the shore the plateau stays what it was. So here:</p>
  * <ul>
  *   <li>in the sea, within six blocks of the shore, columns topping out at the water or up to two blocks over it at
@@ -102,7 +102,7 @@ public final class BasaltCauseway {
         return h ^ (h >>> 33);
     }
 
-    /** Steps from each column to the nearest one of the other kind -- land to sea, or sea to land -- up to 16. */
+    /** Steps from each column to the nearest one of the other kind (land to sea, or sea to land) up to 16. */
     static int[] distance(int n, boolean[] sea, boolean fromLand) {
         int[] d = new int[n * n];
         java.util.Arrays.fill(d, 16);

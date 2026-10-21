@@ -21,10 +21,10 @@ The country's small details, its mornings, and the fire lookouts on its summits.
 - **Fire lookouts** on prominent summits of hill and mountain country, no two nearer than 660 blocks, as
   the real ones are built: a glazed cab twenty blocks up on four splayed timber legs braced in X, a switchback stair
   up the middle walked without a jump, a walkway carried on brackets, a hipped roof with a little glazed lantern-room
-  rising out of it. Kept as a weather station with FT's Geology's instruments -- the terminal at a desk with the
+  rising out of it. Kept as a weather station with FT's Geology's instruments (the terminal at a desk with the
   barometer and hygrometer hung on the wall over it, the rain gauge out on the walkway, the thermometer hung in the
-  shade on the cab's north corner post, the anemometer on the lantern-room's peak, a lightning rod -- all of them read
-  by the terminal -- and lived in: a bed, a stove and its chimney, lanterns, the fire finder in the middle of the
+  shade on the cab's north corner post, the anemometer on the lantern-room's peak, a lightning rod, all of them read
+  by the terminal) and lived in: a bed, a stove and its chimney, lanterns, the fire finder in the middle of the
   floor, barrels of stores and a visitors' book, the keeper's log open on a lectern at the head of the stair (in the
   reader's own language, the rescue frequency on its first page). The legs stand into the ground or on stone footings,
   mossy with the years; in a wet country, vines up them. Within sight of Everest, K2 or the Matterhorn a lookout faces
@@ -32,7 +32,7 @@ The country's small details, its mornings, and the fire lookouts on its summits.
 - **A trail** down from each lookout's stair, winding to keep a walker's slope, to the river or the valley's floor; a
   board at its foot pointing up to the lookout. On a few trees along it, a rescue board: the rescue frequency, and
   which way and how far the lookout lies.
-- **With the Simple Radio ham fork**: each lookout a radio station too, on the rescue frequency, 145.500 MHz -- a
+- **With the Simple Radio ham fork**: each lookout a radio station too, on the rescue frequency, 145.500 MHz: a
   station in the cab with a desk microphone beside it, linked to an antenna on a mast in an enclosure of iron bars
   beside the tower, its battery charged when the tower was found but running down within minutes, as an abandoned
   station's would. At the foot of a leg a coal generator stands cold, its wire laid up the leg and across the floor

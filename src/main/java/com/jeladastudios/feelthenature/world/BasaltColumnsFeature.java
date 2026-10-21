@@ -111,7 +111,7 @@ public class BasaltColumnsFeature extends Feature<NoneFeatureConfiguration> {
 
     /**
      * Whether the sea stands at its top water block: vanilla's water, not a river's or a lake's, with the open air
-     * over it -- not the water of an aquifer or a cave at the sea's level under the land.
+     * over it, not the water of an aquifer or a cave at the sea's level under the land.
      */
     private static boolean sea(WorldGenLevel level, BlockPos.MutableBlockPos at) {
         BlockState s = level.getBlockState(at);

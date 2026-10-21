@@ -20,7 +20,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  * a drop, facing out over it, a board at each end for an arm. Someone put it there for the view.
  *
  * <p>Looked for on a few points of the chunk: grassy ground, level a couple of blocks in front and behind, open to the
- * sky, with the ground some way lower a few blocks out in front -- the brow of a pasture, not a ledge on a cliff.</p>
+ * sky, with the ground some way lower a few blocks out in front: the brow of a pasture, not a ledge on a cliff.</p>
  */
 public class ViewBenchFeature extends Feature<NoneFeatureConfiguration> {
 

@@ -13,7 +13,7 @@ import net.minecraftforge.registries.RegistryObject;
  * The small life in the air: fireflies on a warm night, pollen over a meadow by day, a leaf coming down from a crown,
  * mist rising off still water on a cold morning, a mote of dust in a shaft of sun.
  * The types are registered on both sides; how they look and move is client-only ({@code client.life}). They are drawn
- * with the game's own textures -- its glow and dust sprites, and the leaves' own block texture -- not new art, but for the mist's soft puffs.
+ * with the game's own textures (its glow and dust sprites, and the leaves' own block texture), not new art, but for the mist's soft puffs.
  */
 public final class ModParticles {
 

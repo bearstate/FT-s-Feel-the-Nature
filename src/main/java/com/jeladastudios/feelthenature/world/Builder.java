@@ -30,7 +30,7 @@ final class Builder {
     }
 
     /**
-     * Whether a chunk is the one chunk of its cell -- {@code cell} chunks square -- that a kind of building may stand in:
+     * Whether a chunk is the one chunk of its cell ({@code cell} chunks square) that a kind of building may stand in:
      * one picked from the world's seed and the cell, the same whichever chunk asks. So a kind is never thicker than one
      * to a cell, however much of the country suits it.
      */
@@ -199,7 +199,7 @@ final class Builder {
     /**
      * Whether the square {@code r} blocks round a world position is all on finished ground that may be built on: in
      * world generation the chunk being made, or one beside it already decorated. A block set further out is lost, and
-     * the ground of a chunk beside not yet decorated may still change under what is set on it -- FT's Geology raises a
+     * the ground of a chunk beside not yet decorated may still change under what is set on it: FT's Geology raises a
      * large volcano's body in each chunk's own decoration.
      */
     boolean writable(BlockPos c, int r) {

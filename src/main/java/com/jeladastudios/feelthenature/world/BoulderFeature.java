@@ -15,7 +15,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfigur
 
 /**
  * A boulder of the rock it lies on: fallen from the outcrop above it or left standing as the softer ground round it
- * wore away, so it is the very rock the ground is made of here -- gneiss in a fold belt, basalt on a rift's floor,
+ * wore away, so it is the very rock the ground is made of here: gneiss in a fold belt, basalt on a rift's floor,
  * granite over a pluton. FT's Geology lays that rock under the soil; the boulder reads it from there.
  *
  * <p>A few overlapping blobs, as vanilla's forest rock, half sunk into the ground. In damp forest it takes moss.</p>
@@ -51,7 +51,7 @@ public class BoulderFeature extends Feature<BoulderFeature.Config> {
             }
         }
         if (origin == null) return false;
-        // No rock within reach under deep soil -- a floodplain's silt, a thick moraine -- and so no boulder of it.
+        // No rock within reach under deep soil (a floodplain's silt, a thick moraine) and so no boulder of it.
         BlockState stone = rockUnder(level, origin);
         if (stone == null) return false;
 
@@ -86,7 +86,7 @@ public class BoulderFeature extends Feature<BoulderFeature.Config> {
         for (int d = 1; d <= PROBE; d++) {
             BlockState s = level.getBlockState(m.move(0, -1, 0));
             if (rock(s) && !s.is(Blocks.BEDROCK)) return s;
-            // Through soil and loose ground; anything else -- water, wood, an ore, something built -- ends the search.
+            // Through soil and loose ground; anything else (water, wood, an ore, something built) ends the search.
             boolean loose = s.isAir() || s.is(BlockTags.DIRT) || s.is(BlockTags.SAND) || s.is(Blocks.GRAVEL)
                     || s.is(Blocks.CLAY);
             if (!loose || !s.getFluidState().isEmpty()) return null;

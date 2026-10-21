@@ -30,8 +30,8 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
 /**
  * A fire lookout on a summit: a glazed cab on four splayed timber legs, girts and knee braces at each step, a
  * switchback stair up the middle, a walkway round the cab under the eaves carried on brackets, a hipped roof. Kept as a
- * weather station as much as a lookout: FT's Geology's instruments -- the terminal and the barometer and hygrometer
- * inside, the rain gauge on the walkway, the thermometer hung outside in the shade, the anemometer on the roof's peak --
+ * weather station as much as a lookout: FT's Geology's instruments (the terminal and the barometer and hygrometer
+ * inside, the rain gauge on the walkway, the thermometer hung outside in the shade, the anemometer on the roof's peak)
  * and lived in: a bed, a stove and its chimney, lanterns, the fire finder on its stand in the middle of the floor.
  *
  * <p>Built in place from blocks, turned to one of four ways at random, the ground under it left as it lies: the legs
@@ -216,8 +216,8 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     /**
      * Where the tower stands by a summit, {x, z, y}, or null where no spot near it is level enough: the most level spot
      * within {@link #SHIFT} blocks, the higher where two are as level. By FT's Geology's ground model where it gives
-     * it, so the answer is the same before the ground is generated as after -- {@code /ftn locate lookout} and the
-     * world agree -- else by the world's own heightmap.
+     * it, so the answer is the same before the ground is generated as after ({@code /ftn locate lookout} and the
+     * world agree), else by the world's own heightmap.
      */
     static int[] foot(net.minecraft.server.level.ServerLevel level, BlockPos site, java.util.function.IntBinaryOperator height) {
         int fx = 0, fz = 0, fy = 0, rough = Integer.MAX_VALUE;
@@ -280,8 +280,8 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
     /**
      * The summit a lookout stands on in the cell a chunk lies in, or null where there is none: of the tops of the cell's
-     * ground on a coarse grid, in lookout country, the one standing furthest over a ring round it -- at least
-     * {@link #PROMINENCE} -- closed in on. By the generator's own ground and biomes, so every chunk of the cell finds the
+     * ground on a coarse grid, in lookout country, the one standing furthest over a ring round it (at least
+     * {@link #PROMINENCE}) closed in on. By the generator's own ground and biomes, so every chunk of the cell finds the
      * same summit; worked out once a cell.
      */
     public static BlockPos site(WorldGenLevel level, net.minecraft.world.level.ChunkPos chunk) {
@@ -342,7 +342,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         // The cell's ground on a coarse grid, kept off its edge so the ring and the tower are the cell's own.
         int[][] g = new int[n][n];
         for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) g[i][j] = ground.applyAsInt(x0 + grid / 2 + i * grid, z0 + grid / 2 + j * grid);
-        // The highest of the grid's points in lookout country -- a summit or a high shoulder under the bare rock -- and of
+        // The highest of the grid's points in lookout country (a summit or a high shoulder under the bare rock) and of
         // those, the one standing furthest over the ring round it.
         var biomes = generator.getBiomeSource();
         java.util.List<int[]> country = new java.util.ArrayList<>();
@@ -399,7 +399,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
     /**
      * The named mountain nearest a point within {@link #VIEW}, or null. The mountains are asked of FT's Geology once a
-     * world -- the first time takes it a few seconds -- and kept.
+     * world (the first time takes it a few seconds) and kept.
      */
     public static com.jeladastudios.feelthenature.GeologyBridge.Landmark nearestLandmark(net.minecraft.server.level.ServerLevel level, int x, int z) {
         var known = landmarks;
@@ -487,8 +487,8 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     /**
      * With Simple Radio installed, the lookout kept as a radio station too, as the real ones are: a station on the cab's
      * south wall with its antenna tuner on it, set to the rescue frequency, its battery charged, linked by coax to a
-     * dual-band antenna on a mast in an enclosure of iron bars beside the tower -- a lightning rod on a pole by it,
-     * since the radio draws strikes -- and room in the enclosure for whoever comes to put power in. Its charge does
+     * dual-band antenna on a mast in an enclosure of iron bars beside the tower (a lightning rod on a pole by it,
+     * since the radio draws strikes) and room in the enclosure for whoever comes to put power in. Its charge does
      * not last: a station left alone runs down, as an abandoned one would.
      */
     private static void radio(Builder b, RandomSource random, Spot planned) {
@@ -612,7 +612,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
     /**
      * Where the radio's enclosure goes when it is built with the tower: a few blocks out from the tower on its east side
-     * as drawn, or failing that its south or north, never the west where the stair and the trail come in -- on ground
+     * as drawn, or failing that its south or north, never the west where the stair and the trail come in: on ground
      * level enough across it, and all of it on ground that is done: the chunk being made, or one beside it already
      * decorated. Null where none of them will do.
      */
@@ -710,7 +710,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
     /**
      * The way a tower at a spot is turned: its door to the mountain it looks to, else one of four by the world's seed and
-     * the spot -- the same answer every time it is asked, so its trail can be laid from its stair before it is built.
+     * the spot: the same answer every time it is asked, so its trail can be laid from its stair before it is built.
      */
     static Rotation rotation(WorldGenLevel level, BlockPos foot, com.jeladastudios.feelthenature.GeologyBridge.Landmark view) {
         if (view != null) return toward(view.x() - foot.getX(), view.z() - foot.getZ());
@@ -786,7 +786,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         }
         // Brackets under the walkway's edge, from the top girts out.
         corbels(b, FLOOR - 1, 4);
-        // An X across every face of every tier, girt to girt -- but the west face of the foot, where the way in is.
+        // An X across every face of every tier, girt to girt, but the west face of the foot, where the way in is.
         int low = 0;
         for (int i = 0; i < GIRTS.length; i++) {
             int r = legAt(low);
@@ -924,7 +924,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
     /**
      * The roof, as the lookouts' are: a hipped roof of dark oak over the cab and the walkway, stepping in a block a course,
-     * and up out of it a lantern-room -- a little glazed cupola with a hipped roof of its own over an overhang, its floor
+     * and up out of it a lantern-room: a little glazed cupola with a hipped roof of its own over an overhang, its floor
      * open down into the cab so the light comes in from above. A whole block at its peak for the anemometer.
      */
     private static void roof(Builder b) {
@@ -1049,7 +1049,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
 
     /**
      * A stove's chimney from a height up to another: Advanced Chimneys' own where it is installed; else brick, with a
-     * campfire smoking on top -- but not where Pollution of the Realms is, for whom a fire is a source of pollution.
+     * campfire smoking on top, but not where Pollution of the Realms is, for whom a fire is a source of pollution.
      */
     static void chimney(Builder b, int x, int y0, int z, int y1) {
         Block flue = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(

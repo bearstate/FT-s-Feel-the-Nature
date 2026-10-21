@@ -69,7 +69,7 @@ public final class Mix {
 
     /**
      * How a gust (FT's Geology's, about 0.3 to 1.8 of the mean wind) changes the wind's loudness: by much less than its
-     * strength, 0.72 to 1.32 -- the ear hears a gust as a swell, not as twice the wind -- and never past that.
+     * strength, 0.72 to 1.32 (the ear hears a gust as a swell, not as twice the wind) and never past that.
      */
     public static float gusting(float gust) {
         float g = Math.max(0.3f, Math.min(1.8f, gust));

@@ -144,7 +144,7 @@ final class WaterVoices {
 
     /**
      * What a block's water is heard as: falling water, FT's Geology's river where it runs, a brook (vanilla water
-     * running), or none -- still water, a river stilled behind a dam among it.
+     * running), or none: still water, a river stilled behind a dam among it.
      */
     private static Kind kind(net.minecraft.world.level.BlockGetter level, BlockPos at) {
         BlockState s = level.getBlockState(at);

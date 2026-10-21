@@ -47,7 +47,7 @@ public class CairnFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
         // A bare top: open to the sky, no crown of leaves over it or round it, and the ground lower on every side close
-        // by and on most sides further off -- a summit or a ridge, not a knoll in a valley.
+        // by and on most sides further off: a summit or a ridge, not a knoll in a valley.
         int falls = 0;
         for (Direction d : Direction.Plane.HORIZONTAL) {
             int nx = bx + d.getStepX() * ROUND, nz = bz + d.getStepZ() * ROUND;
