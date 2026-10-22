@@ -405,7 +405,9 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         var known = landmarks;
         if (known == null) {
             synchronized (LookoutTowerFeature.class) {
-                if (landmarks == null) landmarks = com.jeladastudios.feelthenature.GeologyBridge.landmarks(level);
+                if (landmarks == null) {
+                    landmarks = com.jeladastudios.feelthenature.GeologyBridge.landmarks(level).stream().map(l -> summit(level, l)).toList();
+                }
                 known = landmarks;
             }
         }
@@ -419,6 +421,46 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
         return best;
+    }
+
+    /** How far from where FT's Geology sets a named mountain its summit is looked for, in blocks, and how finely. */
+    static final int SUMMIT_REACH = 1024, SUMMIT_STEP = 32;
+
+    /**
+     * A named mountain where its summit is: FT's Geology gives the middle of the ground it lays the mountain out on,
+     * and the peak may stand well off that. Found by the ground model, the highest of a coarse grid over the mountain
+     * and then of a fine one round that; where the model gives nothing, the mountain as given.
+     */
+    static com.jeladastudios.feelthenature.GeologyBridge.Landmark summit(net.minecraft.server.level.ServerLevel level,
+                                                                          com.jeladastudios.feelthenature.GeologyBridge.Landmark l) {
+        int bx = l.x(), bz = l.z();
+        double best = Double.NEGATIVE_INFINITY;
+        for (int dx = -SUMMIT_REACH; dx <= SUMMIT_REACH; dx += SUMMIT_STEP) {
+            for (int dz = -SUMMIT_REACH; dz <= SUMMIT_REACH; dz += SUMMIT_STEP) {
+                double h = com.jeladastudios.feelthenature.GeologyBridge.groundHeight(level, l.x() + dx, l.z() + dz);
+                if (!Double.isNaN(h) && h > best) {
+                    best = h;
+                    bx = l.x() + dx;
+                    bz = l.z() + dz;
+                }
+            }
+        }
+        if (best == Double.NEGATIVE_INFINITY) return l;
+        int cx = bx, cz = bz;
+        for (int dx = -SUMMIT_STEP; dx <= SUMMIT_STEP; dx += 4) {
+            for (int dz = -SUMMIT_STEP; dz <= SUMMIT_STEP; dz += 4) {
+                double h = com.jeladastudios.feelthenature.GeologyBridge.groundHeight(level, cx + dx, cz + dz);
+                if (!Double.isNaN(h) && h > best) {
+                    best = h;
+                    bx = cx + dx;
+                    bz = cz + dz;
+                }
+            }
+        }
+        if (com.jeladastudios.feelthenature.dev.TestCommands.ON) {
+            com.jeladastudios.feelthenature.FeelTheNature.LOGGER.info("LANDMARK {} given at {} {}, summit at {} {} ({})", l.name(), l.x(), l.z(), bx, bz, (int) best);
+        }
+        return new com.jeladastudios.feelthenature.GeologyBridge.Landmark(l.name(), bx, bz, l.bearing());
     }
 
     /** Whether a point is in lookout country, by the generator's own biomes. */
