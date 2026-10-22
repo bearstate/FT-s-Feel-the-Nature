@@ -520,6 +520,10 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         radio(b, random, spot);
         weather(b, random);
         b.join();
+        // A tower of plain timber is a building to FT's Geology's earthquakes, and a tall thin one comes down: asked to
+        // leave it be, from its footings to the anemometer, walkway and stair, the generator at the leg's foot.
+        com.jeladastudios.feelthenature.GeologyBridge.protectFromQuakes(level, new net.minecraft.world.level.levelgen.structure.BoundingBox(
+                foot.getX() - 7, foot.getY() - 13, foot.getZ() - 7, foot.getX() + 7, foot.getY() + PEAK + 3, foot.getZ() + 7));
         return true;
     }
 
@@ -611,6 +615,9 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         for (int h = 0; h <= 7; h++) k.set(1, h, -1, Blocks.IRON_BARS.defaultBlockState());
         k.set(1, 8, -1, Blocks.LIGHTNING_ROD.defaultBlockState());
         k.join();
+        // The mast, its bars and the rod: left alone by the quakes too.
+        com.jeladastudios.feelthenature.GeologyBridge.protectFromQuakes(level, new net.minecraft.world.level.levelgen.structure.BoundingBox(
+                spot.x() - 4, y - 3, spot.z() - 4, spot.x() + 4, y + 11, spot.z() + 4));
         BlockPos aerial = k.at(1, 9, 1).immutable();
         Builder.built("radio_station", aerial);
         BlockPos at = find(level, station[0], station[1], radioBlock("station"));

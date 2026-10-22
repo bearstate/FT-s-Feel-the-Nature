@@ -29,7 +29,8 @@ The country's small details, its mornings, and the fire lookouts on its summits.
   floor, barrels of stores and a visitors' book, the keeper's log open on a lectern by the door (in the
   reader's own language, the rescue frequency on its first page). The legs stand into the ground or on stone footings,
   mossy with the years; in a wet country, vines up them. Within sight of Everest, K2 or the Matterhorn a lookout faces
-  it, with a board by the door naming it. `/ftn locate lookout` finds the nearest.
+  its summit, with a board by the door naming it. With FT's Geology's API 5 its earthquakes leave a lookout and
+  its radio mast alone (the shaking still felt). `/ftn locate lookout` finds the nearest.
 - **A trail** down from each lookout's stair, winding to keep a walker's slope, to the river or the valley's floor; a
   board at its foot pointing up to the lookout. On a few trees along it, a rescue board: the rescue frequency, and
   which way and how far the lookout lies.

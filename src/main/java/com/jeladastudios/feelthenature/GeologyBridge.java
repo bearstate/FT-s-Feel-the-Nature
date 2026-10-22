@@ -275,6 +275,37 @@ public final class GeologyBridge {
         }
     }
 
+    // FT's Geology's API 5: boxes the earthquakes leave alone. Looked up by name, as the core this addon is built
+    // against does not have it yet; an older core does without it, and its quakes treat the box as any building.
+    private static volatile java.lang.reflect.Method protect;
+    private static volatile boolean protectLooked;
+
+    /**
+     * Asks FT's Geology's earthquakes to leave a box alone: what the addon builds of plain blocks (a lookout, its radio's
+     * mast) not shaken down, felled or slid away; the shaking still felt there. Kept with the world. Safe in a feature.
+     */
+    public static void protectFromQuakes(net.minecraft.world.level.LevelAccessor level, net.minecraft.world.level.levelgen.structure.BoundingBox box) {
+        if (!protectLooked) {
+            synchronized (GeologyBridge.class) {
+                if (!protectLooked) {
+                    try {
+                        protect = FtsGeologyApi.class.getMethod("protectFromQuakes", net.minecraft.world.level.LevelAccessor.class,
+                                net.minecraft.world.level.levelgen.structure.BoundingBox.class);
+                    } catch (NoSuchMethodException | LinkageError e) {
+                        protect = null;
+                    }
+                    protectLooked = true;
+                }
+            }
+        }
+        if (protect == null) return;
+        try {
+            protect.invoke(null, level, box);
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            FeelTheNature.LOGGER.warn("FT's Geology would not keep its quakes off a box at {}: {}", box, e.toString());
+        }
+    }
+
     // FT's Geology's API 3 and 4: the ground, the landmarks, the rock and the falls. Missing from an older core, where
     // each answers as if it did not know (NaN, nothing, plain stone) and the addon goes the old way.
     private static volatile boolean groundLinks = true, rockLinks = true, fallsLinks = true;
