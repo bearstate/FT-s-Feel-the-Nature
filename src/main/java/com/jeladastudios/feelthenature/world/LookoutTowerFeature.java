@@ -855,8 +855,10 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
     /**
      * The switchback stair up the middle: flights of three steps along x, eastward in the north lane and westward in the
      * one south of it, a landing across both lanes at each end. Each landing stands level with the flight's last step, so
-     * the stair is walked from the ground to the cab without a jump; the last flight comes up through the cab's floor
-     * along its north wall. A rail of fence posts between the lanes.
+     * the stair is walked from the ground to the cab without a jump. The last landing reaches out through the frame's
+     * north face and the last flight comes up outside the cab's north wall onto the walkway, as a real lookout's does:
+     * the cab is entered by its door from the walkway, which keeps out what walks up in the night. A rail of fence posts
+     * between the lanes.
      */
     private static void stair(Builder b) {
         BlockState plank = Blocks.SPRUCE_PLANKS.defaultBlockState();
@@ -870,28 +872,51 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
             if (landing == -1) {
                 for (int z = LANE_NORTH; z <= LANE_SOUTH; z++) b.fillDown(lx, landing - 1, z, Blocks.COBBLESTONE.defaultBlockState());
             }
+            if (landing + 3 >= FLOOR) {
+                // The last landing carried out through the frame's north face, and the last flight up outside the cab
+                // onto the walkway: the cab's own floor stays whole, its door the one way in.
+                b.set(lx, landing, LANE_NORTH - 1, plank);
+                b.set(lx, landing, WALK_LANE, plank);
+                BlockState air = Blocks.AIR.defaultBlockState();
+                for (int y = landing + 1; y <= landing + 2; y++) {
+                    b.set(lx, y, LANE_NORTH - 1, air);
+                    b.set(lx, y, WALK_LANE, air);
+                }
+                b.set(lx + 1, landing + 2, WALK_LANE, air);
+                for (int s = 1; s <= 3; s++) b.set(lx + s, landing + s, WALK_LANE, east);
+                break;
+            }
             int lane = eastward ? LANE_NORTH : LANE_SOUTH;
             for (int s = 1; s <= 3; s++) b.set(eastward ? lx + s : lx - s, landing + s, lane, eastward ? east : west);
             landing += 3;
             eastward = !eastward;
         }
         for (int y = 0; y < FLOOR; y++) b.setIfAir(0, y, LANE_NORTH + 1, Blocks.SPRUCE_FENCE.defaultBlockState());
+        // Lanterns hung under two landings and under the cab's floor: no dark under the tower for anything to rise in.
+        BlockState hung = Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true);
+        for (int[] at : LIGHTS) b.setIfAir(at[0], at[1], at[2], hung);
     }
+
+    /** The lane outside the cab's north wall the last flight climbs in, under the walkway. */
+    private static final int WALK_LANE = -4;
+    /** Where the lanterns hang under the tower: under the landings at two and eleven, and under the cab's floor. */
+    static final int[][] LIGHTS = {{2, 1, 0}, {-2, 10, 0}, {1, FLOOR - 1, 2}};
 
     /** The stair's two lanes, north and south; the landings span from the one to the other. */
     private static final int LANE_NORTH = -2, LANE_SOUTH = 0;
 
     private static void cab(Builder b) {
         BlockState plank = Blocks.SPRUCE_PLANKS.defaultBlockState();
-        // The walkway's floor, the cab's in it; open over the last flight, which comes up along the north wall, and over
-        // the landing it starts from, so a head clears the floor as the flight is stepped onto.
+        // The walkway's floor, the cab's in it, whole; open only over the last flight, which comes up outside the cab's
+        // north wall, and over the landing it starts from, so a head clears the walkway as the flight is stepped onto.
         for (int x = -5; x <= 5; x++) {
             for (int z = -5; z <= 5; z++) {
-                if (z == LANE_NORTH && x >= -2 && x <= 1) continue;
+                if (z == WALK_LANE && x >= -2 && x <= 1) continue;
                 b.set(x, FLOOR, z, plank);
             }
         }
-        // The walkway's rail.
+        // The walkway's rail, and a post across it at the stairwell's far end, so no one walking round in the dark
+        // steps off into it.
         BlockState fence = Blocks.SPRUCE_FENCE.defaultBlockState();
         for (int i = -5; i <= 5; i++) {
             b.set(i, FLOOR + 1, -5, fence);
@@ -899,6 +924,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
             b.set(-5, FLOOR + 1, i, fence);
             b.set(5, FLOOR + 1, i, fence);
         }
+        b.set(-2, FLOOR + 1, WALK_LANE, fence);
         // The cab: logs at the corners, a plank sill all round, windows over it on every side; the door to the east.
         BlockState pane = Blocks.GLASS_PANE.defaultBlockState();
         for (int y = FLOOR + 1; y <= FLOOR + 3; y++) {
@@ -985,8 +1011,8 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
      * What the cab is kept with, laid out as a lookout's is: the station's terminal at a desk along the west wall with
      * its barometer and hygrometer hung on the wall over it either side of a window and a chair before it, the fire
      * finder in the middle, the stove in the south-west corner with its chimney up through the roof, the bed along the
-     * east wall, the log on a lectern at the head of the stair, barrels of stores. The north wall is the stair's, and
-     * the way from it to the door is kept clear. Out on the walkway: the rain gauge on a corner, the thermometer hung on the cab's corner post that
+     * east wall, the log on a lectern by the door, barrels of stores. The way in from the door is kept clear. Out on
+     * the walkway: the rain gauge on a corner, the thermometer hung on the cab's corner post that
      * faces the true north, a lightning rod and a lantern, a chair looking out; the anemometer on the roof's peak, within
      * the terminal's reach (FT's Geology's terminal reads twelve blocks up).
      */
@@ -1019,7 +1045,7 @@ public class LookoutTowerFeature extends Feature<NoneFeatureConfiguration> {
         BlockState bed = Blocks.WHITE_BED.defaultBlockState().setValue(BedBlock.FACING, Direction.SOUTH);
         b.set(2, f, 2, bed.setValue(BedBlock.PART, BedPart.HEAD));
         b.set(2, f, 1, bed.setValue(BedBlock.PART, BedPart.FOOT));
-        // Stores beside the stove and by the head of the stair; the log on its lectern there, open to whoever comes up.
+        // Stores beside the stove and by the door; the log on its lectern there, open to whoever comes in.
         b.barrel(-1, f, 2, LOOT, random);
         b.barrel(-1, f, -1, REGISTER, random);
         b.lectern(1, f, -1, Direction.EAST, Logbook.lookout(random));

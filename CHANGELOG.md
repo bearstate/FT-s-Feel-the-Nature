@@ -20,12 +20,13 @@ The country's small details, its mornings, and the fire lookouts on its summits.
   blows inside out. Frogs a little quieter.
 - **Fire lookouts** on prominent summits of hill and mountain country, no two nearer than 660 blocks, as
   the real ones are built: a glazed cab twenty blocks up on four splayed timber legs braced in X, a switchback stair
-  up the middle walked without a jump, a walkway carried on brackets, a hipped roof with a little glazed lantern-room
-  rising out of it. Kept as a weather station with FT's Geology's instruments (the terminal at a desk with the
+  up the middle walked without a jump and lit by lanterns under its landings, coming out onto a walkway carried on
+  brackets (the cab is entered by its door from the walkway, so nothing climbs straight into the room), a hipped roof
+  with a little glazed lantern-room rising out of it. Kept as a weather station with FT's Geology's instruments (the terminal at a desk with the
   barometer and hygrometer hung on the wall over it, the rain gauge out on the walkway, the thermometer hung in the
   shade on the cab's north corner post, the anemometer on the lantern-room's peak, a lightning rod, all of them read
   by the terminal) and lived in: a bed, a stove and its chimney, lanterns, the fire finder in the middle of the
-  floor, barrels of stores and a visitors' book, the keeper's log open on a lectern at the head of the stair (in the
+  floor, barrels of stores and a visitors' book, the keeper's log open on a lectern by the door (in the
   reader's own language, the rescue frequency on its first page). The legs stand into the ground or on stone footings,
   mossy with the years; in a wet country, vines up them. Within sight of Everest, K2 or the Matterhorn a lookout faces
   it, with a board by the door naming it. `/ftn locate lookout` finds the nearest.
