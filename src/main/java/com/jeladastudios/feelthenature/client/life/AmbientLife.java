@@ -34,7 +34,7 @@ import net.minecraftforge.fml.common.Mod;
  *   <li>pollen over flowers on a dry day;</li>
  *   <li>leaves coming down from broadleaf crowns, more in a wind, carried with it: needles hardly fall;</li>
  *   <li>snow blown off the surface by a strong wind, and shaken off the crowns that hold it by a gust;</li>
- *   <li>mist rising off still water on a calm, cold morning ({@link Steam});</li>
+ *   <li>mist rising off still water on a calm, cold morning ({@link Steam}), where the player turns it on;</li>
  *   <li>motes of dust glinting in the shafts of sun through a wood's crowns on a still, dry day.</li>
  * </ul>
  *
@@ -128,7 +128,8 @@ public final class AmbientLife {
             for (int i = 0; i < 3; i++) if (RANDOM.nextFloat() < chance) snowClump(level, player, wx, wz);
         }
         float temperature = com.jeladastudios.feelthenature.client.sound.Fauna.temperature(biome.getBaseTemperature(), player.getY());
-        float mist = Steam.strength(time, temperature, wind, rain, GeologyBridge.fog(), season);
+        // Only where the player has asked for it (life.morningMist): off by default.
+        float mist = ClientConfig.MORNING_MIST.get() ? Steam.strength(time, temperature, wind, rain, GeologyBridge.fog(), season) : 0f;
         // Motes in the sun under the trees: a still, dry day, most of them when the sun is low and its shafts slant in.
         if (day && rain < 0.02f && wind < 4f && !level.isThundering()) {
             float low = 1f - Math.min(1f, Math.min(Math.abs(time - 1000), Math.abs(time - 11500)) / 3000f);

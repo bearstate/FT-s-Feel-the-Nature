@@ -10,7 +10,9 @@ The country's small details, its mornings, and the fire lookouts on its summits.
 - **The spray at a waterfall's foot**: mossy rock, moss and ferns, and no snow, round where each of FT's Geology's falls
   lands, out over its banks.
 - **Morning mist**: on a calm, clear, cool morning, mist rising off still water, thickest just after sunrise and in
-  autumn; not in a wind, in rain, in the heat, or where FT's Geology's own fog already lies.
+  autumn; not in a wind, in rain, in the heat, or where FT's Geology's own fog already lies. Off unless turned on
+  (`morningMist` in the client config): its wisps can read as grey smudges over a river, and with some shader packs
+  they hang in the air before the bank.
 - **Motes in the sun**: dust glinting in the shafts of light through a wood's crowns on a still, dry day.
 - **Snow off the crowns**: a gust shakes the snow off the trees that hold it.
 - **Rain on the windows**: indoors in the rain, drops running down the glass, clinging and sliding, more the harder it

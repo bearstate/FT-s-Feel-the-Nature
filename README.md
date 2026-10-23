@@ -31,8 +31,8 @@ what grows round you, and the country is clothed the way its rock and its climat
   still water in the evening, bees over flowers; now and then a hawk, an owl, a loon far out on a lake. Rain and cold
   quiet them, each in its season.
 - **Small Details and Mornings**: stones at the water's edge, old snow lying on the north slopes into summer, the spray
-  at a waterfall's foot, morning mist off still water, motes in the sun through the crowns, snow shaken off the trees
-  by a gust, rain running down the windows.
+  at a waterfall's foot, morning mist off still water (off unless turned on), motes in the sun through the crowns,
+  snow shaken off the trees by a gust, rain running down the windows.
 - **Fire Lookouts** on prominent summits, built as the real ones are: a glazed cab twenty blocks up on splayed timber
   legs, a switchback stair, a walkway, a lantern-room roof. A weather station with FT's Geology's instruments, lived
   in, with the keeper's log on a lectern. A trail winds down to the valley, with rescue boards on its trees.

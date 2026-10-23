@@ -12,7 +12,7 @@ public final class ClientConfig {
     public static final ForgeConfigSpec.DoubleValue RAIN_VOLUME, SURFACE_VOLUME, WIND_VOLUME, DRIP_VOLUME, FAUNA_VOLUME;
     public static final ForgeConfigSpec.IntValue MAX_LAYERS;
     public static final ForgeConfigSpec.BooleanValue DEBUG_LINE;
-    public static final ForgeConfigSpec.BooleanValue AMBIENT_LIFE;
+    public static final ForgeConfigSpec.BooleanValue AMBIENT_LIFE, MORNING_MIST;
     public static final ForgeConfigSpec.DoubleValue LIFE_DENSITY;
 
     static {
@@ -44,6 +44,9 @@ public final class ClientConfig {
                 .define("ambientLife", true);
         LIFE_DENSITY = b.comment("How much of it: 1 is the natural amount, 0.5 half, 2 twice.")
                 .defineInRange("lifeDensity", 1.0, 0.0, 3.0);
+        MORNING_MIST = b.comment("Mist rising off still water on a calm, cold morning. Off unless turned on: its wisps can read as",
+                        "grey smudges over a river, and with some shader packs they hang in the air before the bank.")
+                .define("morningMist", false);
         b.pop();
         SPEC = b.build();
     }
