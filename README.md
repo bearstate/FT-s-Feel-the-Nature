@@ -37,7 +37,7 @@ what grows round you, and the country is clothed the way its rock and its climat
   legs, a switchback stair, a walkway, a lantern-room roof. A weather station with FT's Geology's instruments, lived
   in, with the keeper's log on a lectern. A trail winds down to the valley, with rescue boards on its trees.
   `/ftn locate lookout` finds the nearest.
-- **On the High Pastures**: flag trees bent the way the prevailing wind blows, cairns, dry-stone mountain shelters with
+- **On the High Pastures**: flag trees bent the way the prevailing wind blows, dry-stone mountain shelters with
   a map to the nearest lookout on the wall, benches where the ground falls away before a view, bird hides on the lakes.
 - **Music by the Land**: forest, meadow, peaks, snow, stony ground, taiga and the tree line.
 - **English and Turkish**: Full `en_us` and `tr_tr` translations.

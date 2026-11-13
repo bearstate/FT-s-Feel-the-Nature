@@ -1,3 +1,8 @@
+# FT's Geology: Feel the Nature 1.3.0 (not yet released)
+
+- **Cairns removed**: the piles of stone with a wall on top no longer appear on the alpine meadows and the scree. Those
+  already in a world stay where they are.
+
 # FT's Geology: Feel the Nature 1.2.0
 
 The country's small details, its mornings, and the fire lookouts on its summits.

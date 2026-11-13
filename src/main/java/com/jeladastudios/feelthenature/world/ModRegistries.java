@@ -30,8 +30,6 @@ public final class ModRegistries {
             FEATURES.register("riparian", () -> new RiparianFeature(net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration.CODEC));
     public static final RegistryObject<LookoutTowerFeature> LOOKOUT_TOWER =
             FEATURES.register("lookout_tower", () -> new LookoutTowerFeature(net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration.CODEC));
-    public static final RegistryObject<CairnFeature> CAIRN =
-            FEATURES.register("cairn", () -> new CairnFeature(net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration.CODEC));
     public static final RegistryObject<ViewBenchFeature> VIEW_BENCH =
             FEATURES.register("view_bench", () -> new ViewBenchFeature(net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration.CODEC));
     public static final RegistryObject<ShelterHutFeature> SHELTER_HUT =
