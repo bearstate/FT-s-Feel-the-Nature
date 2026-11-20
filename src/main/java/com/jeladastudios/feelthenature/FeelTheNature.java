@@ -25,5 +25,21 @@ public final class FeelTheNature {
     public FeelTheNature() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
         ModRegistries.register(FMLJavaModLoadingContext.get().getModEventBus());
+        dynamicTrees();
+    }
+
+    /**
+     * Where Dynamic Trees is installed, the addon's tree pack (trees/fts_feelthenature in the jar) handed to it: FT's
+     * Geology's forests grown as its trees instead of the fixed ones. Asked for by name, so the addon needs nothing of
+     * it to load; a Dynamic Trees without the call simply does without.
+     */
+    private static void dynamicTrees() {
+        if (!net.minecraftforge.fml.ModList.get().isLoaded("dynamictrees")) return;
+        try {
+            Class.forName("com.ferreusveritas.dynamictrees.api.registry.RegistryHandler").getMethod("setup", String.class).invoke(null, MODID);
+            LOGGER.info("Dynamic Trees found: FT's Geology's forests are grown as its trees");
+        } catch (ReflectiveOperationException | LinkageError e) {
+            LOGGER.warn("Dynamic Trees is installed but its tree packs could not be joined ({}); the fixed trees stay", e.toString());
+        }
     }
 }

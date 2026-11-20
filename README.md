@@ -52,7 +52,8 @@ what grows round you, and the country is clothed the way its rock and its climat
 
 All optional: **Serene Seasons** (autumn leaves, the creatures' seasons), **Tough As Nails** (the umbrella keeps you
 dry), **AmbientSounds** (its rain and wind stand down so they never play twice), **Terralith** (its basalt cliffs,
-re-done along the sea), **Naturalist** (its animals in FT's Geology's forests and meadows), **the Simple Radio ham
+re-done along the sea), **Naturalist** (its animals in FT's Geology's forests and meadows), **Dynamic Trees** (FT's Geology's forests
+grown as its trees, with the tall pines and stunted tree-line spruce of its Terralith addon where that is installed), **the Simple Radio ham
 fork** (each lookout a radio station on the rescue frequency, with a coal generator at its foot), **Advanced
 Chimneys** (the stoves' chimneys) and **Pollution of the Realms** (no fire left burning).
 Runs on dedicated servers; the sounds and particles are client-side only.

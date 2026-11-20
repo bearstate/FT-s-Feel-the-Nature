@@ -70,12 +70,12 @@ dependencies {
         runtimeOnly fg.deobf('blank:creativecore:2.12.40')
     }
     // With -Ppack, a slice of the modpack the addon was made with in the development game, for the game test against its worldgen: the
-    // mods whose biome modifiers once fell between the addon's and crashed the game (Croptopia, HBM), Dynamic Trees,
+    // mods whose biome modifiers once fell between the addon's and crashed the game (Croptopia, HBM), Dynamic Trees (with its Terralith addon),
     // Naturalist and Wildernature, with what they need, and Terralith, whose biomes the pack lays on FT's Geology's
     // terrain. Copied into libs/ by hand; never shipped.
     if (project.hasProperty('pack')) {
         ['croptopia:4.0.1', 'epherolib:1.2.0', 'hbm:2.0', 'architectury:9.2.14', 'clothconfig:11.1.136', 'geckolib:4.8.4',
-         'dynamictrees:1.4.11', 'naturalist:5.0', 'wildernature:1.0.6', 'curios:5.14.1', 'terralith:2.5.4'].each { runtimeOnly fg.deobf("blank:${it}") }
+         'dynamictrees:1.4.11', 'naturalist:5.0', 'wildernature:1.0.6', 'curios:5.14.1', 'terralith:2.5.4', 'dtterralith:1.2.6'].each { runtimeOnly fg.deobf("blank:${it}") }
     }
     // With -Pradio, Simple Radio (the ham fork) and what it needs, for the lookouts' radio stations. Copied into libs/ by
     // hand; never shipped.

@@ -1,0 +1,12 @@
+[
+  {
+    "_comment": "The fixed trees of FT's Geology's biomes that are grown as Dynamic Trees instead (default.json). Only these: a biome left out keeps its own. Feel the Nature's bushes, flag trees and krummholz stay as they are.",
+    "select": {
+      "name": "fts_geology:(montane_forest|subalpine_forest|treeline|geothermal_basin|everest|k2|matterhorn|orogenic_highland|volcanic_highland|alluvial_plain|rift_valley|oceanic_ridge)"
+    },
+    "cancellers": {
+      "type": "tree",
+      "namespaces": [ "minecraft", "fts_geology" ]
+    }
+  }
+]

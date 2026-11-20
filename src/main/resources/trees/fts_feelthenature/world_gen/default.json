@@ -1,0 +1,108 @@
+[
+  {
+    "_comment": "Montane forest: spruce and pine (FT's Geology's belt of conifers) among oak and birch.",
+    "select": { "name": "fts_geology:montane_forest" },
+    "apply": {
+      "species": { "random": { "spruce": 3, "oak": 2, "birch": 1 } },
+      "density": [ 1.0 ],
+      "chance": 1.0,
+      "forestness": 1.0,
+      "multipass": true
+    }
+  },
+  {
+    "_comment": "With Dynamic Trees for Terralith, a tall pine among the montane spruce, as FT's Geology has one in three.",
+    "select": { "name": "fts_geology:montane_forest" },
+    "only_if_loaded": "dtterralith",
+    "apply": {
+      "species": { "method": "splice_before", "random": { "...": 4, "dtterralith:tall_spruce": 1 } }
+    }
+  },
+  {
+    "_comment": "Subalpine forest: dense spruce, an old giant here and there.",
+    "select": { "name": "fts_geology:subalpine_forest" },
+    "apply": {
+      "species": { "random": { "spruce": 3, "mega_spruce": 1 } },
+      "density": [ 1.0 ],
+      "chance": 1.0,
+      "forestness": 1.0,
+      "multipass": true
+    }
+  },
+  {
+    "select": { "name": "fts_geology:subalpine_forest" },
+    "only_if_loaded": "dtterralith",
+    "apply": {
+      "species": { "method": "splice_before", "random": { "...": 4, "dtterralith:tall_spruce": 1, "dtterralith:northern_spruce": 1 } }
+    }
+  },
+  {
+    "_comment": "The tree line, and the geothermal basins at its height: spruce thinning out.",
+    "select": { "names": [ "fts_geology:treeline", "fts_geology:geothermal_basin" ] },
+    "apply": {
+      "species": "spruce",
+      "density": [ 0.3 ],
+      "chance": 0.5
+    }
+  },
+  {
+    "_comment": "With Dynamic Trees for Terralith, the spruce stunted as it nears the line.",
+    "select": { "names": [ "fts_geology:treeline", "fts_geology:geothermal_basin" ] },
+    "only_if_loaded": "dtterralith",
+    "apply": {
+      "species": { "method": "splice_before", "random": { "...": 1, "dtterralith:dwarf_spruce": 2 } }
+    }
+  },
+  {
+    "_comment": "The great peaks and the highland round them: a few wind-bent trees low down.",
+    "select": { "names": [ "fts_geology:everest", "fts_geology:k2", "fts_geology:matterhorn", "fts_geology:orogenic_highland" ] },
+    "apply": {
+      "species": { "random": { "spruce": 2, "oak": 1 } },
+      "density": [ 0.12 ],
+      "chance": 0.4
+    }
+  },
+  {
+    "_comment": "The volcanic highland: thin spruce on the old flows.",
+    "select": { "name": "fts_geology:volcanic_highland" },
+    "apply": {
+      "species": { "random": { "spruce": 3, "oak": 1 } },
+      "density": [ 0.3 ],
+      "chance": 0.6
+    }
+  },
+  {
+    "select": { "names": [ "fts_geology:everest", "fts_geology:k2", "fts_geology:matterhorn", "fts_geology:orogenic_highland", "fts_geology:volcanic_highland" ] },
+    "only_if_loaded": "dtterralith",
+    "apply": {
+      "species": { "method": "splice_before", "random": { "...": 2, "dtterralith:windswept_spruce": 1 } }
+    }
+  },
+  {
+    "_comment": "The alluvial plain: an oak or a birch standing alone in the grass.",
+    "select": { "name": "fts_geology:alluvial_plain" },
+    "apply": {
+      "species": { "random": { "oak": 8, "birch": 1 } },
+      "density": 0,
+      "chance": 0.04
+    }
+  },
+  {
+    "_comment": "The rift valley: savanna acacia.",
+    "select": { "name": "fts_geology:rift_valley" },
+    "apply": {
+      "species": "acacia",
+      "density": [ 0.1 ],
+      "chance": "standard"
+    }
+  },
+  {
+    "_comment": "The oceanic ridge: a few oak on its islands.",
+    "select": { "name": "fts_geology:oceanic_ridge" },
+    "apply": {
+      "species": "oak",
+      "density": [ 0.1 ],
+      "chance": 0.3
+    }
+  }
+]

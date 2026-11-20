@@ -109,6 +109,8 @@ public final class TestCommands {
                 .then(Commands.literal("log")
                         .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
                                 .executes(c -> fallenLog(c, IntegerArgumentType.getInteger(c, "radius")))))
+                .then(Commands.literal("trees").then(Commands.argument("radius", IntegerArgumentType.integer(8, 400))
+                        .executes(c -> trees(c, IntegerArgumentType.getInteger(c, "radius")))))
                 .then(Commands.literal("snowpatch")
                         .then(Commands.argument("radius", IntegerArgumentType.integer(8, 160))
                                 .executes(c -> snowPatch(c, IntegerArgumentType.getInteger(c, "radius")))))
@@ -352,6 +354,44 @@ public final class TestCommands {
      * block on top with no snow on the ground six blocks to the west, east, north or south of it. Answers
      * {@code FTN_TEST snowpatch x y z biome} or {@code FTN_TEST snowpatch none}.
      */
+    /**
+     * The trees in the country loaded round the player, by biome: the standing trunks of fixed trees (logs) and of
+     * Dynamic Trees (its branch blocks), counted a column at a time down from the top through the canopy. Answers
+     * {@code FTN_TEST trees biome fixed=n dynamic=n; ...}.
+     */
+    private static int trees(CommandContext<CommandSourceStack> c, int radius) {
+        ServerPlayer player = c.getSource().getPlayer();
+        if (player == null) return 0;
+        ServerLevel level = player.serverLevel();
+        java.util.Map<String, int[]> by = new java.util.TreeMap<>();
+        BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+        for (int x = player.getBlockX() - radius; x <= player.getBlockX() + radius; x++) {
+            for (int z = player.getBlockZ() - radius; z <= player.getBlockZ() + radius; z++) {
+                if (!level.hasChunk(x >> 4, z >> 4)) continue;
+                int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z), ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                for (int y = top; y >= Math.min(top, ground) - 24; y--) {
+                    var s = level.getBlockState(m.set(x, y, z));
+                    var key = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getKey(s.getBlock());
+                    if (key == null) continue;
+                    boolean fixed = s.is(net.minecraft.tags.BlockTags.LOGS) && key.getNamespace().equals("minecraft");
+                    boolean dynamic = key.getNamespace().startsWith("dynamictrees") || key.getNamespace().startsWith("dt");
+                    if (!fixed && !(dynamic && key.getPath().endsWith("branch"))) continue;
+                    // A standing trunk only, four high: not a fallen log, a bush or a branch reaching out.
+                    boolean trunk = true;
+                    for (int dy = 1; dy <= 3 && trunk; dy++) trunk = level.getBlockState(new BlockPos(x, y - dy, z)).getBlock() == s.getBlock();
+                    if (!trunk) break;
+                    String biome = level.getBiome(m).unwrapKey().map(k -> k.location().toString()).orElse("?");
+                    by.computeIfAbsent(biome, k -> new int[2])[fixed ? 0 : 1]++;
+                    break;
+                }
+            }
+        }
+        StringBuilder b = new StringBuilder("FTN_TEST trees");
+        by.forEach((k, v) -> b.append(' ').append(k).append(" fixed=").append(v[0]).append(" dynamic=").append(v[1]).append(';'));
+        c.getSource().sendSuccess(() -> Component.literal(b.toString()), false);
+        return 1;
+    }
+
     private static int snowPatch(CommandContext<CommandSourceStack> c, int radius) {
         ServerPlayer player = c.getSource().getPlayer();
         if (player == null) return 0;

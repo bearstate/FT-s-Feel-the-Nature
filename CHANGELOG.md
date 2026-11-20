@@ -2,6 +2,11 @@
 
 - **Cairns removed**: the piles of stone with a wall on top no longer appear on the alpine meadows and the scree. Those
   already in a world stay where they are.
+- **Dynamic Trees**: where it is installed, FT's Geology's forests grow as its trees instead of the fixed ones: the
+  montane forest's spruce among oak and birch, the subalpine forest's dense spruce with an old giant here and there,
+  spruce thinning out at the tree line, a few wind-bent trees on the great peaks, acacia in the rift valley. With
+  its Terralith addon, tall pines among the spruce and stunted spruce at the tree line. Feel the Nature's bushes,
+  krummholz and flag trees stay as they are.
 
 # FT's Geology: Feel the Nature 1.2.0
 
@@ -140,7 +145,7 @@ The first release. Forge 1.20.1 (47.2 or newer), with FT's Geology 0.11.0 or new
 
 ## Works with
 
-FT's Geology (required), Serene Seasons, Tough As Nails, AmbientSounds, Terralith. Everything but FT's Geology is
+FT's Geology (required), Serene Seasons, Tough As Nails, AmbientSounds, Terralith, Dynamic Trees. Everything but FT's Geology is
 optional.
 
 All the recordings are CC0, from Freesound; the recordists are named in `CREDITS-sounds.md`. Licensed under the GNU
