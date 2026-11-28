@@ -60,8 +60,8 @@ Runs on dedicated servers; the sounds and particles are client-side only.
 
 ## Building
 
-The addon compiles against FT's Geology's jar, which is not in this repository: copy an FT's Geology 0.11.0 jar into
-`libs/` as `ftn-core-0.11.0.jar`, then
+The addon compiles against FT's Geology's jar, which is not in this repository: copy an FT's Geology 0.12.0-beta.1 jar
+into `libs/` as `ftn-core-0.12.0-beta.1.jar`, then
 
 ```
 ./gradlew build

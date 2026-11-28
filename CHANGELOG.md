@@ -1,5 +1,7 @@
 # FT's Geology: Feel the Nature 1.3.0
 
+Made alongside FT's Geology 0.12.0-beta.1 and tried with it; still runs on 0.11.0 and later.
+
 - **Cairns removed**: the piles of stone with a wall on top no longer appear on the alpine meadows and the scree. Those
   already in a world stay where they are.
 - **Dynamic Trees**: where it is installed, FT's Geology's forests grow as its trees instead of the fixed ones: the
